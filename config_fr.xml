@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<module>
+	<name>bpostshm</name>
+	<displayName><![CDATA[bpost Shipping Manager - bpost customers only]]></displayName>
+	<version><![CDATA[1.0]]></version>
+	<description><![CDATA[Allow your customers to choose their preferrred delivery method: delivery at home or the office, at a pick-up
+			location or in a bpack 24/7 parcel machine.]]></description>
+	<author><![CDATA[Stigmi.eu]]></author>
+	<tab><![CDATA[shipping_logistics]]></tab>
+	<is_configurable>1</is_configurable>
+	<need_instance>0</need_instance>
+	<limited_countries></limited_countries>
+</module>

@@ -1,0 +1,159 @@
+/**
+ * 2014 Stigmi
+ *
+ * @author    Stigmi.eu <www.stigmi.eu>
+ * @copyright 2014 Stigmi
+ * @license   http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ */
+#bpost-settings fieldset a, #bpost-settings fieldset a.active, #bpost-settings fieldset a.focus, #bpost-settings fieldset a.hover, #bpost-settings fieldset a.visited {
+  text-decoration: underline; }
+#bpost-settings fieldset legend img {
+  height: 16px; }
+#bpost-settings fieldset ul {
+  list-style: disc inside none;
+  padding-left: 0; }
+#bpost-settings form {
+  margin-top: 20px; }
+  #bpost-settings form label {
+    cursor: pointer; }
+  #bpost-settings form select.fixed-width-xs {
+    display: inline-block; }
+  #bpost-settings form input[type="text"] {
+    max-width: 60%; }
+  #bpost-settings form #account_api_url {
+    font-style: italic; }
+  #bpost-settings form .hidden {
+    display: none; }
+  #bpost-settings form .control-label-bw {
+    float: left;
+    font-weight: bold;
+    padding: .2em .5em 0 0;
+    text-align: right;
+    text-shadow: 0 1px 0 #fff;
+    width: 250px; }
+  #bpost-settings form .margin-form {
+    font-size: 100%; }
+    #bpost-settings form .margin-form label {
+      font-weight: normal; }
+      #bpost-settings form .margin-form label img {
+        margin-left: 3px;
+        position: relative;
+        top: -1px; }
+  #bpost-settings form .radio label {
+    float: none; }
+  #bpost-settings form .select-multiple {
+    margin-left: 260px;
+    width: 60%; }
+    #bpost-settings form .select-multiple select {
+      height: 150px;
+      width: 100%; }
+    #bpost-settings form .select-multiple img {
+      cursor: pointer;
+      padding: 10px 0;
+      vertical-align: middle; }
+    #bpost-settings form .select-multiple #add_country,
+    #bpost-settings form .select-multiple #remove_country {
+      opacity: .3; }
+  #bpost-settings form.v1-4 .radio, #bpost-settings form.v1-5 .radio {
+    padding-bottom: 0; }
+  #bpost-settings form.v1-4 .checkbox label,
+  #bpost-settings form.v1-4 .switch label, #bpost-settings form.v1-5 .checkbox label,
+  #bpost-settings form.v1-5 .switch label {
+    float: none;
+    width: auto; }
+  #bpost-settings form.v1-4 .margin-form, #bpost-settings form.v1-5 .margin-form {
+    line-height: 20px; }
+    #bpost-settings form.v1-4 .margin-form + .margin-form, #bpost-settings form.v1-5 .margin-form + .margin-form {
+      margin-top: -.8em; }
+  #bpost-settings form.v1-4 .control-label-bw {
+    width: 200px; }
+
+#adminbpostorders-view .metadata-command .actions a, #adminbpostorders-view .metadata-command .actions a:visited,
+#adminbpostorders-view .box .box-actions a,
+#adminbpostorders-view .box .box-actions a:visited,
+#adminbpostorders-view .product .product-actions a,
+#adminbpostorders-view .product .product-actions a:visited {
+  color: #268ccd; }
+#adminbpostorders-view .metadata-command .actions a img,
+#adminbpostorders-view .box .box-actions a img,
+#adminbpostorders-view .product .product-actions a img {
+  margin-right: 6px; }
+#adminbpostorders-view .metadata-command .actions a span,
+#adminbpostorders-view .box .box-actions a span,
+#adminbpostorders-view .product .product-actions a span {
+  text-decoration: underline; }
+#adminbpostorders-view .metadata-command .actions {
+  float: right;
+  margin: 12px 10px;
+  width: 364px; }
+  #adminbpostorders-view .metadata-command .actions a + a {
+    display: inline-block;
+    padding-left: 10px; }
+#adminbpostorders-view .box {
+  background-color: #ececec;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  margin-bottom: 12px; }
+  #adminbpostorders-view .box .box-title {
+    color: #333; }
+    #adminbpostorders-view .box .box-title img {
+      margin-right: 2px; }
+  #adminbpostorders-view .box .box-content {
+    background-color: #f8f8f8;
+    border-top: 1px solid #ccc;
+    padding: 10px 12px; }
+  #adminbpostorders-view .box .box-actions {
+    float: right;
+    margin: 12px 10px;
+    width: 364px; }
+    #adminbpostorders-view .box .box-actions a + a {
+      display: inline-block;
+      padding-left: 10px; }
+#adminbpostorders-view .product {
+  background-color: #fff;
+  margin: 5px 0;
+  padding: 15px 12px 10px; }
+  #adminbpostorders-view .product .details dl {
+    margin-top: 2px; }
+  #adminbpostorders-view .product .product-actions {
+    float: right;
+    margin-top: 1px;
+    width: 350px; }
+    #adminbpostorders-view .product .product-actions li {
+      margin-bottom: 5px; }
+      #adminbpostorders-view .product .product-actions li.disabled,
+      #adminbpostorders-view .product .product-actions li.disabled a {
+        color: #ccc;
+        font-style: italic; }
+      #adminbpostorders-view .product .product-actions li.disabled a {
+        text-decoration: none; }
+    #adminbpostorders-view .product .product-actions select {
+      font-size: 91%;
+      width: 40px; }
+#adminbpostorders-view li .product_image {
+  float: left;
+  margin-right: 15px; }
+#adminbpostorders-view li dt {
+  margin-bottom: 3px;
+  font-weight: bold; }
+#adminbpostorders-view li dd {
+  margin-left: 0; }
+
+#adminbpostorders #idTabs li {
+  display: inline-block; }
+#adminbpostorders #idTabs a {
+  background-color: #f8f8f8;
+  border-color: #ccc;
+  border-style: solid;
+  border-width: 1px 1px 0;
+  border-radius: 3px 3px 0 0;
+  display: inline-block;
+  font-size: 14px;
+  line-height: 32px;
+  margin-right: 3px;
+  padding: 0 15px; }
+  #adminbpostorders #idTabs a.selected {
+    background-color: #49b2ff;
+    color: #fff; }
+#adminbpostorders .block_hidden_only_for_screen {
+  display: none; }

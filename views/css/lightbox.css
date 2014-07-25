@@ -1,0 +1,247 @@
+/**
+ * 2014 Stigmi
+ *
+ * @author    Stigmi.eu <www.stigmi.eu>
+ * @copyright 2014 Stigmi
+ * @license   http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ */
+.col-xs-4,
+.col-xs-6,
+.col-xs-8,
+.col-xs-12 {
+  float: left;
+  padding: 0 15px;
+  position: relative; }
+
+.col-xs-4 {
+  width: 33.3333%; }
+
+.col-xs-6 {
+  width: 50%; }
+
+.col-xs-8 {
+  width: 66.6667%; }
+
+.col-xs-12 {
+  width: 100%; }
+
+.alpha {
+  padding-left: 0; }
+
+.omega {
+  padding-right: 0; }
+
+#lightbox {
+  text-align: left;
+  width: 100%; }
+  #lightbox.v1-5 {
+    background-color: #F9F9F9; }
+    #lightbox.v1-5.at-shop #poi li {
+      background-color: #fff; }
+  #lightbox *,
+  #lightbox *:before,
+  #lightbox *:after {
+    box-sizing: border-box; }
+  #lightbox .button {
+    height: 18px;
+    line-height: 16px;
+    padding: 0px 7px;
+    vertical-align: middle; }
+  #lightbox form {
+    line-height: 18px; }
+    #lightbox form label {
+      font-weight: bold; }
+    #lightbox form input[type="checkbox"],
+    #lightbox form input[type="radio"],
+    #lightbox form input[type="text"] {
+      vertical-align: middle; }
+    #lightbox form input[type="text"],
+    #lightbox form select {
+      font-size: 12px;
+      margin: 0  15px 0 3px; }
+    #lightbox form input[type="checkbox"] + label,
+    #lightbox form input[type="radio"] + label {
+      margin-left: 5px; }
+    #lightbox form input[type="radio"] {
+      position: relative;
+      top: -1px; }
+    #lightbox form input[type="text"] {
+      border: 1px solid #ccc;
+      border-radius: 3px !important;
+      height: 20px;
+      padding: 0 10px; }
+    #lightbox form select {
+      height: 22px; }
+    #lightbox form .error,
+    #lightbox form .loader {
+      border-radius: 3px;
+      display: inline-block;
+      font-size: 12px;
+      line-height: 25px;
+      padding: 0 10px;
+      vertical-align: middle; }
+    #lightbox form .error {
+      margin: 0 0 0 15px; }
+    #lightbox form .loader {
+      display: none;
+      margin: 0 0 0 5px; }
+  #lightbox.at-shop #catch-phrase {
+    border-bottom: 1px solid #d2d2d2;
+    color: #009bda;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 10px 0; }
+  #lightbox.at-shop #search-form {
+    padding: 20px 0; }
+    #lightbox.at-shop #search-form .button {
+      display: inline-block; }
+  #lightbox.at-shop #poi {
+    list-style: none inside none; }
+    #lightbox.at-shop #poi li {
+      background-color: #F9F9F9;
+      border: 1px solid #f2f2f2;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 0 0 8px 0;
+      padding: 6px 10px 10px; }
+      #lightbox.at-shop #poi li.active {
+        background-color: #fee68a; }
+      #lightbox.at-shop #poi li > a {
+        display: block; }
+        #lightbox.at-shop #poi li > a, #lightbox.at-shop #poi li > a:active, #lightbox.at-shop #poi li > a:focus, #lightbox.at-shop #poi li > a:hover {
+          text-decoration: none; }
+    #lightbox.at-shop #poi img {
+      float: left;
+      margin-top: 6px;
+      margin-right: 8px; }
+    #lightbox.at-shop #poi .details {
+      float: left;
+      font-size: 10px;
+      line-height: 12px;
+      margin-top: 6px;
+      width: 80%; }
+      #lightbox.at-shop #poi .details .name {
+        display: block;
+        color: #009bda;
+        font-size: 12px;
+        font-weight: bold;
+        text-transform: uppercase; }
+    #lightbox.at-shop #poi .hours {
+      margin-left: 37px;
+      margin-top: 5px; }
+      #lightbox.at-shop #poi .hours table {
+        width: 80%; }
+      #lightbox.at-shop #poi .hours td {
+        font-size: 11px;
+        line-height: 14px;
+        padding: 1px 3px;
+        width: 33.33%; }
+        #lightbox.at-shop #poi .hours td.day {
+          font-weight: bold; }
+      #lightbox.at-shop #poi .hours .two-cols .day + td {
+        width: 66.67%; }
+    #lightbox.at-shop #poi .button {
+      margin-top: 8px; }
+  #lightbox.at-shop #map-canvas {
+    margin-left: 1%;
+    margin-right: 1%;
+    width: 98%;
+    height: 100%; }
+  #lightbox.at-247 {
+    min-height: 350px; }
+    #lightbox.at-247 h1 {
+      color: #c90200;
+      font-size: 16px; }
+      #lightbox.at-247 h1 .step {
+        background-color: #c90200;
+        border: 1px solid #981b1e;
+        border-radius: 5px;
+        color: #fff;
+        display: inline-block;
+        font-size: 20px;
+        line-height: 55px;
+        margin-right: 20px;
+        padding: 0 22px; }
+    #lightbox.at-247 h2 {
+      border-bottom: 1px solid #D2D2D2;
+      font-size: 14px;
+      margin: 20px 0;
+      padding-bottom: 5px; }
+    #lightbox.at-247 h3 {
+      font-size: 12px;
+      padding-bottom: 12px; }
+    #lightbox.at-247 p {
+      padding: 0 5% 12px 0; }
+    #lightbox.at-247 ul {
+      list-style: inside disc none; }
+      #lightbox.at-247 ul li {
+        padding-bottom: 2px; }
+    #lightbox.at-247 a, #lightbox.at-247 a:visited {
+      color: #009bda; }
+    #lightbox.at-247 #rc-form {
+      margin-bottom: 15px; }
+    #lightbox.at-247 #register {
+      display: none; }
+    #lightbox.at-247 #register-247 .row {
+      margin-bottom: 5px; }
+    #lightbox.at-247 #register-247 label {
+      float: left;
+      width: 30%; }
+    #lightbox.at-247 #register-247 input.error,
+    #lightbox.at-247 #register-247 select.error {
+      border-color: #c90200; }
+    #lightbox.at-247 #register-247 input[type="text"],
+    #lightbox.at-247 #register-247 select {
+      margin-right: 3px; }
+    #lightbox.at-247 #register-247 input[type="text"] {
+      padding-left: 5px;
+      width: 30%; }
+    #lightbox.at-247 #register-247 select {
+      width: 33.3%; }
+    #lightbox.at-247 #register-247 .infos {
+      font-style: italic;
+      margin-left: 5px; }
+    #lightbox.at-247 #register-247 sup {
+      color: #c90200; }
+    #lightbox.at-247 #register-247 .last {
+      margin-top: 5px;
+      padding-left: 30%; }
+      #lightbox.at-247 #register-247 .last input {
+        margin-left: 5px; }
+      #lightbox.at-247 #register-247 .last label {
+        float: none;
+        font-weight: normal; }
+    #lightbox.at-247 #rc-info-content {
+      display: none; }
+    #lightbox.at-247 img {
+      height: auto;
+      max-width: 100%;
+      width: auto; }
+
+@media screen and (min-width: 480px) {
+  .at-shop .col-xs-4 {
+    overflow-y: scroll; }
+  .at-shop .col-xs-4,
+  .at-shop .col-xs-8 {
+    height: 520px; } }
+@media screen and (max-width: 780px) {
+  .col-xs-4,
+  .col-xs-6,
+  .col-xs-8,
+  .col-xs-12 {
+    float: none;
+    height: auto;
+    width: 100%; }
+
+  #lightbox.at-shop #poi {
+    padding-right: 15px; }
+
+  #search-form input {
+    max-width: 24%; }
+
+  #map-canvas {
+    display: none; }
+
+  #rc-info {
+    display: block;
+    margin-left: 20px; } }

@@ -1,0 +1,288 @@
+/**
+ * 2014 Stigmi
+ *
+ * @author    Stigmi.eu <www.stigmi.eu>
+ * @copyright 2014 Stigmi
+ * @license   http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ */
+
+#bpost-settings {
+    fieldset {
+        a {
+            &,
+            &.active,
+            &.focus,
+            &.hover,
+            &.visited {
+                //color: #0000EE;
+                text-decoration: underline;
+            }
+        }
+
+        legend {
+            img {
+                height: 16px;
+            }
+        }
+
+        ul {
+            list-style: disc inside none;
+            padding-left: 0;
+        }
+    }
+
+    form {
+        margin-top: 20px;
+
+        label {
+            cursor: pointer;
+        }
+
+        select {
+            &.fixed-width-xs {
+                display: inline-block;
+            }
+        }
+
+        input[type="text"] {
+            max-width: 60%;
+        }
+
+        #account_api_url {
+            font-style: italic;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .control-label-bw {
+            float: left;
+            font-weight: bold;
+            padding: .2em .5em 0 0;
+            text-align: right;
+            text-shadow: 0 1px 0 #fff;
+            width: 250px;
+        }
+
+        .margin-form {
+            font-size: 100%;
+
+            label {
+                font-weight: normal;
+
+                img {
+                    margin-left: 3px;
+                    position: relative;
+                    top: -1px;
+                }
+            }
+        }
+
+        .radio {
+            label {
+                float: none;
+            }
+        }
+
+        .select-multiple {
+            margin-left: 260px;
+            width: 60%;
+
+            select {
+                height: 150px;
+                width: 100%;
+            }
+
+            img {
+                cursor: pointer;
+                padding: 10px 0;
+                vertical-align: middle;
+            }
+
+            #add_country,
+            #remove_country {
+                opacity: .3;
+            }
+        }
+
+        &.v1-4,
+        &.v1-5 {
+            .radio {
+                padding-bottom: 0;
+            }
+
+            .checkbox,
+            .switch {
+                label {
+                    float: none;
+                    width: auto;
+                }
+            }
+
+            .margin-form {
+                line-height: 20px;
+
+                & + .margin-form {
+                    margin-top: -.8em;
+                }
+            }
+        }
+
+        &.v1-4 {
+            .control-label-bw {
+                width: 200px;
+            }
+        }
+    }
+}
+
+#adminbpostorders-view {
+    .metadata-command .actions,
+    .box .box-actions,
+    .product .product-actions {
+        a {
+            &,
+            &:visited {
+                color: #268ccd;
+            }
+
+            img {
+                margin-right: 6px;
+            }
+
+            span {
+                text-decoration: underline;
+            }
+        }
+    }
+
+    .metadata-command {
+        .actions {
+            float: right;
+            margin: 12px 10px;
+            width: 364px;
+
+            a + a {
+                display: inline-block;
+                padding-left: 10px;
+            }
+        }
+    }
+    .box {
+        background-color: #ececec;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        margin-bottom: 12px;
+
+        .box-title {
+            color: #333;
+
+            img {
+                margin-right: 2px;
+            }
+        }
+
+        .box-content {
+            background-color: #f8f8f8;
+            border-top: 1px solid #ccc;
+            padding: 10px 12px;
+        }
+
+        .box-actions {
+            float: right;
+            margin: 12px 10px;
+            width: 364px;
+
+            a + a {
+                display: inline-block;
+                padding-left: 10px;
+            }
+        }
+    }
+
+    .product {
+        background-color: #fff;
+        margin: 5px 0;
+        padding: 15px 12px 10px;
+
+        .details {
+            dl {
+                margin-top: 2px;
+            }
+        }
+
+        .product-actions {
+            float: right;
+            margin-top: 1px;
+            width: 350px;
+
+            li {
+                margin-bottom: 5px;
+
+                &.disabled {
+                    &,
+                    a {
+                        color: #ccc;
+                        font-style: italic;
+                    }
+
+                    a {
+                        text-decoration: none;
+                    }
+                }
+            }
+
+            select {
+                font-size: 91%;
+                width: 40px;
+            }
+        }
+    }
+
+    li {
+        .product_image {
+            float: left;
+            margin-right: 15px;
+        }
+
+        dt {
+            margin-bottom: 3px;
+            font-weight: bold;
+        }
+
+        dd {
+            margin-left: 0;
+        }
+    }
+}
+
+#adminbpostorders {
+    #idTabs {
+        li {
+            display: inline-block;
+        }
+
+        a {
+            background-color: #f8f8f8;
+            border-color: #ccc;
+            border-style: solid;
+            border-width: 1px 1px 0;
+            border-radius: 3px 3px 0 0;
+            display: inline-block;
+            font-size: 14px;
+            line-height: 32px;
+            margin-right: 3px;
+            padding: 0 15px;
+
+            &.selected {
+                background-color: #49b2ff;
+                color: #fff;
+            }
+        }
+    }
+
+    .block_hidden_only_for_screen {
+        display: none;
+    }
+}
