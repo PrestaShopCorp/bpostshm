@@ -17,10 +17,10 @@
 			{if {$has_bulk_actions}}
 				{if isset($list_skip_actions.delete)}
 					{if !in_array($tr.$identifier, $list_skip_actions.delete)}
-						<input type="checkbox" name="{$table}Box[]" value="{$tr.$identifier}" class="noborder" />
+						<input type="checkbox" name="{$table|escape}Box[]" value="{$tr.$identifier|escape}" class="noborder" />
 					{/if}
 				{else}
-					<input type="checkbox" name="{$table}Box[]" value="{$tr.$identifier}" class="noborder" />
+					<input type="checkbox" name="{$table|escape}Box[]" value="{$tr.$identifier|escape}" class="noborder" />
 				{/if}
 			{/if}
 		</td>
@@ -47,7 +47,7 @@
 				{/if}
 				{if isset($tr.$key)}
 					{if isset($params.active)}
-						{$tr.$key}
+						{$tr.$key|strval}
 					{elseif isset($params.activeVisu)}
 						<img src="../img/admin/{if $tr.$key}enabled.gif{else}disabled.gif{/if}"
 						alt="{if $tr.$key}{l s='Enabled' mod='bpostshm'}{else}{l s='Disabled' mod='bpostshm'}{/if}" title="{if $tr.$key}{l s='Enabled' mod='bpostshm'}{else}{l s='Disabled' mod='bpostshm'}{/if}" />
@@ -61,37 +61,37 @@
 								<img src="../img/admin/{if $order_way == 'ASC'}up{else}down{/if}.gif" alt="{l s='Up' mod='bpostshm'}" title="{l s='Up' mod='bpostshm'}" />
 							</a>
 						{else}
-							{$tr.$key.position + 1}
+							{$tr.$key.position|intval + 1}
 						{/if}
 					{elseif isset($params.image)}
-						{$tr.$key}
+						{$tr.$key|strval}
 					{elseif isset($params.icon)}
 						{if is_array($tr[$key])}
-							<img src="../img/admin/{$tr[$key]['src']}" alt="{$tr[$key]['alt']}" title="{$tr[$key]['alt']}" />
+							<img src="../img/admin/{$tr[$key]['src']|strval}" alt="{$tr[$key]['alt']|strval}" title="{$tr[$key]['alt']|strval}" />
 						{/if}
 					{elseif isset($params.price)}
-						{$tr.$key}
+						{$tr.$key|strval}
 					{elseif isset($params.float)}
-						{$tr.$key}
+						{$tr.$key|strval}
 					{elseif isset($params.type) && $params.type == 'date'}
-						{$tr.$key}
+						{$tr.$key|strval}
 					{elseif isset($params.type) && $params.type == 'datetime'}
-						{$tr.$key}
+						{$tr.$key|strval}
 					{elseif isset($params.type) && $params.type == 'decimal'}
 						{$tr.$key|string_format:"%.2f"}
 					{elseif isset($params.type) && $params.type == 'percent'}
-						{$tr.$key} {l s='%' mod='bpostshm'}
+						{$tr.$key|strval} {l s='%' mod='bpostshm'}
 					{* If type is 'editable', an input is created *}
 					{elseif isset($params.type) && $params.type == 'editable' && isset($tr.id)}
-						<input type="text" name="{$key}_{$tr.id}" value="{$tr.$key|escape:'htmlall':'UTF-8'}" class="{$key}" />
+						<input type="text" name="{$key|strval}_{$tr.id|intval}" value="{$tr.$key|strval}" class="{$key|strval}" />
 					{elseif isset($params.callback)}
-						{$tr.$key}
+						{$tr.$key|strval}
 					{elseif $key == 'color'}
-						<div style="float: left; width: 18px; height: 12px; border: 1px solid #996633; background-color: {$tr.$key}; margin-right: 4px;"></div>
+						<div style="float: left; width: 18px; height: 12px; border: 1px solid #996633; background-color: {$tr.$key|strval}; margin-right: 4px;"></div>
 					{elseif isset($params.maxlength) && Tools::strlen($tr.$key) > $params.maxlength}
-						<span title="{$tr.$key|escape:'htmlall':'UTF-8'}">{$tr.$key|truncate:$params.maxlength:'...'|escape:'htmlall':'UTF-8'}</span>
+						<span title="{$tr.$key|strval}">{$tr.$key|truncate:$params.maxlength:'...'|escape:'htmlall':'UTF-8'}</span>
 					{else}
-						{$tr.$key|escape:'htmlall':'UTF-8'}
+						{$tr.$key|strval}
 					{/if}
 				{else}
 					{block name="default_field"}--{/block}
@@ -107,11 +107,11 @@
 		{/foreach}
 
 	{if $shop_link_type}
-		<td class="center" title="{$tr.shop_name}">
+		<td class="center" title="{$tr.shop_name|escape}">
 			{if isset($tr.shop_short_name)}
-				{$tr.shop_short_name}
+				{$tr.shop_short_name|escape}
 			{else}
-				{$tr.shop_name}
+				{$tr.shop_name|escape}
 			{/if}</td>
 	{/if}
 	{if $has_actions}
@@ -120,7 +120,7 @@
 				<option value="">-</option>
 				{foreach $actions AS $action}
 					{if isset($tr.$action)}
-						{$tr.$action}
+						{$tr.$action|strval}
 					{/if}
 				{/foreach}
 			</select>
@@ -129,6 +129,6 @@
 	</tr>
 {/foreach}
 {else}
-	<tr><td class="center" colspan="{count($fields_display) + 2}">{l s='No items found' mod='bpostshm'}</td></tr>
+	<tr><td class="center" colspan="{count($fields_display|intval) + 2}">{l s='No items found' mod='bpostshm'}</td></tr>
 {/if}
 </tbody>

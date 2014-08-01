@@ -275,13 +275,9 @@ class AdminBpostOrdersController extends ModuleAdminController
 				$this->jsonEncode($response);
 			}
 			elseif (Tools::getIsset('printLabels'.$this->table))
-			{
 				$this->jsonEncode(array('links' => $this->printLabels($reference)));
-			}
 			elseif (Tools::getIsset('markTreated'.$this->table))
-			{
 				$this->jsonEncode($this->markOrderTreated($reference));
-			}
 			elseif (Tools::getIsset('sendTTEmail'.$this->table))
 			{
 				$response = $this->sendTTEmail($reference);
@@ -478,7 +474,7 @@ class AdminBpostOrdersController extends ModuleAdminController
 			return false;
 		else
 			foreach ($this->boxes as $reference)
-				$labels[] =  $this->printLabels($reference);
+				$labels[] = $this->printLabels($reference);
 
 		if (!empty($labels))
 			$this->context->smarty->assign('labels', $labels);
@@ -551,9 +547,8 @@ WHERE
 	 */
 	public function getPrintIcon($reference = '')
 	{
-		if (empty($reference)) {
+		if (empty($reference))
 			return;
-		}
 
 		return '<img class="print" src="'._MODULE_DIR_.'bpostshm/views/img/icons/print.png"
 			 data-labels="'.Tools::safeOutput(self::$currentIndex.'&reference='.$reference.'&printLabels'.$this->table.'&token='.$this->token).'"/>';
@@ -565,9 +560,8 @@ WHERE
 	 */
 	public function getTTIcon($reference = '')
 	{
-		if (empty($reference)) {
+		if (empty($reference))
 			return;
-		}
 
 		$ps_order = Order::getByReference(Tools::substr($reference, 7))->getFirst();
 		$treated_status = Configuration::get('BPOST_ORDER_STATE_TREATED_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id));
@@ -612,9 +606,8 @@ WHERE
 	 */
 	public function displayAddLabelLink($token = null, $reference = '')
 	{
-		if (empty($reference)) {
+		if (empty($reference))
 			return;
-		}
 
 		$tpl_vars = array(
 			'action' => $this->l('Add label'),
@@ -639,9 +632,8 @@ WHERE
 	 */
 	public function displayPrintLabelsLink($token = null, $reference = '')
 	{
-		if (empty($reference)) {
+		if (empty($reference))
 			return;
-		}
 
 		$tpl_vars = array(
 			'action' => $this->l('Print labels'),
@@ -661,9 +653,8 @@ WHERE
 	 */
 	public function displayMarkTreatedLink($token = null, $reference = '')
 	{
-		if (empty($reference)) {
+		if (empty($reference))
 			return;
-		}
 
 		$tpl_vars = array(
 			'action' => $this->l('Mark treated'),
@@ -688,9 +679,8 @@ WHERE
 	 */
 	public function displaySendTTEmailLink($token = null, $reference = '')
 	{
-		if (empty($reference)) {
+		if (empty($reference))
 			return;
-		}
 
 		$tpl_vars = array(
 			'action' => $this->l('Send T&T e-mail'),
@@ -715,9 +705,8 @@ WHERE
 	 */
 	public function displayCreateRetourLink($token = null, $reference = '')
 	{
-		if (empty($reference)) {
+		if (empty($reference))
 			return;
-		}
 
 		$tpl_vars = array(
 			'action' => $this->l('Create retour'),
@@ -758,9 +747,8 @@ WHERE
 	 */
 	public function displayViewLink($token = null, $reference = '')
 	{
-		if (empty($reference)) {
+		if (empty($reference))
 			return;
-		}
 
 		$tpl_vars = array(
 			'action' => $this->l('Open order'),
@@ -782,9 +770,8 @@ WHERE
 	 */
 	public function displayCancelLink($token = null, $reference = '')
 	{
-		if (empty($reference)) {
+		if (empty($reference))
 			return;
-		}
 
 		$tpl_vars = array(
 			'action' => $this->l('Cancel order'),
@@ -808,9 +795,8 @@ WHERE
 	 */
 	private function markOrderTreated($reference = '')
 	{
-		if (empty($reference)) {
+		if (empty($reference))
 			return false;
-		}
 
 		$pdf_dir = _PS_MODULE_DIR_.'bpostshm/pdf/'.$reference;
 		if (!is_dir($pdf_dir) || !opendir($pdf_dir))
@@ -852,9 +838,8 @@ WHERE
 	 */
 	private function sendTTEmail($reference = '')
 	{
-		if (empty($reference)) {
+		if (empty($reference))
 			return false;
-		}
 
 		$pdf_dir = _PS_MODULE_DIR_.'bpostshm/pdf/'.$reference;
 		if (!is_dir($pdf_dir) || !opendir($pdf_dir))
@@ -958,9 +943,8 @@ WHERE
 	{
 		$links = array();
 
-		if (empty($reference)) {
+		if (empty($reference))
 			return $links;
-		}
 
 		$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
 		$do_not_open = array('.', '..', 'labels');

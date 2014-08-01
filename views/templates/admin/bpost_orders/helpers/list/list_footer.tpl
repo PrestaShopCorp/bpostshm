@@ -18,7 +18,7 @@
 	</tr>
 </table>
 {if !$simple_header}
-	<input type="hidden" name="token" value="{$token}" />
+	<input type="hidden" name="token" value="{$token|escape}" />
 	</form>
 {/if}
 
@@ -30,12 +30,9 @@
 				tr_list = [];
 
 			$table.find('td.order_state').each(function(i, td) {
-				var $td 	= $(td);
-
-				if ($(td).text().trim() === '{$treated_status}')
-				{
+				var $td = $(td);
+				if ($td.text().trim() == {$treated_status|intval})
 					tr_list.push($td.closest('tr'));
-				}
 			});
 
 			if (tr_list.length)
