@@ -14,7 +14,7 @@
 		$button 			= $('<a id="bpostHandler" class="button" />'),
 		$carrierInputs,
 		l_s = {
-			"Configure bpost shipping" : "{l s='Configure bpost shipping' mod='bpostshm' js=1}",
+			"Select delivery point" : "{l s='Select delivery point' mod='bpostshm' js=1}",
 			"Edit bpost shipping configuration" : "{l s='Edit bpost shipping configuration' mod='bpostshm' js=1}",
 			"You must agree to the terms of service before continuing." : "{l s='You must agree to the terms of service before continuing.' mod='bpostshm' js=1}"
 		};
@@ -69,7 +69,7 @@
 	function myButton($button_, content)
 	{
 		if ('undefined' === typeof content)
-			content = l_s['Configure bpost shipping'];
+			content = l_s['Select delivery point'];
 
 		$button_.attr('title', content);
 
@@ -108,8 +108,8 @@
 			myButton($button_, l_s['Edit bpost shipping configuration']);
 
 		$button_.data('href', href)
-			.fancybox(fancyboxParams)
-			.appendTo($container);
+			.fancybox(fancyboxParams);
+		$container.append('<br />', $button);
 
 		$('[name="processCarrier"]').attr('disabled', true).css('opacity', .3);
 	}

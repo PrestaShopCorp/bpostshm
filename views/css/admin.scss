@@ -138,9 +138,7 @@
 }
 
 #adminbpostorders-view {
-    .metadata-command .actions,
-    .box .box-actions,
-    .product .product-actions {
+    .metadata-command {
         a {
             &,
             &:visited {
@@ -155,13 +153,11 @@
                 text-decoration: underline;
             }
         }
-    }
 
-    .metadata-command {
         .actions {
             float: right;
             margin: 12px 10px;
-            width: 364px;
+            width: 25%;
 
             a + a {
                 display: inline-block;
@@ -169,6 +165,7 @@
             }
         }
     }
+
     .box {
         background-color: #ececec;
         border: 1px solid #ccc;
@@ -177,82 +174,6 @@
 
         .box-title {
             color: #333;
-
-            img {
-                margin-right: 2px;
-            }
-        }
-
-        .box-content {
-            background-color: #f8f8f8;
-            border-top: 1px solid #ccc;
-            padding: 10px 12px;
-        }
-
-        .box-actions {
-            float: right;
-            margin: 12px 10px;
-            width: 364px;
-
-            a + a {
-                display: inline-block;
-                padding-left: 10px;
-            }
-        }
-    }
-
-    .product {
-        background-color: #fff;
-        margin: 5px 0;
-        padding: 15px 12px 10px;
-
-        .details {
-            dl {
-                margin-top: 2px;
-            }
-        }
-
-        .product-actions {
-            float: right;
-            margin-top: 1px;
-            width: 350px;
-
-            li {
-                margin-bottom: 5px;
-
-                &.disabled {
-                    &,
-                    a {
-                        color: #ccc;
-                        font-style: italic;
-                    }
-
-                    a {
-                        text-decoration: none;
-                    }
-                }
-            }
-
-            select {
-                font-size: 91%;
-                width: 40px;
-            }
-        }
-    }
-
-    li {
-        .product_image {
-            float: left;
-            margin-right: 15px;
-        }
-
-        dt {
-            margin-bottom: 3px;
-            font-weight: bold;
-        }
-
-        dd {
-            margin-left: 0;
         }
     }
 }

@@ -8,13 +8,7 @@
  * @license   BSD License
  */
 
-namespace TijsVerkoyen\Bpost\Bpost;
-
-use TijsVerkoyen\Bpost\Exception;
-use TijsVerkoyen\Bpost\Bpost\Order\Box;
-use TijsVerkoyen\Bpost\Bpost\Order\Line;
-
-class Order
+class TijsVerkoyenBpostbpostOrder
 {
 	/**
 	 * Order reference: unique ID used in your web shop to assign to an order.
@@ -79,9 +73,9 @@ class Order
 	/**
 	 * Add a box
 	 *
-	 * @param Box $box
+	 * @param TijsVerkoyenBpostBpostOrderBox $box
 	 */
-	public function addBox(Box $box)
+	public function addBox(TijsVerkoyenBpostBpostOrderBox $box)
 	{
 		$this->boxes[] = $box;
 	}
@@ -121,9 +115,9 @@ class Order
 	/**
 	 * Add an order line
 	 *
-	 * @param Line $line
+	 * @param TijsVerkoyenBpostBpostOrderLine $line
 	 */
-	public function addLine(Line $line)
+	public function addLine(TijsVerkoyenBpostBpostOrderLine $line)
 	{
 		$this->lines[] = $line;
 	}
@@ -208,7 +202,7 @@ class Order
 		$lines = $this->getLines();
 		if (!empty($lines))
 			foreach ($lines as $line)
-				/** @var $line \TijsVerkoyen\Bpost\Bpost\Order\Line */
+				/** @var $line TijsVerkoyenBpostBpostOrderLine */
 				$order->appendChild(
 					$line->toXML($document, 'tns')
 				);
@@ -216,7 +210,7 @@ class Order
 		$boxes = $this->getBoxes();
 		if (!empty($boxes))
 			foreach ($boxes as $box)
-				/** @var $box \TijsVerkoyen\Bpost\Bpost\Order\Box */
+				/** @var $box TijsVerkoyenBpostBpostOrderBox */
 				$order->appendChild(
 					$box->toXML($document, 'tns')
 				);
@@ -226,25 +220,25 @@ class Order
 
 	/**
 	 * @param  \SimpleXMLElement $xml
-	 * @return Order
-	 * @throws Exception
+	 * @return TijsVerkoyenBpostbpostOrder
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public static function createFromXML(\SimpleXMLElement $xml)
 	{
 		// @todo work with classmaps ...
 		if (!isset($xml->reference))
-			throw new Exception('No reference found.');
+			throw new TijsVerkoyenBpostException('No reference found.');
 
-		$order = new Order((string)$xml->reference);
+		$order = new TijsVerkoyenBpostbpostOrder((string)$xml->reference);
 
 		if (isset($xml->costCenter) && $xml->costCenter != '')
 			$order->setCostCenter((string)$xml->costCenter);
 		if (isset($xml->orderLine))
 			foreach ($xml->orderLine as $order_line)
-				$order->addLine(Line::createFromXML($order_line));
+				$order->addLine(TijsVerkoyenBpostBpostOrderLine::createFromXML($order_line));
 		if (isset($xml->box))
 			foreach ($xml->box as $box)
-				$order->addBox(Box::createFromXML($box));
+				$order->addBox(TijsVerkoyenBpostBpostOrderBox::createFromXML($box));
 
 		return $order;
 	}

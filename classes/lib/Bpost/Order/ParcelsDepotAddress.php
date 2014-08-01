@@ -8,9 +8,7 @@
  * @license   BSD License
  */
 
-namespace TijsVerkoyen\Bpost\Bpost\Order;
-
-class ParcelsDepotAddress extends Address
+class TijsVerkoyenBpostBpostOrderParcelsDepotAddress extends TijsVerkoyenBpostBpostOrderAddress
 {
 	const TAG_NAME = 'parcelsDepotAddress';
 }

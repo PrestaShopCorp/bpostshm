@@ -8,11 +8,7 @@
  * @license   BSD License
  */
 
-namespace TijsVerkoyen\Bpost\Bpost\Order;
-
-use TijsVerkoyen\Bpost\Exception;
-
-class Address
+class TijsVerkoyenBpostBpostOrderAddress
 {
 	const TAG_NAME = 'common:address';
 
@@ -48,13 +44,13 @@ class Address
 
 	/**
 	 * @param string $box
-	 * @throws Exception
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public function setBox($box)
 	{
 		$length = 8;
 		if (mb_strlen($box) > $length)
-			throw new Exception(sprintf('Invalid length, maximum is %1$s.', $length));
+			throw new TijsVerkoyenBpostException(sprintf('Invalid length, maximum is %1$s.', $length));
 		$this->box = $box;
 	}
 
@@ -68,13 +64,13 @@ class Address
 
 	/**
 	 * @param string $country_code
-	 * @throws Exception
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public function setCountryCode($country_code)
 	{
 		$length = 2;
 		if (mb_strlen($country_code) > $length)
-			throw new Exception(sprintf('Invalid length, maximum is %1$s.', $length));
+			throw new TijsVerkoyenBpostException(sprintf('Invalid length, maximum is %1$s.', $length));
 		$this->country_code = \Tools::strtoupper($country_code);
 	}
 
@@ -88,13 +84,13 @@ class Address
 
 	/**
 	 * @param string $locality
-	 * @throws Exception
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public function setLocality($locality)
 	{
 		$length = 40;
 		if (mb_strlen($locality) > $length)
-			throw new Exception(sprintf('Invalid length, maximum is %1$s.', $length));
+			throw new TijsVerkoyenBpostException(sprintf('Invalid length, maximum is %1$s.', $length));
 		$this->locality = $locality;
 	}
 
@@ -108,13 +104,13 @@ class Address
 
 	/**
 	 * @param string $number
-	 * @throws Exception
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public function setNumber($number)
 	{
 		$length = 8;
 		if (mb_strlen($number) > $length)
-			throw new Exception(sprintf('Invalid length, maximum is %1$s.', $length));
+			throw new TijsVerkoyenBpostException(sprintf('Invalid length, maximum is %1$s.', $length));
 		$this->number = $number;
 	}
 
@@ -128,13 +124,13 @@ class Address
 
 	/**
 	 * @param string $postal_code
-	 * @throws Exception
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public function setPostalCode($postal_code)
 	{
 		$length = 40;
 		if (mb_strlen($postal_code) > $length)
-			throw new Exception(sprintf('Invalid length, maximum is %1$s.', $length));
+			throw new TijsVerkoyenBpostException(sprintf('Invalid length, maximum is %1$s.', $length));
 
 		$this->postal_code = $postal_code;
 	}
@@ -149,13 +145,13 @@ class Address
 
 	/**
 	 * @param string $street_name
-	 * @throws Exception
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public function setStreetName($street_name)
 	{
 		$length = 40;
 		if (mb_strlen($street_name) > $length)
-			throw new Exception(sprintf('Invalid length, maximum is %1$s.', $length));
+			throw new TijsVerkoyenBpostException(sprintf('Invalid length, maximum is %1$s.', $length));
 		$this->street_name = $street_name;
 	}
 
@@ -282,11 +278,11 @@ class Address
 
 	/**
 	 * @param  \SimpleXMLElement $xml
-	 * @return Address
+	 * @return TijsVerkoyenBpostBpostOrderAddress
 	 */
 	public static function createFromXML(\SimpleXMLElement $xml)
 	{
-		$address = new Address();
+		$address = new TijsVerkoyenBpostBpostOrderAddress();
 
 		if (isset($xml->streetName) && $xml->streetName != '')
 			$address->setStreetName((string)$xml->streetName);

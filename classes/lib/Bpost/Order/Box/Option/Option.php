@@ -8,9 +8,7 @@
  * @license   BSD License
  */
 
-namespace TijsVerkoyen\Bpost\Bpost\Order\Box\Option;
-
-class Option
+class TijsVerkoyenBpostBpostOrderBoxOption
 {
 
 }

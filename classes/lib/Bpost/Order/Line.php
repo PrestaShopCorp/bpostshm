@@ -8,9 +8,7 @@
  * @license   BSD License
  */
 
-namespace TijsVerkoyen\Bpost\Bpost\Order;
-
-class Line
+class TijsVerkoyenBpostBpostOrderLine
 {
 	/**
 	 * @var string
@@ -111,11 +109,11 @@ class Line
 
 	/**
 	 * @param  \SimpleXMLElement $xml
-	 * @return Line
+	 * @return TijsVerkoyenBpostBpostOrderLine
 	 */
 	public static function createFromXML(\SimpleXMLElement $xml)
 	{
-		$line = new Line();
+		$line = new TijsVerkoyenBpostBpostOrderLine();
 		if (isset($xml->text) && $xml->text != '')
 			$line->setText((string)$xml->text);
 		if (isset($xml->nbOfItems) && $xml->nbOfItems != '')

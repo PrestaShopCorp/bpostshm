@@ -8,9 +8,7 @@
  * @license   BSD License
  */
 
-namespace TijsVerkoyen\Bpost\Geo6;
-
-class Service
+class TijsVerkoyenBpostGeo6Service
 {
 	/**
 	 * @var string
@@ -77,11 +75,11 @@ class Service
 
 	/**
 	 * @param  \SimpleXMLElement $xml
-	 * @return Service
+	 * @return TijsVerkoyenBpostGeo6Service
 	 */
 	public static function createFromXML(\SimpleXMLElement $xml)
 	{
-		$service = new Service();
+		$service = new TijsVerkoyenBpostGeo6Service();
 		$service->setName((string)$xml);
 
 		if (isset($xml['category']))

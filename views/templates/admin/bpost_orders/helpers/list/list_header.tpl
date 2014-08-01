@@ -77,23 +77,23 @@
 							<input type="image" src="../img/admin/list-prev2.gif" onclick="getE('submitFilter{$list_id}').value=1"/>&nbsp;
 							<input type="image" src="../img/admin/list-prev.gif" onclick="getE('submitFilter{$list_id}').value={$page - 1}"/>
 						{/if}
-						{l s='Page'} <b>{$page}</b> / {$total_pages}
+						{l s='Page' mod='bpostshm'} <b>{$page}</b> / {$total_pages}
 						{if $page < $total_pages}
 							<input type="image" src="../img/admin/list-next.gif" onclick="getE('submitFilter{$list_id}').value={$page + 1}"/>&nbsp;
 							<input type="image" src="../img/admin/list-next2.gif" onclick="getE('submitFilter{$list_id}').value={$total_pages}"/>
 						{/if}
-						| {l s='Display'}
+						| {l s='Display' mod='bpostshm'}
 						<select name="{$list_id}_pagination" onchange="submit()">
 							{* Choose number of results per page *}
 							{foreach $pagination AS $value}
 								<option value="{$value|intval}"{if $selected_pagination == $value && $selected_pagination != NULL} selected="selected"{elseif $selected_pagination == NULL && $value == $pagination[1]} selected="selected2"{/if}>{$value|intval}</option>
 							{/foreach}
 						</select>
-						/ {$list_total} {l s='result(s)'}
+						/ {$list_total} {l s='result(s)' mod='bpostshm'}
 					</span>
 					<span style="float: right;">
-						<input type="submit" id="submitFilterButton{$list_id}" name="submitFilter" value="{l s='Filter'}" class="button" />					
-						<input type="submit" name="submitReset{$list_id}" value="{l s='Reset'}" class="button" />
+						<input type="submit" id="submitFilterButton{$list_id}" name="submitFilter" value="{l s='Filter' mod='bpostshm'}" class="button" />
+						<input type="submit" name="submitReset{$list_id}" value="{l s='Reset' mod='bpostshm'}" class="button" />
 					</span>
 					<span class="clear"></span>
 				</td>
@@ -143,15 +143,15 @@
 							{if $shop_link_type}
 								<th>
 									{if $shop_link_type == 'shop'}
-										{l s='Shop'}
+										{l s='Shop' mod='bpostshm'}
 									{else}
-										{l s='Group shop'}
+										{l s='Group shop' mod='bpostshm'}
 									{/if}
 									<br />&nbsp;
 								</th>
 							{/if}
 							{if $has_actions}
-								<th class="center">{l s='Actions'}{if !$simple_header}<br />&nbsp;{/if}</th>
+								<th class="center">{l s='Actions' mod='bpostshm'}{if !$simple_header}<br />&nbsp;{/if}</th>
 							{/if}
 						</tr>
  						{if !$simple_header}
@@ -171,12 +171,12 @@
 										{if $params.type == 'bool'}
 											<select onchange="$('#submitFilterButton{$list_id}').focus();$('#submitFilterButton{$list_id}').click();" name="{$list_id}Filter_{$key}">
 												<option value="">-</option>
-												<option value="1"{if $params.value == 1} selected="selected"{/if}>{l s='Yes'}</option>
-												<option value="0"{if $params.value == 0 && $params.value != ''} selected="selected"{/if}>{l s='No'}</option>
+												<option value="1"{if $params.value == 1} selected="selected"{/if}>{l s='Yes' mod='bpostshm'}</option>
+												<option value="0"{if $params.value == 0 && $params.value != ''} selected="selected"{/if}>{l s='No' mod='bpostshm'}</option>
 											</select>
 										{elseif $params.type == 'date' || $params.type == 'datetime'}
-											{l s='From'} <input type="text" class="filter datepicker" id="{$params.id_date}_0" name="{$params.name_date}[0]" value="{if isset($params.value.0)}{$params.value.0}{/if}"{if isset($params.width)} style="width:70px"{/if}/><br />
-											{l s='To'} <input type="text" class="filter datepicker" id="{$params.id_date}_1" name="{$params.name_date}[1]" value="{if isset($params.value.1)}{$params.value.1}{/if}"{if isset($params.width)} style="width:70px"{/if}/>
+											{l s='From' mod='bpostshm'} <input type="text" class="filter datepicker" id="{$params.id_date}_0" name="{$params.name_date}[0]" value="{if isset($params.value.0)}{$params.value.0}{/if}"{if isset($params.width)} style="width:70px"{/if}/><br />
+											{l s='To' mod='bpostshm'} <input type="text" class="filter datepicker" id="{$params.id_date}_1" name="{$params.name_date}[1]" value="{if isset($params.value.1)}{$params.value.1}{/if}"{if isset($params.width)} style="width:70px"{/if}/>
 										{elseif $params.type == 'select'}
 											{if isset($params.filter_key)}
 												<select onchange="$('#submitFilterButton{$list_id}').focus();$('#submitFilterButton{$list_id}').click();" name="{$list_id}Filter_{$params.filter_key}" {if isset($params.width)} style="width:{$params.width}px"{/if}>

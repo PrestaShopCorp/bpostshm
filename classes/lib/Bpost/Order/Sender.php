@@ -8,19 +8,17 @@
  * @license   BSD License
  */
 
-namespace TijsVerkoyen\Bpost\Bpost\Order;
-
-class Sender extends Customer
+class TijsVerkoyenBpostBpostOrderSender extends TijsVerkoyenBpostBpostOrderCustomer
 {
 	const TAG_NAME = 'sender';
 
 	/**
 	 * @param  \SimpleXMLElement $xml
-	 * @return Sender
+	 * @return TijsVerkoyenBpostBpostOrderSender
 	 */
 	public static function createFromXML(\SimpleXMLElement $xml)
 	{
-		$sender = new Sender();
+		$sender = new TijsVerkoyenBpostBpostOrderSender();
 		$sender = parent::createFromXMLHelper($xml, $sender);
 
 		return $sender;

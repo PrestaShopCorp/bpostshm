@@ -72,7 +72,7 @@ class Autoloader
 	 */
 	public function loadPS14($class_name)
 	{
-		if (function_exists('smartyAutoload') AND smartyAutoload($class_name))
+		if (function_exists('smartyAutoload') && smartyAutoload($class_name))
 			return true;
 
 		$class_name = str_replace(chr(0), '', $class_name);
@@ -82,8 +82,8 @@ class Autoloader
 		$file_in_classes = file_exists($class_dir.$class_name.'.php');
 
 		// This is a Core class and its name is the same as its declared name
-		if (substr($class_name, -4) == 'Core')
-			require_once($class_dir.substr($class_name, 0, -4).'.php');
+		if (Tools::substr($class_name, -4) == 'Core')
+			require_once($class_dir.Tools::substr($class_name, 0, -4).'.php');
 		else
 		{
 			if ($file_in_override && $file_in_classes)
@@ -94,17 +94,17 @@ class Autoloader
 			elseif (!$file_in_override && $file_in_classes)
 			{
 				require_once($class_dir.str_replace(chr(0), '', $class_name).'.php');
-				$class_infos = new ReflectionClass($class_name.((interface_exists($class_name, false) or class_exists($class_name, false)) ? '' : 'Core'));
-				if (!$class_infos->isInterface() && substr($class_infos->name, -4) == 'Core')
+				$class_infos = new ReflectionClass($class_name.((interface_exists($class_name, false) || class_exists($class_name, false)) ? '' : 'Core'));
+				if (!$class_infos->isInterface() && Tools::substr($class_infos->name, -4) == 'Core')
 					eval(($class_infos->isAbstract() ? 'abstract ' : '').'class '.$class_name.' extends '.$class_name.'Core {}');
 			}
 			elseif ($file_in_override && !$file_in_classes)
 				require_once($override_dir.$class_name.'.php');
 			else
 			{
-				$class_name = explode("\\", $class_name);
+				$class_name = explode('\\', $class_name);
 				array_splice($class_name, 0, 2);
-				require_once(_PS_MODULE_DIR_.'bpostshm/classes/lib/'.implode("/", $class_name).'.php');
+				require_once(_PS_MODULE_DIR_.'bpostshm/classes/lib/'.implode('/', $class_name).'.php');
 			}
 		}
 	}
@@ -150,16 +150,10 @@ class Autoloader
 				else if (Tools::substr($file, -4) == '.php')
 				{
 					$content = Tools::file_get_contents($path.$file);
-					$pattern = '#\W[abstract\s+]?(class|interface)\s+(?P<classname>'.basename($file, '.php').')[Core]?
-						(\s+extends|implements)?\s+([\\\\]?[a-z]+)?\W?\{#ix';
+					$pattern = '#(class|interface)\s+(?P<classname>[a-zA-Z0-9]+)(\w|\s|\\\)+\{#ix';
 					if (preg_match($pattern, $content, $m) && !empty($m['classname']))
-					{
-						$key = $m['classname'];
-						$pattern = '#(namespace)\s+(?P<namespace>.*);+#i';
-						if (preg_match($pattern, $content, $n) && !empty($n['namespace']))
-							$key = $n['namespace'].'\\'.$key;
-						$classes[$key] = $path.$file;
-					}
+						if (strpos($m['classname'], basename($file, '.php')))
+							$classes[$m['classname']] = $path.$file;
 				}
 			}
 		}

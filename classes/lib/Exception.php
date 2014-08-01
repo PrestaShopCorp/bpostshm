@@ -8,8 +8,6 @@
  * @license   BSD License
  */
 
-namespace TijsVerkoyen\Bpost;
-
-class Exception extends \Exception
+class TijsVerkoyenBpostException extends \Exception
 {
 }

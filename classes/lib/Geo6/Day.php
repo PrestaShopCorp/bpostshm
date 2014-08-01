@@ -8,11 +8,7 @@
  * @license   BSD License
  */
 
-namespace TijsVerkoyen\Bpost\Geo6;
-
-use TijsVerkoyen\Bpost\Exception;
-
-class Day
+class TijsVerkoyenBpostGeo6Day
 {
 	/**
 	 * @var string
@@ -112,7 +108,7 @@ class Day
 				return 7;
 		}
 
-		throw new Exception('Invalid day.');
+		throw new TijsVerkoyenBpostException('Invalid day.');
 	}
 
 	/**
@@ -149,11 +145,11 @@ class Day
 
 	/**
 	 * @param  \SimpleXMLElement $xml
-	 * @return Day
+	 * @return TijsVerkoyenBpostGeo6Day
 	 */
 	public static function createFromXML(\SimpleXMLElement $xml)
 	{
-		$day = new Day();
+		$day = new TijsVerkoyenBpostGeo6Day();
 		$day->setDay($xml->getName());
 
 		if (isset($xml->AMOpen) && $xml->AMOpen != '')

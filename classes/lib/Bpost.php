@@ -8,13 +8,7 @@
  * @license   BSD License
  */
 
-namespace TijsVerkoyen\Bpost;
-
-use TijsVerkoyen\Bpost\Bpost\Label;
-use TijsVerkoyen\Bpost\Bpost\Order;
-use TijsVerkoyen\Bpost\Bpost\Order\Box;
-
-class Bpost
+class TijsVerkoyenBpostBpost
 {
 	/* URL for the api */
 	const API_URL = 'https://api.bpost.be/services/shm';
@@ -95,7 +89,7 @@ class Bpost
 	 * @param  SimpleXMLElement $item   The item to decode.
 	 * @param  array			$return Just a placeholder.
 	 * @return mixed
-	 * @throws Exception
+	 * @throws TijsVerkoyenBpostException
 	 */
 	private static function decodeResponse($item, $return = null)
 	{
@@ -140,7 +134,7 @@ class Bpost
 				}
 			}
 		else
-			throw new Exception('Invalid item.');
+			throw new TijsVerkoyenBpostException('Invalid item.');
 
 		return $return;
 	}
@@ -154,7 +148,7 @@ class Bpost
 	 * @param  string $method	The HTTP-method to use.
 	 * @param  bool   $expect_xml Do we expect XML?
 	 * @return mixed
-	 * @throws Exception
+	 * @throws TijsVerkoyenBpostException
 	 */
 	private function doCall($url, $body = null, $headers = array(), $method = 'GET', $expect_xml = true)
 	{
@@ -196,7 +190,7 @@ class Bpost
 
 		// error?
 		if ($error_number != '')
-			throw new Exception($error_message, $error_number);
+			throw new TijsVerkoyenBpostException($error_message, $error_number);
 
 		// valid HTTP-code
 		if (!in_array($headers['http_code'], array(0, 200, 201)))
@@ -212,7 +206,7 @@ class Bpost
 				$code = isset($xml->code) ? (int)$xml->code : null;
 
 				// throw exception
-				throw new Exception($message, $code);
+				throw new TijsVerkoyenBpostException($message, $code);
 			}
 
 			if ((isset($headers['content_type']) && substr_count($headers['content_type'], 'text/plain') > 0) || ($headers['http_code'] == '404'))
@@ -220,7 +214,7 @@ class Bpost
 			else
 				$message = 'Invalid response.';
 
-			throw new Exception($message, $headers['http_code']);
+			throw new TijsVerkoyenBpostException($message, $headers['http_code']);
 		}
 
 		// if we don't expect XML we can return the content here
@@ -323,10 +317,10 @@ class Bpost
 	/**
 	 * Creates a new order. If an order with the same orderReference already exists
 	 *
-	 * @param  Order $order
+	 * @param  TijsVerkoyenBpostbpostOrder $order
 	 * @return bool
 	 */
-	public function createOrReplaceOrder(Order $order)
+	public function createOrReplaceOrder(TijsVerkoyenBpostbpostOrder $order)
 	{
 		$url = '/orders';
 
@@ -360,7 +354,7 @@ class Bpost
 	 * Fetch an order
 	 *
 	 * @param $reference
-	 * @return Order
+	 * @return TijsVerkoyenBpostbpostOrder
 	 */
 	public function fetchOrder($reference)
 	{
@@ -375,7 +369,7 @@ class Bpost
 			$headers
 		);
 
-		return Order::createFromXML($xml);
+		return TijsVerkoyenBpostbpostOrder::createFromXML($xml);
 	}
 
 	/**
@@ -384,16 +378,16 @@ class Bpost
 	 * @param string $reference	The reference for an order
 	 * @param string $status	The new status, allowed values are: OPEN, PENDING, CANCELLED, COMPLETED or ON-HOLD
 	 * @return bool
-	 * @throws Exception
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public function modifyOrderStatus($reference, $status)
 	{
 		$status = \Tools::strtoupper($status);
-		if (!in_array($status, Box::getPossibleStatusValues()))
-			throw new Exception(
+		if (!in_array($status, TijsVerkoyenBpostBpostOrderBox::getPossibleStatusValues()))
+			throw new TijsVerkoyenBpostException(
 				sprintf(
 					'Invalid value, possible values are: %1$s.',
-					implode(', ', Box::getPossibleStatusValues())
+					implode(', ', TijsVerkoyenBpostBpostOrderBox::getPossibleStatusValues())
 				)
 			);
 
@@ -448,13 +442,13 @@ class Bpost
 	 * @param  bool   $with_return_labels
 	 * @param  bool   $as_pdf
 	 * @return array
-	 * @throws Exception
+	 * @throws TijsVerkoyenBpostException
 	 */
 	protected function getLabel($url, $format = 'A6', $with_return_labels = false, $as_pdf = false)
 	{
 		$format = \Tools::strtoupper($format);
 		if (!in_array($format, self::getPossibleLabelFormatValues()))
-			throw new Exception(
+			throw new TijsVerkoyenBpostException(
 				sprintf(
 					'Invalid value, possible values are: %1$s.',
 					implode(', ', self::getPossibleLabelFormatValues())
@@ -484,7 +478,7 @@ class Bpost
 
 		if (isset($xml->label))
 			foreach ($xml->label as $label)
-				$labels[] = Label::createFromXML($label);
+				$labels[] = TijsVerkoyenBpostBpostLabel::createFromXML($label);
 
 		return $labels;
 	}
@@ -535,13 +529,13 @@ class Bpost
 	 * @param  bool   $with_return_labels Should return labels be returned?
 	 * @param  bool   $as_pdf			Should we retrieve the PDF-version instead of PNG
 	 * @return array
-	 * @throws Exception
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public function createLabelInBulkForOrders(array $references, $format = 'A6', $with_return_labels = false, $as_pdf = false)
 	{
 		$format = \Tools::strtoupper($format);
 		if (!in_array($format, self::getPossibleLabelFormatValues()))
-			throw new Exception(
+			throw new TijsVerkoyenBpostException(
 				sprintf(
 					'Invalid value, possible values are: %1$s.',
 					implode(', ', self::getPossibleLabelFormatValues())
@@ -586,7 +580,7 @@ class Bpost
 
 		if (isset($xml->label))
 			foreach ($xml->label as $label)
-				$labels[] = Label::createFromXML($label);
+				$labels[] = TijsVerkoyenBpostBpostLabel::createFromXML($label);
 
 		return $labels;
 	}

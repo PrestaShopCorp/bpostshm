@@ -8,13 +8,7 @@
  * @license   BSD License
  */
 
-namespace TijsVerkoyen\Bpost\Bpost\Order\Box;
-
-use TijsVerkoyen\Bpost\Bpost\Order\PugoAddress;
-use TijsVerkoyen\Bpost\Exception;
-use TijsVerkoyen\Bpost\Bpost\Order\Box\Option\Messaging;
-
-class AtBpost extends National
+class TijsVerkoyenBpostBpostOrderBoxAtBpost extends TijsVerkoyenBpostBpostOrderBoxNational
 {
 	/**
 	 * @var string
@@ -32,7 +26,7 @@ class AtBpost extends National
 	private $pugo_name;
 
 	/**
-	 * @var \TijsVerkoyen\Bpost\Bpost\Order\PugoAddress;
+	 * @var TijsVerkoyenBpostBpostOrderPugoAddress;
 	 */
 	private $pugo_address;
 
@@ -48,12 +42,12 @@ class AtBpost extends National
 
 	/**
 	 * @param string $product Possible values are: bpack@bpost
-	 * @throws Exception
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public function setProduct($product)
 	{
 		if (!in_array($product, self::getPossibleProductValues()))
-			throw new Exception(
+			throw new TijsVerkoyenBpostException(
 				sprintf(
 					'Invalid value, possible values are: %1$s.',
 					implode(', ', self::getPossibleProductValues())
@@ -74,7 +68,7 @@ class AtBpost extends National
 	}
 
 	/**
-	 * @param \TijsVerkoyen\Bpost\Bpost\Order\PugoAddress $pugo_address
+	 * @param TijsVerkoyenBpostBpostOrderPugoAddress $pugo_address
 	 */
 	public function setPugoAddress($pugo_address)
 	{
@@ -82,7 +76,7 @@ class AtBpost extends National
 	}
 
 	/**
-	 * @return \TijsVerkoyen\Bpost\Bpost\Order\PugoAddress
+	 * @return TijsVerkoyenBpostBpostOrderPugoAddress
 	 */
 	public function getPugoAddress()
 	{
@@ -220,12 +214,12 @@ class AtBpost extends National
 
 	/**
 	 * @param  \SimpleXMLElement $xml
-	 * @return AtBpost
-	 * @throws Exception
+	 * @return TijsVerkoyenBpostBpostOrderBoxAtBpost
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public static function createFromXML(\SimpleXMLElement $xml)
 	{
-		$at_bpost = new AtBpost();
+		$at_bpost = new TijsVerkoyenBpostBpostOrderBoxAtBpost();
 
 		if (isset($xml->atBpost->product) && $xml->atBpost->product != '')
 			$at_bpost->setProduct((string)$xml->atBpost->product);
@@ -242,12 +236,12 @@ class AtBpost extends National
 						'infoReminder',
 						'keepMeInformed',
 					)))
-					$option = Messaging::createFromXML($option_data);
+					$option = TijsVerkoyenBpostBpostOrderBoxOptionMessaging::createFromXML($option_data);
 				else
 				{
-					$class_name = '\\TijsVerkoyen\\Bpost\\Bpost\\Order\\Box\\Option\\'.\Tools::ucfirst($option_data->getName());
+					$class_name = 'TijsVerkoyenBpostBpostOrderBoxOption'.\Tools::ucfirst($option_data->getName());
 					if (!method_exists($class_name, 'createFromXML'))
-						throw new Exception('Not Implemented');
+						throw new TijsVerkoyenBpostException('Not Implemented');
 					$option = call_user_func(
 						array($class_name, 'createFromXML'),
 						$option_data
@@ -272,7 +266,7 @@ class AtBpost extends National
 				'http://schema.post.be/shm/deepintegration/v3/common'
 			);
 			$at_bpost->setPugoAddress(
-				PugoAddress::createFromXML($pugo_address_data)
+				TijsVerkoyenBpostBpostOrderPugoAddress::createFromXML($pugo_address_data)
 			);
 		}
 

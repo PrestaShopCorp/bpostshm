@@ -8,11 +8,7 @@
  * @license   BSD License
  */
 
-namespace TijsVerkoyen\Bpost\Bpost\Order\Box\Openinghour;
-
-use TijsVerkoyen\Bpost\Exception;
-
-class Day
+class TijsVerkoyenBpostBpostOrderBoxOpeninghourDay
 {
 	/**
 	 * @var string
@@ -26,12 +22,12 @@ class Day
 
 	/**
 	 * @param string $day
-	 * @throws Exception
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public function setDay($day)
 	{
 		if (!in_array($day, self::getPossibleDayValues()))
-			throw new Exception(
+			throw new TijsVerkoyenBpostException(
 				sprintf(
 					'Invalid value, possible values are: %1$s.',
 					implode(', ', self::getPossibleDayValues())

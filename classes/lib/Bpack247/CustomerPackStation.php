@@ -8,9 +8,7 @@
  * @license   BSD License
  */
 
-namespace TijsVerkoyen\Bpost\Bpack247;
-
-class CustomerPackStation
+class TijsVerkoyenBpostBpack247CustomerPackStation
 {
 	/**
 	 * @var string
@@ -77,11 +75,11 @@ class CustomerPackStation
 
 	/**
 	 * @param  \SimpleXMLElement   $xml
-	 * @return CustomerPackStation
+	 * @return TijsVerkoyenBpostBpack247CustomerPackStation
 	 */
 	public static function createFromXML(\SimpleXMLElement $xml)
 	{
-		$pack_station = new CustomerPackStation();
+		$pack_station = new TijsVerkoyenBpostBpack247CustomerPackStation();
 
 		if (isset($xml->orderNumber) && $xml->orderNumber != '')
 			$pack_station->setOrderNumber((string)$xml->orderNumber);

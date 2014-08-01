@@ -8,9 +8,7 @@
  * @license   BSD License
  */
 
-namespace TijsVerkoyen\Bpost\Bpost\Order\Box\Option;
-
-class AutomaticSecondPresentation extends Option
+class TijsVerkoyenBpostBpostOrderBoxOptionAutomaticSecondPresentation extends TijsVerkoyenBpostBpostOrderBoxOption
 {
 	/**
 	 * Return the object as an array for usage in the XML

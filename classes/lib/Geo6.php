@@ -8,12 +8,7 @@
  * @license   BSD License
  */
 
-namespace TijsVerkoyen\Bpost;
-
-use TijsVerkoyen\Bpost\Exception;
-use TijsVerkoyen\Bpost\Geo6\Poi;
-
-class Geo6
+class TijsVerkoyenBpostGeo6
 {
 	/* URL for the api */
 	const API_URL = 'http://taxipost.geo6.be/Locator';
@@ -80,7 +75,7 @@ class Geo6
 	 * @param  string		   $method
 	 * @param  array|null	   $parameters
 	 * @return SimpleXMLElement
-	 * @throws Exception
+	 * @throws TijsVerkoyenBpostException
 	 */
 	private function doCall($method, $parameters = null)
 	{
@@ -105,18 +100,18 @@ class Geo6
 
 		// error?
 		if ($error_number != '')
-			throw new Exception($error_message, $error_number);
+			throw new TijsVerkoyenBpostException($error_message, $error_number);
 
 		// we expect XML so decode it
 		$xml = simplexml_load_string($response);
 
 		// validate xml
 		if ($xml === false || (isset($xml->head) && isset($xml->body)))
-			throw new Exception('Invalid XML-response.');
+			throw new TijsVerkoyenBpostException('Invalid XML-response.');
 
 		// catch generic errors
 		if (isset($xml['type']) && (string)$xml['type'] == 'TaxipostLocatorError')
-			throw new Exception((string)$xml->txt);
+			throw new TijsVerkoyenBpostException((string)$xml->txt);
 
 		// return
 		return $xml;
@@ -214,7 +209,7 @@ class Geo6
 	 *							  7: (1+2+4, Post Office + Post Point + bpack 24/7)
 	 * @param  int   $limit
 	 * @return array
-	 * @throws Exception
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public function getNearestServicePoint($street, $number, $zone, $language = 'nl', $type = 3, $limit = 10)
 	{
@@ -229,12 +224,12 @@ class Geo6
 		$xml = $this->doCall('search', $parameters);
 
 		if (!isset($xml->PoiList->Poi))
-			throw new Exception('Invalid XML-response');
+			throw new TijsVerkoyenBpostException('Invalid XML-response');
 
 		$pois = array();
 		foreach ($xml->PoiList->Poi as $poi)
 			$pois[] = array(
-				'poi' => Geo6\Poi::createFromXML($poi->Record),
+				'poi' => TijsVerkoyenBpostGeo6Poi::createFromXML($poi->Record),
 				'distance' => (float)$poi->Distance,
 			);
 
@@ -251,8 +246,8 @@ class Geo6
 	 *							  1: Post Office
 	 *							  2: Post Point
 	 *							  4: bpack 24/7
-	 * @return Poi
-	 * @throws Exception
+	 * @return TijsVerkoyenBpostGeo6Poi
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public function getServicePointDetails($id, $language = 'nl', $type = 3)
 	{
@@ -264,9 +259,9 @@ class Geo6
 		$xml = $this->doCall('info', $parameters);
 
 		if (!isset($xml->Poi->Record))
-			throw new Exception('Invalid XML-response.');
+			throw new TijsVerkoyenBpostException('Invalid XML-response.');
 
-		return Poi::createFromXML($xml->Poi->Record);
+		return TijsVerkoyenBpostGeo6Poi::createFromXML($xml->Poi->Record);
 	}
 
 	/**

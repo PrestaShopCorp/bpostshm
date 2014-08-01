@@ -8,9 +8,7 @@
  * @license   BSD License
  */
 
-namespace TijsVerkoyen\Bpost\Bpost\Order\Box\Option;
-
-class Signature extends Option
+class TijsVerkoyenBpostBpostOrderBoxOptionSignature extends TijsVerkoyenBpostBpostOrderBoxOption
 {
 	/**
 	 * Return the object as an array for usage in the XML

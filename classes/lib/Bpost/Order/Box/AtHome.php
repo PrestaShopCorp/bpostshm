@@ -8,14 +8,7 @@
  * @license   BSD License
  */
 
-namespace TijsVerkoyen\Bpost\Bpost\Order\Box;
-
-use TijsVerkoyen\Bpost\Bpost\Order\Box\Openinghour\Day;
-use TijsVerkoyen\Bpost\Bpost\Order\Box\Option\Messaging;
-use TijsVerkoyen\Bpost\Bpost\Order\Receiver;
-use TijsVerkoyen\Bpost\Exception;
-
-class AtHome extends National
+class TijsVerkoyenBpostBpostOrderBoxAtHome extends TijsVerkoyenBpostBpostOrderBoxNational
 {
 	/**
 	 * @var array
@@ -28,7 +21,7 @@ class AtHome extends National
 	private $desired_delivery_place;
 
 	/**
-	 * @var \TijsVerkoyen\Bpost\Bpost\Order\Receiver
+	 * @var TijsVerkoyenBpostBpostOrderReceiver
 	 */
 	private $receiver;
 
@@ -57,9 +50,9 @@ class AtHome extends National
 	}
 
 	/**
-	 * @param Day $day
+	 * @param TijsVerkoyenBpostBpostOrderBoxOpeninghourDay $day
 	 */
-	public function addOpeningHour(Day $day)
+	public function addOpeningHour(TijsVerkoyenBpostBpostOrderBoxOpeninghourDay $day)
 	{
 		$this->opening_hours[] = $day;
 	}
@@ -79,12 +72,12 @@ class AtHome extends National
 	 *						  * bpack Bus
 	 *						  * bpack Pallet
 	 *						  * bpack Easy Retour
-	 * @throws Exception
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public function setProduct($product)
 	{
 		if (!in_array($product, self::getPossibleProductValues()))
-			throw new Exception(
+			throw new TijsVerkoyenBpostException(
 				sprintf(
 					'Invalid value, possible values are: %1$s.',
 					implode(', ', self::getPossibleProductValues())
@@ -109,7 +102,7 @@ class AtHome extends National
 	}
 
 	/**
-	 * @param \TijsVerkoyen\Bpost\Bpost\Order\Receiver $receiver
+	 * @param TijsVerkoyenBpostBpostOrderReceiver $receiver
 	 */
 	public function setReceiver($receiver)
 	{
@@ -117,7 +110,7 @@ class AtHome extends National
 	}
 
 	/**
-	 * @return \TijsVerkoyen\Bpost\Bpost\Order\Receiver
+	 * @return TijsVerkoyenBpostBpostOrderReceiver
 	 */
 	public function getReceiver()
 	{
@@ -146,7 +139,7 @@ class AtHome extends National
 		{
 			$opening_hours_element = $document->createElement('openingHours');
 			foreach ($opening_hours as $day)
-				/** @var $day \TijsVerkoyen\Bpost\Bpost\Order\Box\Openinghour\Day */
+				/** @var $day TijsVerkoyenBpostBpostOrderBoxOpeninghourDay */
 				$opening_hours_element->appendChild($day->toXML($document));
 			$box_element->appendChild($opening_hours_element);
 		}
@@ -174,12 +167,12 @@ class AtHome extends National
 
 	/**
 	 * @param  \SimpleXMLElement $xml
-	 * @return AtHome
-	 * @throws Exception
+	 * @return TijsVerkoyenBpostBpostOrderBoxAtHome
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public static function createFromXML(\SimpleXMLElement $xml)
 	{
-		$at_home = new AtHome();
+		$at_home = new TijsVerkoyenBpostBpostOrderBoxAtHome();
 
 		if (isset($xml->atHome->product) && $xml->atHome->product != '')
 			$at_home->setProduct((string)$xml->atHome->product);
@@ -189,12 +182,12 @@ class AtHome extends National
 				$option_data = $option_data->children('http://schema.post.be/shm/deepintegration/v3/common');
 
 				if (in_array($option_data->getName(), array('infoDistributed')))
-					$option = Messaging::createFromXML($option_data);
+					$option = TijsVerkoyenBpostBpostOrderBoxOptionMessaging::createFromXML($option_data);
 				else
 				{
-					$class_name = '\\TijsVerkoyen\\Bpost\\Bpost\\Order\\Box\\Option\\'.\Tools::ucfirst($option_data->getName());
+					$class_name = 'TijsVerkoyenBpostBpostOrderBoxOption'.\Tools::ucfirst($option_data->getName());
 					if (!method_exists($class_name, 'createFromXML'))
-						throw new Exception('Not Implemented');
+						throw new TijsVerkoyenBpostException('Not Implemented');
 					$option = call_user_func(
 						array($class_name, 'createFromXML'),
 						$option_data
@@ -207,7 +200,7 @@ class AtHome extends National
 			$at_home->setWeight((int)$xml->atHome->weight);
 		if (isset($xml->atHome->openingHours) && $xml->atHome->openingHours != '')
 		{
-			throw new Exception('Not Implemented');
+			throw new TijsVerkoyenBpostException('Not Implemented');
 			//$atHome->setProduct(
 			//	(string)$xml->atHome->openingHours
 			//);
@@ -216,7 +209,7 @@ class AtHome extends National
 			$at_home->setDesiredDeliveryplace((string)$xml->atHome->desiredDeliveryPlace);
 		if (isset($xml->atHome->receiver))
 			$at_home->setReceiver(
-				Receiver::createFromXML(
+				TijsVerkoyenBpostBpostOrderReceiver::createFromXML(
 					$xml->atHome->receiver->children('http://schema.post.be/shm/deepintegration/v3/common')
 				)
 			);

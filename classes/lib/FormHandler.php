@@ -8,14 +8,12 @@
  * @license   BSD License
  */
 
-namespace TijsVerkoyen\Bpost;
-
-class FormHandler
+class TijsVerkoyenBpostFormHandler
 {
 	/**
 	 * bPost instance
 	 *
-	 * @var Bpost
+	 * @var TijsVerkoyenBpostBpost
 	 */
 	private $bpost;
 
@@ -34,7 +32,7 @@ class FormHandler
 	 */
 	public function __construct($account_id, $pass_phrase)
 	{
-		$this->bpost = new Bpost($account_id, $pass_phrase);
+		$this->bpost = new TijsVerkoyenBpostBpost($account_id, $pass_phrase);
 	}
 
 	/**
@@ -100,7 +98,7 @@ class FormHandler
 	 *
 	 * @param string $key
 	 * @param mixed  $value
-	 * @throws Exception
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public function setParameter($key, $value)
 	{
@@ -114,7 +112,7 @@ class FormHandler
 				$allowed_values['lang'] = array('NL', 'FR', 'EN', 'DE', 'Default');
 
 				if (!in_array($value, $allowed_values[$key]))
-					throw new Exception(
+					throw new TijsVerkoyenBpostException(
 						'Invalid value ('.$value.') for '.$key.', allowed values are: '.implode(', ', $allowed_values[$key]).'.'
 					);
 				$this->parameters[$key] = $value;
@@ -123,7 +121,7 @@ class FormHandler
 			// maximum 2 chars
 			case 'customerCountry':
 				if (mb_strlen($value) > 2)
-					throw new Exception(
+					throw new TijsVerkoyenBpostException(
 						'Invalid length for '.$key.', maximum is 2.'
 					);
 				$this->parameters[$key] = (string)$value;
@@ -133,7 +131,7 @@ class FormHandler
 			case 'customerStreetNumber':
 			case 'customerBox':
 				if (mb_strlen($value) > 8)
-					throw new Exception(
+					throw new TijsVerkoyenBpostException(
 						'Invalid length for '.$key.', maximum is 8.'
 					);
 				$this->parameters[$key] = (string)$value;
@@ -142,7 +140,7 @@ class FormHandler
 			// maximum 20 chars
 			case 'customerPhoneNumber':
 				if (mb_strlen($value) > 20)
-					throw new Exception(
+					throw new TijsVerkoyenBpostException(
 						'Invalid length for '.$key.', maximum is 20.'
 					);
 				$this->parameters[$key] = (string)$value;
@@ -151,7 +149,7 @@ class FormHandler
 			// maximum 32 chars
 			case 'customerPostalCode':
 				if (mb_strlen($value) > 32)
-					throw new Exception(
+					throw new TijsVerkoyenBpostException(
 						'Invalid length for '.$key.', maximum is 32.'
 					);
 				$this->parameters[$key] = (string)$value;
@@ -164,7 +162,7 @@ class FormHandler
 			case 'customerStreet':
 			case 'customerCity':
 				if (mb_strlen($value) > 40)
-					throw new Exception(
+					throw new TijsVerkoyenBpostException(
 						'Invalid length for '.$key.', maximum is 40.'
 					);
 				$this->parameters[$key] = (string)$value;
@@ -175,7 +173,7 @@ class FormHandler
 			case 'costCenter':
 			case 'customerEmail':
 				if (mb_strlen($value) > 50)
-					throw new Exception(
+					throw new TijsVerkoyenBpostException(
 						'Invalid length for '.$key.', maximum is 50.'
 					);
 				$this->parameters[$key] = (string)$value;

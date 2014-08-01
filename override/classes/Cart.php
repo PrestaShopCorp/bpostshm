@@ -254,7 +254,7 @@ class Cart extends CartCore
 				{
 					$carriers = $cr->getAssociatedRestrictions('carrier', true, false);
 					if (is_array($carriers) && count($carriers) && isset($carriers['selected']))
-						foreach($carriers['selected'] as $carrier)
+						foreach ($carriers['selected'] as $carrier)
 							if (isset($carrier['id_carrier']) && $carrier['id_carrier'])
 								$free_carriers_rules[] = (int)$carrier['id_carrier'];
 				}
@@ -276,7 +276,7 @@ class Cart extends CartCore
 				{
 					$total_price_with_tax += $data['price_with_tax'];
 					$total_price_without_tax += $data['price_without_tax'];
-					$total_price_without_tax_with_rules = (in_array($id_carrier, $free_carriers_rules)) ? 0 : $total_price_without_tax ;
+					$total_price_without_tax_with_rules = (in_array($id_carrier, $free_carriers_rules)) ? 0 : $total_price_without_tax;
 
 					if (!isset($carrier_collection[$id_carrier]))
 						$carrier_collection[$id_carrier] = new Carrier($id_carrier);

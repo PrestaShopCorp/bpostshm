@@ -21,7 +21,7 @@ class Service
 	 */
 	protected static $instance;
 
-	// Cache fetched orders
+	/* Cache fetched orders */
 	public static $cache = array();
 
 	public $bpost;
@@ -36,7 +36,6 @@ class Service
 	 */
 	public function __construct(Context $context)
 	{
-
 		require_once(_PS_MODULE_DIR_.'bpostshm/classes/Autoloader.php');
 		if (Service::isPrestashopFresherThan14())
 			spl_autoload_register(array(Autoloader::getInstance(), 'load'));
@@ -46,11 +45,11 @@ class Service
 		$this->context = $context;
 
 		$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
-		$this->bpost = new TijsVerkoyen\Bpost\Bpost(
+		$this->bpost = new TijsVerkoyenBpostBpost(
 			Configuration::get('BPOST_ACCOUNT_ID_'.$context_shop_id),
 			Configuration::get('BPOST_ACCOUNT_PASSPHRASE_'.$context_shop_id)
 		);
-		$this->geo6 = new TijsVerkoyen\Bpost\Geo6(
+		$this->geo6 = new TijsVerkoyenBpostGeo6(
 			self::GEO6_PARTNER,
 			self::GEO6_APP_ID
 		);
@@ -185,7 +184,7 @@ class Service
 		$product_config = array();
 
 		if ($response = $this->doCall(
-				TijsVerkoyen\Bpost\Bpost::API_URL.'/'.$this->bpost->getAccountId().'/productconfig',
+				TijsVerkoyenBpostBpost::API_URL.'/'.$this->bpost->getAccountId().'/productconfig',
 				null,
 				array(
 					'Accept: application/vnd.bpost.shm-productConfiguration-v3+XML',
@@ -234,7 +233,7 @@ class Service
 					);
 				}
 			}
-		} catch (\TijsVerkoyen\Bpost\Exception $e) {
+		} catch (TijsVerkoyenBpostException $e) {
 			$service_points = array();
 		}
 
@@ -260,7 +259,7 @@ class Service
 							'pm_open' => $day->getPmOpen(),
 							'pm_close' => $day->getPmClose(),
 						);
-		} catch (\TijsVerkoyen\Bpost\Exception $e) {
+		} catch (TijsVerkoyenBpostException $e) {
 			$service_point_hours = array();
 		}
 
@@ -286,7 +285,7 @@ class Service
 				$service_point_details['zip'] 		= $poi->getZip();
 				$service_point_details['city'] 		= $poi->getCity();
 			}
-		} catch (\TijsVerkoyen\Bpost\Exception $e) {
+		} catch (TijsVerkoyenBpostException $e) {
 			$service_point_details = array();
 		}
 
@@ -298,7 +297,7 @@ class Service
 	 */
 	public function makerBpack247Customer($params = array())
 	{
-		$customer = new TijsVerkoyen\Bpost\Bpack247\Customer();
+		$customer = new TijsVerkoyenBpostBpack247Customer();
 
 		if (isset($params['user_id']) && $params['user_id'] != '')
 			$customer->setUserID((string)$params['user_id']);
@@ -351,7 +350,7 @@ class Service
 		if (isset($params['town']) && $params['town'] != '')
 			$customer->setTown((string)$params['town']);
 
-		$bpack247 = new \TijsVerkoyen\Bpost\Bpack247(
+		$bpack247 = new TijsVerkoyenBpostBpack247(
 			Configuration::get('BPOST_ACCOUNT_ID_'.$this->context->shop->id),
 			Configuration::get('BPOST_ACCOUNT_PASSPHRASE_'.$this->context->shop->id)
 		);
@@ -360,7 +359,7 @@ class Service
 
 		try {
 			$response = $response && $bpack247->createMember($customer);
-		} catch (\TijsVerkoyen\Bpost\Exception $e) {
+		} catch (TijsVerkoyenBpostException $e) {
 			$response = false;
 		}
 
@@ -371,7 +370,7 @@ class Service
 	 * @param array $params
 	 * @param int $type
 	 * @param bool $is_retour
-	 * @return \TijsVerkoyen\Bpost\Bpost\Order
+	 * @return TijsVerkoyenBpostbpostOrder
 	 */
 	public function makeOrder($id_order = 0, $type = 3, $is_retour = false)
 	{
@@ -399,14 +398,14 @@ class Service
 		$reference = Configuration::get('BPOST_ACCOUNT_ID_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id)).'_'
 			.Tools::substr($reference, 0, 53);
 
-		$order = new TijsVerkoyen\Bpost\Bpost\Order($reference);
+		$order = new TijsVerkoyenBpostbpostOrder($reference);
 		//$order->setCostCenter('Cost Center');
 
 		// add product lines
 		if ($products = $ps_order->getProducts())
 			foreach ($products as $product)
 			{
-				$line = new TijsVerkoyen\Bpost\Bpost\Order\Line($product['product_name'], $product['product_quantity']);
+				$line = new TijsVerkoyenBpostBpostOrderLine($product['product_name'], $product['product_quantity']);
 				$order->addLine($line);
 				$weight += $product['product_weight'];
 			}
@@ -423,7 +422,7 @@ class Service
 			$nr = (!empty($invoice_address->address2) && is_numeric($invoice_address->address2) ? $invoice_address->address2 : 0);
 		$street = !empty($matches[2]) ? $matches[2] : $invoice_address->address1;
 
-		$address = new TijsVerkoyen\Bpost\Bpost\Order\Address();
+		$address = new TijsVerkoyenBpostBpostOrderAddress();
 		$address->setNumber(Tools::substr($nr, 0, 8));
 		$address->setStreetName(Tools::substr($street.(!empty($invoice_address->address2) ? ' '.$invoice_address->address2 : ''), 0, 40));
 		$address->setPostalCode(Tools::substr((int)$invoice_address->postcode, 0, 32));
@@ -431,7 +430,7 @@ class Service
 		$address->setCountryCode(Tools::strtoupper(Country::getIsoById($invoice_address->id_country)));
 
 		$customer = new Customer((int)$ps_order->id_customer);
-		$sender = new TijsVerkoyen\Bpost\Bpost\Order\Sender();
+		$sender = new TijsVerkoyenBpostBpostOrderSender();
 		$sender->setAddress($address);
 		$sender->setName(Tools::substr($customer->firstname.' '.$customer->lastname, 0, 40));
 		if (!empty($customer->company))
@@ -470,14 +469,14 @@ class Service
 			$nr = (!empty($address2) && is_numeric($address2) ? $address2 : 0);
 		$street = !empty($matches[2]) ? $matches[2] : $address1;
 
-		$address = new TijsVerkoyen\Bpost\Bpost\Order\Address();
+		$address = new TijsVerkoyenBpostBpostOrderAddress();
 		$address->setNumber(Tools::substr($nr, 0, 8));
 		$address->setStreetName(Tools::substr($street.(!empty($address2) ? ' '.$address2 : ''), 0, 40));
 		$address->setPostalCode(Tools::substr((int)$postcode, 0, 32));
 		$address->setLocality(Tools::substr($city, 0, 40));
 		$address->setCountryCode(Tools::strtoupper(Country::getIsoById($id_country)));
 
-		$receiver = new TijsVerkoyen\Bpost\Bpost\Order\Receiver();
+		$receiver = new TijsVerkoyenBpostBpostOrderReceiver();
 		$receiver->setAddress($address);
 		$receiver->setPhoneNumber($phone);
 		if ($is_retour)
@@ -502,7 +501,7 @@ class Service
 			if (empty(self::$cache[$reference]) || !$base_order = self::$cache[$reference])
 				$base_order = $this->bpost->fetchOrder($reference);
 			foreach ($base_order->getBoxes() as $box)
-				$response &= $this->addBox($order, (int)$type, $sender, $receiver, $weight, $service_point_id, $box);
+				$response = $response && $this->addBox($order, (int)$type, $sender, $receiver, $weight, $service_point_id, $box);
 		}
 		else
 			$response &= $this->addBox($order, (int)$type, $sender, $receiver, $weight, $service_point_id);
@@ -525,15 +524,18 @@ class Service
 		*/
 
 		try {
-			$response &= $this->bpost->createOrReplaceOrder($order);
+			$response = $response && $this->bpost->createOrReplaceOrder($order);
 			//$response &= $this->updateOrderStatus($reference);
 			//$response &= $this->bpost->modifyOrderStatus($order->getReference(), 'OPEN');
 			if ($is_retour)
-				for ($i = 0; $i < (count($base_order->getBoxes())); $i++)
-					$response &= $this->createPSLabel($reference);
+			{
+				$boxes_count = count($base_order->getBoxes());
+				for ($i = 0; $i < $boxes_count; $i++)
+					$response = $response && $this->createPSLabel($reference);
+			}
 			else
-				$response &= $this->createPSLabel($reference);
-		} catch (\TijsVerkoyen\Bpost\Exception $e) {
+				$response = $response && $this->createPSLabel($reference);
+		} catch (TijsVerkoyenBpostException $e) {
 			$response = false;
 		}
 
@@ -541,17 +543,17 @@ class Service
 	}
 
 	/**
-	 * @param \TijsVerkoyen\Bpost\Bpost\Order $order
+	 * @param TijsVerkoyenBpostbpostOrder $order
 	 * @param int $type
-	 * @param \TijsVerkoyen\Bpost\Bpost\Order\Sender $sender
-	 * @param \TijsVerkoyen\Bpost\Bpost\Order\Receiver $receiver
+	 * @param TijsVerkoyenBpostBpostOrderSender $sender
+	 * @param TijsVerkoyenBpostBpostOrderReceiver $receiver
 	 * @param int $weight
 	 * @param null $service_point_id
-	 * @param \TijsVerkoyen\Bpost\Bpost\Order\Box $box
+	 * @param TijsVerkoyenBpostBpostOrderBox $box
 	 * @return bool
 	 */
-	public function addBox(TijsVerkoyen\Bpost\Bpost\Order $order = null, $type = 0, \TijsVerkoyen\Bpost\Bpost\Order\Sender $sender,
-		\TijsVerkoyen\Bpost\Bpost\Order\Receiver $receiver, $weight = 0, $service_point_id = null, $box = null)
+	public function addBox(TijsVerkoyenBpostbpostOrder $order = null, $type = 0, TijsVerkoyenBpostBpostOrderSender $sender,
+		TijsVerkoyenBpostBpostOrderReceiver $receiver, $weight = 0, $service_point_id = null, $box = null)
 	{
 		$response = true;
 
@@ -565,7 +567,7 @@ class Service
 
 		if (!$is_retour)
 		{
-			$box = new TijsVerkoyen\Bpost\Bpost\Order\Box();
+			$box = new TijsVerkoyenBpostBpostOrderBox();
 			$box->setStatus('OPEN');
 		}
 		$box->setSender($sender);
@@ -574,7 +576,7 @@ class Service
 		{
 			case (int)BpostShm::SHIPPING_METHOD_AT_HOME:
 				// @Home
-				$at_home = new TijsVerkoyen\Bpost\Bpost\Order\Box\AtHome();
+				$at_home = new TijsVerkoyenBpostBpostOrderBoxAtHome();
 				$at_home->setWeight($weight);
 				$at_home->setReceiver($receiver);
 				if ($is_retour)
@@ -583,7 +585,7 @@ class Service
 				{
 					$at_home->setProduct('bpack 24h Pro');
 
-					$option = new TijsVerkoyen\Bpost\Bpost\Order\Box\Option\Messaging(
+					$option = new TijsVerkoyenBpostBpostOrderBoxOptionMessaging(
 						'infoDistributed',
 						$this->context->language->iso_code,
 						$sender->getEmailAddress()
@@ -597,7 +599,7 @@ class Service
 			case (int)BpostShm::SHIPPING_METHOD_AT_SHOP:
 				// @Bpost
 				$service_point = $this->getServicePointDetails($service_point_id, BpostShm::SHIPPING_METHOD_AT_SHOP);
-				$pugo_address = new TijsVerkoyen\Bpost\Bpost\Order\PugoAddress(
+				$pugo_address = new TijsVerkoyenBpostBpostOrderPugoAddress(
 					$service_point['street'],
 					$service_point['nr'],
 					null,
@@ -606,14 +608,14 @@ class Service
 					'BE'
 				);
 
-				$at_bpost = new TijsVerkoyen\Bpost\Bpost\Order\Box\AtBpost();
+				$at_bpost = new TijsVerkoyenBpostBpostOrderBoxAtBpost();
 				$at_bpost->setPugoId($service_point_id);
 				$at_bpost->setPugoName(Tools::substr($service_point['office'], 0, 40));
 				$at_bpost->setPugoAddress($pugo_address);
 				$at_bpost->setReceiverName(Tools::substr($receiver->getName(), 0, 40));
 				$at_bpost->setReceiverCompany(Tools::substr($receiver->getCompany(), 0, 40));
 
-				$option = new TijsVerkoyen\Bpost\Bpost\Order\Box\Option\Messaging(
+				$option = new TijsVerkoyenBpostBpostOrderBoxOptionMessaging(
 					'keepMeInformed',
 					$this->context->language->iso_code,
 					$sender->getEmailAddress()
@@ -681,7 +683,7 @@ class Service
 								$recipient = $national_box->getReceiverName().' '.$national_box->getPugoName().' '.$address->getPostalCode().' '
 									.$address->getLocality();
 						}
-			} catch (\TijsVerkoyen\Bpost\Exception $e) {
+			} catch (TijsVerkoyenBpostException $e) {
 				$recipient = '-';
 			}
 		}
@@ -708,7 +710,7 @@ class Service
 					$order = $this->bpost->fetchOrder($reference);
 				if ($boxes = $order->getBoxes())
 					$status = $boxes[0]->getStatus();
-			} catch (\TijsVerkoyen\Bpost\Exception $e) {
+			} catch (TijsVerkoyenBpostException $e) {
 				$status = '-';
 			}
 		}
@@ -731,7 +733,7 @@ class Service
 
 			try {
 				$response = $this->bpost->modifyOrderStatus($reference, $status);
-			} catch (\TijsVerkoyen\Bpost\Exception $e) {
+			} catch (TijsVerkoyenBpostException $e) {
 				$response = false;
 			}
 		}
@@ -753,7 +755,7 @@ class Service
 
 			try {
 				$response = $this->bpost->createLabelForOrder($reference, $format, $with_return_labels, true);
-			} catch (\TijsVerkoyen\Bpost\Exception $e) {
+			} catch (TijsVerkoyenBpostException $e) {
 				$response = false;
 			}
 		}

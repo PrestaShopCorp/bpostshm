@@ -8,9 +8,7 @@
  * @license   BSD License
  */
 
-namespace TijsVerkoyen\Bpost\Bpost\Order\Box;
-
-abstract class National
+abstract class TijsVerkoyenBpostBpostOrderBoxNational
 {
 	/**
 	 * @var string
@@ -44,9 +42,9 @@ abstract class National
 	}
 
 	/**
-	 * @param \TijsVerkoyen\Bpost\Bpost\Order\Box\Option\Option $option
+	 * @param TijsVerkoyenBpostBpostOrderBoxOption $option
 	 */
-	public function addOption(Option\Option $option)
+	public function addOption(TijsVerkoyenBpostBpostOrderBoxOption $option)
 	{
 		$this->options[] = $option;
 	}

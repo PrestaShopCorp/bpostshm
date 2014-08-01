@@ -33,7 +33,7 @@ class BpostShm extends CarrierModule
 	public $carriers = array();
 	public $shipping_methods = array();
 
-	private $api_url = 'https://shippingmanager.bpost.be/ShmFrontEnd/start'; //'http://shippingmanager.bpost.be/shippingmanager/frontEnd';
+	private $api_url = 'https://shippingmanager.bpost.be/ShmFrontEnd/start'; /* 'http://shippingmanager.bpost.be/shippingmanager/frontEnd' */
 
 	public function __construct()
 	{
@@ -81,7 +81,7 @@ class BpostShm extends CarrierModule
 	{
 		if (!extension_loaded('curl'))
 			exit;
-		
+
 		$return = true;
 
 		if (!Service::isPrestashopFresherThan14())
@@ -118,7 +118,7 @@ class BpostShm extends CarrierModule
 			'BPOST_ACCOUNT_API_URL_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id),
 			$this->api_url
 		);
-		
+
 		$return = $return && $this->addOrderState();
 
 		// Db::execute ALTER TABLE will return nor TRUE nor FALSE
@@ -219,11 +219,11 @@ class BpostShm extends CarrierModule
 							if ($country->affectZoneToSelection(array($id_country), $id_zone_be))
 								$carrier->addZone((int)$id_zone_be);
 						}
-				} else {
+				}
+				else
 					if ($zones = Zone::getZones(true))
 						foreach ($zones as $zone)
 							$carrier->addZone((int)$zone['id_zone']);
-				}
 
 				Configuration::updateValue(
 					'BPOST_SHIP_METHOD_'.$shipping_method.'_ID_CARRIER_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id),
@@ -251,7 +251,7 @@ class BpostShm extends CarrierModule
 
 		return $return;
 	}
-	
+
 	private function addOrderState()
 	{
 		$return = true;
@@ -264,7 +264,7 @@ class BpostShm extends CarrierModule
 				$exists = true;
 				break;
 			}
-				
+
 		if ($exists)
 			return $return;
 
@@ -335,36 +335,43 @@ class BpostShm extends CarrierModule
 	{
 		Db::getInstance(_PS_USE_SQL_SLAVE_)->execute('
 CREATE TABLE IF NOT EXISTS
-	`ps_order_label`
+	`'._DB_PREFIX_.'_order_label`
 (
 	`id_order_label` int(11) NOT NULL AUTO_INCREMENT,
 	`reference` varchar(50) NOT NULL,
 	`status` varchar(20) NOT NULL,
 	`barcode` varchar(25) NOT NULL,
 	`date_add` datetime NOT NULL,
-	`date_upd` datetime NOT NULL,
+	`date_upd` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	PRIMARY KEY (`id_order_label`)
 )');
 	}
 
 	private function alterCartTable($add = true)
 	{
+		$db = Db::getInstance(_PS_USE_SQL_SLAVE_);
+
 		if ($add)
-			Db::getInstance(_PS_USE_SQL_SLAVE_)->execute('
+		{
+			if (!$db->getRow('
+SELECT
+	column_name
+FROM
+	information_schema.columns
+WHERE
+	table_schema = "'._DB_NAME_.'"
+AND
+	table_name = "'._DB_PREFIX_.'cart"
+AND
+	column_name = "bpack247_customer"'))
+				$db->execute('
 ALTER TABLE
 	`'._DB_PREFIX_.'cart`
 ADD COLUMN
 	`bpack247_customer` TEXT,
 ADD COLUMN
 	`service_point_id` INT(10) unsigned');
-	else
-		Db::getInstance(_PS_USE_SQL_SLAVE_)->execute('
-ALTER TABLE
-	`'._DB_PREFIX_.'cart`
-DROP COLUMN
-	`bpack247_customer`,
-DROP COLUMN
-	`service_point_id`');
+		}
 	}
 
 	/**
@@ -561,8 +568,6 @@ DROP COLUMN
 	}
 
 	/**
-	 * @todo fix bpost->modifyOrderStatus() which duplicates each label for the given order
-	 *
 	 * @param array $params
 	 */
 	public function hookActionOrderStatusUpdate($params)
@@ -639,7 +644,7 @@ DROP COLUMN
 			elseif (!$this->context->cookie->checkedTOS && Configuration::get('PS_CONDITIONS'))
 				$warning = '<p class="warning">'.Tools::displayError('Please accept the Terms of Service.').'</p>';
 			else
-				$warning = '<p class="warning">' . $this->l('Please configure selected bpost shipping method.') . '</p>';
+				$warning = '<p class="warning">'.$this->l('Please configure selected bpost shipping method.').'</p>';
 
 			$return = array(
 				'HOOK_TOP_PAYMENT' => '',
@@ -691,9 +696,7 @@ DROP COLUMN
 	 */
 	public function hookDisplayOrderConfirmation($params)
 	{
-		return;
-
-		foreach ($this->getIdCarriers() as $shipping_method => $id_carrier)
+		/*foreach ($this->getIdCarriers() as $shipping_method => $id_carrier)
 		{
 			if ((int)$params['objOrder']->id_carrier == $id_carrier)
 			{
@@ -701,7 +704,7 @@ DROP COLUMN
 				$service->makeOrder($params['objOrder']->id, $shipping_method);
 				break;
 			}
-		}
+		}*/
 	}
 
 	public function hookDisplayBackOfficeHeader()
@@ -799,7 +802,7 @@ DROP COLUMN
 		$delivery_option = $this->context->cart->getDeliveryOption(null, false, false);
 
 		$wrapping_fees_tax_inc = $wrapping_fees = $this->context->cart->getGiftWrappingPrice();
-		$oldMessage = Message::getMessageByCartId((int)($this->context->cart->id));
+		$old_message = Message::getMessageByCartId((int)$this->context->cart->id);
 
 		$free_shipping = false;
 		foreach ($this->context->cart->getCartRules() as $rule)
@@ -815,13 +818,13 @@ DROP COLUMN
 
 		$vars = array(
 			'free_shipping' => $free_shipping,
-			'checkedTOS' => (int)($this->context->cookie->checkedTOS),
-			'recyclablePackAllowed' => (int)(Configuration::get('PS_RECYCLABLE_PACK')),
-			'giftAllowed' => (int)(Configuration::get('PS_GIFT_WRAPPING')),
-			'cms_id' => (int)(Configuration::get('PS_CONDITIONS_CMS_ID')),
-			'conditions' => (int)(Configuration::get('PS_CONDITIONS')),
+			'checkedTOS' => (int)$this->context->cookie->checkedTOS,
+			'recyclablePackAllowed' => (int)Configuration::get('PS_RECYCLABLE_PACK'),
+			'giftAllowed' => (int)Configuration::get('PS_GIFT_WRAPPING'),
+			'cms_id' => (int)Configuration::get('PS_CONDITIONS_CMS_ID'),
+			'conditions' => (int)Configuration::get('PS_CONDITIONS'),
 			'link_conditions' => $link_conditions,
-			'recyclable' => (int)($this->context->cart->recyclable),
+			'recyclable' => (int)$this->context->cart->recyclable,
 			'gift_wrapping_price' => (float)$wrapping_fees,
 			'total_wrapping_cost' => Tools::convertPrice($wrapping_fees_tax_inc, $this->context->currency),
 			'total_wrapping_tax_exc_cost' => Tools::convertPrice($wrapping_fees, $this->context->currency),
@@ -831,7 +834,7 @@ DROP COLUMN
 			'delivery_option' => $delivery_option,
 			'address_collection' => $this->context->cart->getAddressCollection(),
 			'opc' => (bool)Configuration::get('PS_ORDER_PROCESS_TYPE'),
-			'oldMessage' => isset($oldMessage['message'])? $oldMessage['message'] : '',
+			'oldMessage' => isset($old_message['message'])? $old_message['message'] : '',
 			'HOOK_BEFORECARRIER' => Hook::exec('displayBeforeCarrier', array(
 				'carriers' => $carriers,
 				'delivery_option_list' => $this->context->cart->getDeliveryOptionList(),
@@ -843,7 +846,7 @@ DROP COLUMN
 
 		$this->context->smarty->assign($vars);
 
-		if (!Address::isCountryActiveById((int)($this->context->cart->id_address_delivery)) && $this->context->cart->id_address_delivery != 0)
+		if (!Address::isCountryActiveById((int)$this->context->cart->id_address_delivery) && $this->context->cart->id_address_delivery != 0)
 			$this->errors[] = Tools::displayError('This address is not in a valid area.');
 		elseif ((!Validate::isLoadedObject($address_delivery) || $address_delivery->deleted) && $this->context->cart->id_address_delivery != 0)
 			$this->errors[] = Tools::displayError('This address is invalid.');

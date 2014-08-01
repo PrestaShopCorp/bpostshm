@@ -8,9 +8,7 @@
  * @license   BSD License
  */
 
-namespace TijsVerkoyen\Bpost\Bpost\Order\Box\Option;
-
-class CashOnDelivery extends Option
+class TijsVerkoyenBpostBpostOrderBoxOptionCashOnDelivery extends TijsVerkoyenBpostBpostOrderBoxOption
 {
 	/**
 	 * @var float

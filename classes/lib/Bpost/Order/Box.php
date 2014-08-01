@@ -8,24 +8,20 @@
  * @license   BSD License
  */
 
-namespace TijsVerkoyen\Bpost\Bpost\Order;
-
-use TijsVerkoyen\Bpost\Exception;
-
-class Box
+class TijsVerkoyenBpostBpostOrderBox
 {
 	/**
-	 * @var \TijsVerkoyen\Bpost\Bpost\Order\Sender
+	 * @var TijsVerkoyenBpostBpostOrderSender
 	 */
 	private $sender;
 
 	/**
-	 * @var \TijsVerkoyen\Bpost\Bpost\Order\Box\AtHome
+	 * @var TijsVerkoyenBpostBpostOrderBoxAtHome
 	 */
 	private $national_box;
 
 	/**
-	 * @var \TijsVerkoyen\Bpost\Bpost\Order\Box\International
+	 * @var TijsVerkoyenBpostBpostOrderBoxInternational
 	 */
 	private $international_box;
 
@@ -40,15 +36,15 @@ class Box
 	private $status;
 
 	/**
-	 * @param \TijsVerkoyen\Bpost\Bpost\Order\Box\International $international_box
+	 * @param TijsVerkoyenBpostBpostOrderBoxInternational $international_box
 	 */
-	public function setInternationalBox(Box\International $international_box)
+	public function setInternationalBox(TijsVerkoyenBpostBpostOrderBoxInternational $international_box)
 	{
 		$this->international_box = $international_box;
 	}
 
 	/**
-	 * @return \TijsVerkoyen\Bpost\Bpost\Order\Box\International
+	 * @return TijsVerkoyenBpostBpostOrderBoxInternational
 	 */
 	public function getInternationalBox()
 	{
@@ -56,15 +52,15 @@ class Box
 	}
 
 	/**
-	 * @param \TijsVerkoyen\Bpost\Bpost\Order\Box\National $national_box
+	 * @param TijsVerkoyenBpostBpostOrderBoxNational $national_box
 	 */
-	public function setNationalBox(Box\National $national_box)
+	public function setNationalBox(TijsVerkoyenBpostBpostOrderBoxNational $national_box)
 	{
 		$this->national_box = $national_box;
 	}
 
 	/**
-	 * @return \TijsVerkoyen\Bpost\Bpost\Order\Box\National
+	 * @return TijsVerkoyenBpostBpostOrderBoxNational
 	 */
 	public function getNationalBox()
 	{
@@ -88,15 +84,15 @@ class Box
 	}
 
 	/**
-	 * @param \TijsVerkoyen\Bpost\Bpost\Order\Sender $sender
+	 * @param TijsVerkoyenBpostBpostOrderSender $sender
 	 */
-	public function setSender(Sender $sender)
+	public function setSender(TijsVerkoyenBpostBpostOrderSender $sender)
 	{
 		$this->sender = $sender;
 	}
 
 	/**
-	 * @return \TijsVerkoyen\Bpost\Bpost\Order\Sender
+	 * @return TijsVerkoyenBpostBpostOrderSender
 	 */
 	public function getSender()
 	{
@@ -105,13 +101,13 @@ class Box
 
 	/**
 	 * @param string $status
-	 * @throws Exception
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public function setStatus($status)
 	{
 		$status = \Tools::strtoupper($status);
 		if (!in_array($status, self::getPossibleStatusValues()))
-			throw new Exception(
+			throw new TijsVerkoyenBpostException(
 				sprintf(
 					'Invalid value, possible values are: %1$s.',
 					implode(', ', self::getPossibleStatusValues())
@@ -189,15 +185,15 @@ class Box
 
 	/**
 	 * @param  \SimpleXMLElement $xml
-	 * @return Box
-	 * @throws Exception
+	 * @return TijsVerkoyenBpostBpostOrderBox
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public static function createFromXML(\SimpleXMLElement $xml)
 	{
-		$box = new Box();
+		$box = new TijsVerkoyenBpostBpostOrderBox();
 		if (isset($xml->sender))
 			$box->setSender(
-				Sender::createFromXML(
+				TijsVerkoyenBpostBpostOrderSender::createFromXML(
 					$xml->sender->children(
 						'http://schema.post.be/shm/deepintegration/v3/common'
 					)
@@ -208,12 +204,12 @@ class Box
 			$national_box_data = $xml->nationalBox->children('http://schema.post.be/shm/deepintegration/v3/national');
 
 			// build classname based on the tag name
-			$className = '\\TijsVerkoyen\\Bpost\\Bpost\\Order\\Box\\'.\Tools::ucfirst($national_box_data->getName());
+			$className = 'TijsVerkoyenBpostBpostOrderBox'.\Tools::ucfirst($national_box_data->getName());
 			if ($national_box_data->getName() == 'at24-7')
-				$className = '\\TijsVerkoyen\\Bpost\\Bpost\\Order\\Box\\at247';
+				$className = 'TijsVerkoyenBpostBpostOrderBoxat247';
 
 			if (!method_exists($className, 'createFromXML'))
-				throw new Exception('Not Implemented');
+				throw new TijsVerkoyenBpostException('Not Implemented');
 
 			$national_box = call_user_func(
 				array($className, 'createFromXML'),
@@ -227,10 +223,10 @@ class Box
 			$international_box_data = $xml->internationalBox->children('http://schema.post.be/shm/deepintegration/v3/international');
 
 			// build classname based on the tag name
-			$className = '\\TijsVerkoyen\\Bpost\\Bpost\\Order\\Box\\'.\Tools::ucfirst($international_box_data->getName());
+			$className = 'TijsVerkoyenBpostBpostOrderBox'.\Tools::ucfirst($international_box_data->getName());
 
 			if (!method_exists($className, 'createFromXML'))
-				throw new Exception('Not Implemented');
+				throw new TijsVerkoyenBpostException('Not Implemented');
 
 			$international_box = call_user_func(
 				array($className, 'createFromXML'),

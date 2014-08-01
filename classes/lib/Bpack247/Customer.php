@@ -8,12 +8,7 @@
  * @license   BSD License
  */
 
-namespace TijsVerkoyen\Bpost\Bpack247;
-
-use TijsVerkoyen\Bpost\Exception;
-use TijsVerkoyen\Bpost\Bpack247\CustomerPackStation;
-
-class Customer
+class TijsVerkoyenBpostBpack247Customer
 {
 	/**
 	 * @var bool
@@ -318,9 +313,9 @@ class Customer
 	}
 
 	/**
-	 * @param CustomerPackStation $pack_station
+	 * @param TijsVerkoyenBpostBpack247CustomerPackStation $pack_station
 	 */
-	public function addPackStation(CustomerPackStation $pack_station)
+	public function addPackStation(TijsVerkoyenBpostBpack247CustomerPackStation $pack_station)
 	{
 		$this->pack_stations[] = $pack_station;
 	}
@@ -359,12 +354,12 @@ class Customer
 
 	/**
 	 * @param string $preferred_language
-	 * @throws \TijsVerkoyen\Bpost\Exception
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public function setPreferredLanguage($preferred_language)
 	{
 		if (!in_array($preferred_language, self::getPossiblePreferredLanguageValues()))
-			throw new Exception(
+			throw new TijsVerkoyenBpostException(
 				sprintf(
 					'Invalid value, possible values are: %1$s.',
 					implode(', ', self::getPossiblePreferredLanguageValues())
@@ -428,12 +423,12 @@ class Customer
 
 	/**
 	 * @param string $title
-	 * @throws \TijsVerkoyen\Bpost\Exception
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public function setTitle($title)
 	{
 		if (!in_array($title, self::getPossibleTitleValues()))
-			throw new Exception(
+			throw new TijsVerkoyenBpostException(
 				sprintf(
 					'Invalid value, possible values are: %1$s.',
 					implode(', ', self::getPossibleTitleValues())
@@ -628,16 +623,16 @@ class Customer
 
 	/**
 	 * @param \SimpleXMLElement $xml
-	 * @return Customer
-	 * @throws \TijsVerkoyen\Bpost\Exception
+	 * @return TijsVerkoyenBpostBpack247Customer
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public static function createFromXML(\SimpleXMLElement $xml)
 	{
 		// @todo work with classmaps ...
 		if (!isset($xml->UserID))
-			throw new Exception('No UserId found.');
+			throw new TijsVerkoyenBpostException('No UserId found.');
 
-		$customer = new Customer();
+		$customer = new TijsVerkoyenBpostBpack247Customer();
 
 		if (isset($xml->UserID) && $xml->UserID != '')
 			$customer->setUserID((string)$xml->UserID);
@@ -692,7 +687,7 @@ class Customer
 
 		if (isset($xml->PackStations->CustomerPackStation))
 			foreach ($xml->PackStations->CustomerPackStation as $pack_station)
-				$customer->addPackStation(CustomerPackStation::createFromXML($pack_station));
+				$customer->addPackStation(TijsVerkoyenBpostBpack247CustomerPackStation::createFromXML($pack_station));
 
 		return $customer;
 	}

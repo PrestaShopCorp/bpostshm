@@ -8,11 +8,7 @@
  * @license   BSD License
  */
 
-namespace TijsVerkoyen\Bpost\Bpost\Order\Box\Option;
-
-use TijsVerkoyen\Bpost\Exception;
-
-class Insurance extends Option
+class TijsVerkoyenBpostBpostOrderBoxOptionInsurance extends TijsVerkoyenBpostBpostOrderBoxOption
 {
 	/**
 	 * @var string
@@ -37,12 +33,12 @@ class Insurance extends Option
 
 	/**
 	 * @param string $type
-	 * @throws Exception
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public function setType($type)
 	{
 		if (!in_array($type, self::getPossibleTypeValues()))
-			throw new Exception(
+			throw new TijsVerkoyenBpostException(
 				sprintf(
 					'Invalid value, possible values are: %1$s.',
 					implode(', ', self::getPossibleTypeValues())
@@ -62,12 +58,12 @@ class Insurance extends Option
 
 	/**
 	 * @param string $value
-	 * @throws Exception
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public function setValue($value)
 	{
 		if (!in_array($value, self::getPossibleValueValues()))
-			throw new Exception(
+			throw new TijsVerkoyenBpostException(
 				sprintf(
 					'Invalid value, possible values are: %1$s.',
 					implode(', ', self::getPossibleValueValues())

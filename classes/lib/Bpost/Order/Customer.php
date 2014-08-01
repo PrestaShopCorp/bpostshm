@@ -8,11 +8,7 @@
  * @license   BSD License
  */
 
-namespace TijsVerkoyen\Bpost\Bpost\Order;
-
-use TijsVerkoyen\Bpost\Exception;
-
-class Customer
+class TijsVerkoyenBpostBpostOrderCustomer
 {
 	const TAG_NAME = 'customer';
 
@@ -27,7 +23,7 @@ class Customer
 	private $company;
 
 	/**
-	 * @var Address
+	 * @var TijsVerkoyenBpostBpostOrderAddress
 	 */
 	private $address;
 
@@ -42,7 +38,7 @@ class Customer
 	private $phone_number;
 
 	/**
-	 * @param \TijsVerkoyen\Bpost\Bpost\Order\Address $address
+	 * @param TijsVerkoyenBpostBpostOrderAddress $address
 	 */
 	public function setAddress($address)
 	{
@@ -50,7 +46,7 @@ class Customer
 	}
 
 	/**
-	 * @return \TijsVerkoyen\Bpost\Bpost\Order\Address
+	 * @return TijsVerkoyenBpostBpostOrderAddress
 	 */
 	public function getAddress()
 	{
@@ -75,13 +71,13 @@ class Customer
 
 	/**
 	 * @param string $email_address
-	 * @throws Exception
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public function setEmailAddress($email_address)
 	{
 		$length = 50;
 		if (mb_strlen($email_address) > $length)
-			throw new Exception(sprintf('Invalid length, maximum is %1$s.', $length));
+			throw new TijsVerkoyenBpostException(sprintf('Invalid length, maximum is %1$s.', $length));
 		$this->email_address = $email_address;
 	}
 
@@ -111,13 +107,13 @@ class Customer
 
 	/**
 	 * @param string $phone_number
-	 * @throws Exception
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public function setPhoneNumber($phone_number)
 	{
 		$length = 20;
 		if (mb_strlen($phone_number) > $length)
-			throw new Exception(sprintf('Invalid length, maximum is %1$s.', $length));
+			throw new TijsVerkoyenBpostException(sprintf('Invalid length, maximum is %1$s.', $length));
 		$this->phone_number = $phone_number;
 	}
 
@@ -182,17 +178,17 @@ class Customer
 
 	/**
 	 * @param  \SimpleXMLElement $xml
-	 * @param  Customer		  $instance
-	 * @return Customer
+	 * @param  TijsVerkoyenBpostBpostOrderCustomer		  $instance
+	 * @return TijsVerkoyenBpostBpostOrderCustomer
 	 */
-	public static function createFromXMLHelper(\SimpleXMLElement $xml, Customer $instance)
+	public static function createFromXMLHelper(\SimpleXMLElement $xml, TijsVerkoyenBpostBpostOrderCustomer $instance)
 	{
 		if (isset($xml->name) && $xml->name != '')
 			$instance->setName((string)$xml->name);
 		if (isset($xml->company) && $xml->company != '')
 			$instance->setCompany((string)$xml->company);
 		if (isset($xml->address))
-			$instance->setAddress(Address::createFromXML($xml->address));
+			$instance->setAddress(TijsVerkoyenBpostBpostOrderAddress::createFromXML($xml->address));
 		if (isset($xml->emailAddress) && $xml->emailAddress != '')
 			$instance->setEmailAddress((string)$xml->emailAddress);
 		if (isset($xml->phoneNumber) && $xml->phoneNumber != '')

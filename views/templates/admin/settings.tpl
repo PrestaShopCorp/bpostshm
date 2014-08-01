@@ -13,7 +13,7 @@
 		<div class="error">
 			<ul>{strip}
 				{foreach $errors as $error}
-					<li>{$error}</li>
+					<li>{$error|escape}</li>
 				{/foreach}
 			{/strip}</ul>
 		</div>

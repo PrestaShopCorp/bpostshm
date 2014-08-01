@@ -8,11 +8,7 @@
  * @license   BSD License
  */
 
-namespace TijsVerkoyen\Bpost;
-
-use TijsVerkoyen\Bpost\Bpack247\Customer;
-
-class Bpack247
+class TijsVerkoyenBpostBpack247
 {
 	/* URL for the api */
 	const API_URL = 'http://www.bpack247.be/BpostRegistrationWebserviceREST/servicecontroller.svc';
@@ -69,7 +65,7 @@ class Bpack247
 	 * @param  string $body   The data to pass.
 	 * @param  string $method The HTTP-method to use.
 	 * @return mixed
-	 * @throws Exception
+	 * @throws TijsVerkoyenBpostException
 	 */
 	private function doCall($url, $body = null, $method = 'GET')
 	{
@@ -107,7 +103,7 @@ class Bpack247
 
 		// error?
 		if ($error_number != '')
-			throw new Exception($error_message, $error_number);
+			throw new TijsVerkoyenBpostException($error_message, $error_number);
 
 var_dump(
 	$options[CURLOPT_URL],
@@ -126,10 +122,10 @@ echo '</xmp><br />';
 			{
 				$message = (string)$xml->message;
 				$code = isset($xml->code) ? (int)$xml->code : null;
-				throw new Exception($message, $code);
+				throw new TijsVerkoyenBpostException($message, $code);
 			}
 
-			throw new Exception('Invalid response.', $headers['http_code']);
+			throw new TijsVerkoyenBpostException('Invalid response.', $headers['http_code']);
 		}
 
 		// convert into XML
@@ -140,7 +136,7 @@ echo '</xmp><br />';
 		{
 			$message = (string)$xml->message;
 			$code = (string)$xml->code;
-			throw new Exception($message, $code);
+			throw new TijsVerkoyenBpostException($message, $code);
 		}
 
 		// return the response
@@ -214,7 +210,7 @@ echo '</xmp><br />';
 	}
 
 	/* webservice methods */
-	public function createMember(Customer $customer)
+	public function createMember(TijsVerkoyenBpostBpack247Customer $customer)
 	{
 		$url = '/customer';
 
@@ -239,7 +235,7 @@ echo '</xmp><br />';
 	 * Retrieve member information
 	 *
 	 * @param  string   $id
-	 * @return Customer
+	 * @return TijsVerkoyenBpostBpack247Customer
 	 */
 	public function getMember($id)
 	{
@@ -247,6 +243,6 @@ echo '</xmp><br />';
 			'/customer/'.$id
 		);
 
-		return Customer::createFromXML($xml);
+		return TijsVerkoyenBpostBpack247Customer::createFromXML($xml);
 	}
 }

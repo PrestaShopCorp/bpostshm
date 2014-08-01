@@ -8,11 +8,7 @@
  * @license   BSD License
  */
 
-namespace TijsVerkoyen\Bpost\Bpost\Order\Box\Option;
-
-use TijsVerkoyen\Bpost\Exception;
-
-class Messaging extends Option
+class TijsVerkoyenBpostBpostOrderBoxOptionMessaging extends TijsVerkoyenBpostBpostOrderBoxOption
 {
 	/**
 	 * @var string
@@ -36,13 +32,13 @@ class Messaging extends Option
 
 	/**
 	 * @param string $email_address
-	 * @throws Exception
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public function setEmailAddress($email_address)
 	{
 		$length = 50;
 		if (mb_strlen($email_address) > $length)
-			throw new Exception(sprintf('Invalid length, maximum is %1$s.', $length));
+			throw new TijsVerkoyenBpostException(sprintf('Invalid length, maximum is %1$s.', $length));
 
 		$this->email_address = $email_address;
 	}
@@ -57,14 +53,14 @@ class Messaging extends Option
 
 	/**
 	 * @param string $language
-	 * @throws Exception
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public function setLanguage($language)
 	{
 		$language = \Tools::strtoupper($language);
 
 		if (!in_array($language, self::getPossibleLanguageValues()))
-			throw new Exception(
+			throw new TijsVerkoyenBpostException(
 				sprintf(
 					'Invalid value, possible values are: %1$s.',
 					implode(', ', self::getPossibleLanguageValues())
@@ -97,13 +93,13 @@ class Messaging extends Option
 
 	/**
 	 * @param string $mobile_phone
-	 * @throws Exception
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public function setMobilePhone($mobile_phone)
 	{
 		$length = 20;
 		if (mb_strlen($mobile_phone) > $length)
-			throw new Exception(sprintf('Invalid length, maximum is %1$s.', $length));
+			throw new TijsVerkoyenBpostException(sprintf('Invalid length, maximum is %1$s.', $length));
 
 		$this->mobile_phone = $mobile_phone;
 	}
@@ -131,12 +127,12 @@ class Messaging extends Option
 
 	/**
 	 * @param string $type
-	 * @throws Exception
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public function setType($type)
 	{
 		if (!in_array($type, self::getPossibleTypeValues()))
-			throw new Exception(
+			throw new TijsVerkoyenBpostException(
 				sprintf(
 					'Invalid value, possible values are: %1$s.',
 					implode(', ', self::getPossibleTypeValues())
@@ -217,11 +213,11 @@ class Messaging extends Option
 
 	/**
 	 * @param  \SimpleXMLElement $xml
-	 * @return Messaging
+	 * @return TijsVerkoyenBpostBpostOrderBoxOptionMessaging
 	 */
 	public static function createFromXML(\SimpleXMLElement $xml)
 	{
-		$messaging = new Messaging(
+		$messaging = new TijsVerkoyenBpostBpostOrderBoxOptionMessaging(
 			$xml->getName(), (string)$xml->attributes()->language
 		);
 

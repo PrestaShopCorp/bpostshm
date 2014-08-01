@@ -8,11 +8,7 @@
  * @license   BSD License
  */
 
-namespace TijsVerkoyen\Bpost\Bpost;
-
-use TijsVerkoyen\Bpost\Exception;
-
-class Label
+class TijsVerkoyenBpostBpostLabel
 {
 	/**
 	 * @var string
@@ -63,12 +59,12 @@ class Label
 
 	/**
 	 * @param string $mime_type
-	 * @throws Exception
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public function setMimeType($mime_type)
 	{
 		if (!in_array($mime_type, self::getPossibleMimeTypeValues()))
-			throw new Exception(
+			throw new TijsVerkoyenBpostException(
 				sprintf(
 					'Invalid value, possible values are: %1$s.',
 					implode(', ', self::getPossibleMimeTypeValues())
@@ -110,11 +106,11 @@ class Label
 
 	/**
 	 * @param  \SimpleXMLElement $xml
-	 * @return Label
+	 * @return TijsVerkoyenBpostBpostLabel
 	 */
 	public static function createFromXML(\SimpleXMLElement $xml)
 	{
-		$label = new Label();
+		$label = new TijsVerkoyenBpostBpostLabel();
 		if (isset($xml->barcode) && $xml->barcode != '')
 			$label->setBarcode((string)$xml->barcode);
 		if (isset($xml->mimeType) && $xml->mimeType != '')

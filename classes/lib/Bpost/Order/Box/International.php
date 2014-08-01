@@ -8,13 +8,7 @@
  * @license   BSD License
  */
 
-namespace TijsVerkoyen\Bpost\Bpost\Order\Box;
-
-use TijsVerkoyen\Bpost\Exception;
-use TijsVerkoyen\Bpost\Bpost\Order\Box\Customsinfo\CustomsInfo;
-use TijsVerkoyen\Bpost\Bpost\Order\Receiver;
-
-class International
+class TijsVerkoyenBpostBpostOrderBoxInternational
 {
 	/**
 	 * @var string
@@ -27,7 +21,7 @@ class International
 	private $options;
 
 	/**
-	 * @var \TijsVerkoyen\Bpost\Bpost\Order\Receiver
+	 * @var TijsVerkoyenBpostBpostOrderReceiver
 	 */
 	private $receiver;
 
@@ -37,12 +31,12 @@ class International
 	private $parcel_weight;
 
 	/**
-	 * @var \TijsVerkoyen\Bpost\Bpost\Order\Box\CustomsInfo\CustomsInfo
+	 * @var TijsVerkoyenBpostBpostOrderBoxCustomsinfoCustomsInfo
 	 */
 	private $customs_info;
 
 	/**
-	 * @param \TijsVerkoyen\Bpost\Bpost\Order\Box\CustomsInfo\CustomsInfo $customs_info
+	 * @param TijsVerkoyenBpostBpostOrderBoxCustomsinfoCustomsInfo $customs_info
 	 */
 	public function setCustomsInfo($customs_info)
 	{
@@ -50,7 +44,7 @@ class International
 	}
 
 	/**
-	 * @return \TijsVerkoyen\Bpost\Bpost\Order\Box\CustomsInfo\CustomsInfo
+	 * @return TijsVerkoyenBpostBpostOrderBoxCustomsinfoCustomsInfo
 	 */
 	public function getCustomsInfo()
 	{
@@ -74,9 +68,9 @@ class International
 	}
 
 	/**
-	 * @param \TijsVerkoyen\Bpost\Bpost\Order\Box\Option\Option $option
+	 * @param TijsVerkoyenBpostBpostOrderBoxOption $option
 	 */
-	public function addOption(Option\Option $option)
+	public function addOption(TijsVerkoyenBpostBpostOrderBoxOption $option)
 	{
 		$this->options[] = $option;
 	}
@@ -99,12 +93,12 @@ class International
 
 	/**
 	 * @param string $product
-	 * @throws Exception
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public function setProduct($product)
 	{
 		if (!in_array($product, self::getPossibleProductValues()))
-			throw new Exception(
+			throw new TijsVerkoyenBpostException(
 				sprintf(
 					'Invalid value, possible values are: %1$s.',
 					implode(', ', self::getPossibleProductValues())
@@ -135,7 +129,7 @@ class International
 	}
 
 	/**
-	 * @param \TijsVerkoyen\Bpost\Bpost\Order\Receiver $receiver
+	 * @param TijsVerkoyenBpostBpostOrderReceiver $receiver
 	 */
 	public function setReceiver($receiver)
 	{
@@ -143,7 +137,7 @@ class International
 	}
 
 	/**
-	 * @return \TijsVerkoyen\Bpost\Bpost\Order\Receiver
+	 * @return TijsVerkoyenBpostBpostOrderReceiver
 	 */
 	public function getReceiver()
 	{
@@ -203,12 +197,12 @@ class International
 
 	/**
 	 * @param  \SimpleXMLElement $xml
-	 * @return International
-	 * @throws Exception
+	 * @return TijsVerkoyenBpostBpostOrderBoxInternational
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public static function createFromXML(\SimpleXMLElement $xml)
 	{
-		$international = new International();
+		$international = new TijsVerkoyenBpostBpostOrderBoxInternational();
 
 		if (isset($xml->international->product) && $xml->international->product != '')
 			$international->setProduct((string)$xml->international->product);
@@ -218,12 +212,12 @@ class International
 				$option_data = $option_data->children('http://schema.post.be/shm/deepintegration/v3/common');
 
 				if (in_array($option_data->getName(), array('infoDistributed')))
-					$option = Option\Messaging::createFromXML($option_data);
+					$option = TijsVerkoyenBpostBpostOrderBoxOptionMessaging::createFromXML($option_data);
 				else
 				{
-					$class_name = '\\TijsVerkoyen\\Bpost\\Bpost\\Order\\Box\\Option\\'.\Tools::ucfirst($option_data->getName());
+					$class_name = 'TijsVerkoyenBpostBpostOrderBoxOption'.\Tools::ucfirst($option_data->getName());
 					if (!method_exists($class_name, 'createFromXML'))
-						throw new Exception('Not Implemented');
+						throw new TijsVerkoyenBpostException('Not Implemented');
 					$option = call_user_func(
 						array($class_name, 'createFromXML'),
 						$option_data
@@ -240,11 +234,11 @@ class International
 				'http://schema.post.be/shm/deepintegration/v3/common'
 			);
 			$international->setReceiver(
-				Receiver::createFromXML($receiver_data)
+				TijsVerkoyenBpostBpostOrderReceiver::createFromXML($receiver_data)
 			);
 		}
 		if (isset($xml->international->customsInfo))
-			$international->setCustomsInfo(CustomsInfo::createFromXML($xml->international->customsInfo));
+			$international->setCustomsInfo(TijsVerkoyenBpostBpostOrderBoxCustomsinfoCustomsInfo::createFromXML($xml->international->customsInfo));
 
 		return $international;
 	}

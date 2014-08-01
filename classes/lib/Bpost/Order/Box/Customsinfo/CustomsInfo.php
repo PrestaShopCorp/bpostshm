@@ -8,11 +8,7 @@
  * @license   BSD License
  */
 
-namespace TijsVerkoyen\Bpost\Bpost\Order\Box\Customsinfo;
-
-use TijsVerkoyen\Bpost\Exception;
-
-class CustomsInfo
+class TijsVerkoyenBpostBpostOrderBoxCustomsinfoCustomsInfo
 {
 	/**
 	 * @var int
@@ -41,13 +37,13 @@ class CustomsInfo
 
 	/**
 	 * @param string $content_description
-	 * @throws Exception
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public function setContentDescription($content_description)
 	{
 		$length = 50;
 		if (mb_strlen($content_description) > $length)
-			throw new Exception(sprintf('Invalid length, maximum is %1$s.', $length));
+			throw new TijsVerkoyenBpostException(sprintf('Invalid length, maximum is %1$s.', $length));
 
 		$this->content_description = $content_description;
 	}
@@ -62,14 +58,14 @@ class CustomsInfo
 
 	/**
 	 * @param string $parcel_return_instructions
-	 * @throws Exception
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public function setParcelReturninstructions($parcel_return_instructions)
 	{
 		$parcel_return_instructions = \Tools::strtoupper($parcel_return_instructions);
 
 		if (!in_array($parcel_return_instructions, self::getPossibleParcelReturnInstructionValues()))
-			throw new Exception(
+			throw new TijsVerkoyenBpostException(
 				sprintf(
 					'Invalid value, possible values are: %1$s.',
 					implode(', ', self::getPossibleParcelReturnInstructionValues())
@@ -133,14 +129,14 @@ class CustomsInfo
 
 	/**
 	 * @param string $shipment_type
-	 * @throws Exception
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public function setShipmentType($shipment_type)
 	{
 		$shipment_type = \Tools::strtoupper($shipment_type);
 
 		if (!in_array($shipment_type, self::getPossibleShipmentTypeValues()))
-			throw new Exception(
+			throw new TijsVerkoyenBpostException(
 				sprintf(
 					'Invalid value, possible values are: %1$s.',
 					implode(', ', self::getPossibleShipmentTypeValues())
@@ -256,11 +252,11 @@ class CustomsInfo
 
 	/**
 	 * @param  \SimpleXMLElement $xml
-	 * @return CustomsInfo
+	 * @return TijsVerkoyenBpostBpostOrderBoxCustomsinfoCustomsInfo
 	 */
 	public static function createFromXML(\SimpleXMLElement $xml)
 	{
-		$customs_info = new CustomsInfo();
+		$customs_info = new TijsVerkoyenBpostBpostOrderBoxCustomsinfoCustomsInfo();
 
 		if (isset($xml->parcelVlue) && $xml->parcelValue != '')
 			$customs_info->setParcelValue(	(int)$xml->parcelValue);

@@ -50,15 +50,15 @@
 						{$tr.$key}
 					{elseif isset($params.activeVisu)}
 						<img src="../img/admin/{if $tr.$key}enabled.gif{else}disabled.gif{/if}"
-						alt="{if $tr.$key}{l s='Enabled'}{else}{l s='Disabled'}{/if}" title="{if $tr.$key}{l s='Enabled'}{else}{l s='Disabled'}{/if}" />
+						alt="{if $tr.$key}{l s='Enabled' mod='bpostshm'}{else}{l s='Disabled' mod='bpostshm'}{/if}" title="{if $tr.$key}{l s='Enabled' mod='bpostshm'}{else}{l s='Disabled' mod='bpostshm'}{/if}" />
 					{elseif isset($params.position)}
 						{if $order_by == 'position' && $order_way != 'DESC'}
 							<a href="{$tr.$key.position_url_down}" {if !($tr.$key.position != $positions[count($positions) - 1])}style="display: none;"{/if}>
-								<img src="../img/admin/{if $order_way == 'ASC'}down{else}up{/if}.gif" alt="{l s='Down'}" title="{l s='Down'}" />
+								<img src="../img/admin/{if $order_way == 'ASC'}down{else}up{/if}.gif" alt="{l s='Down' mod='bpostshm'}" title="{l s='Down' mod='bpostshm'}" />
 							</a>
 
 							<a href="{$tr.$key.position_url_up}" {if !($tr.$key.position != $positions.0)}style="display: none;"{/if}>
-								<img src="../img/admin/{if $order_way == 'ASC'}up{else}down{/if}.gif" alt="{l s='Up'}" title="{l s='Up'}" />
+								<img src="../img/admin/{if $order_way == 'ASC'}up{else}down{/if}.gif" alt="{l s='Up' mod='bpostshm'}" title="{l s='Up' mod='bpostshm'}" />
 							</a>
 						{else}
 							{$tr.$key.position + 1}
@@ -80,7 +80,7 @@
 					{elseif isset($params.type) && $params.type == 'decimal'}
 						{$tr.$key|string_format:"%.2f"}
 					{elseif isset($params.type) && $params.type == 'percent'}
-						{$tr.$key} {l s='%'}
+						{$tr.$key} {l s='%' mod='bpostshm'}
 					{* If type is 'editable', an input is created *}
 					{elseif isset($params.type) && $params.type == 'editable' && isset($tr.id)}
 						<input type="text" name="{$key}_{$tr.id}" value="{$tr.$key|escape:'htmlall':'UTF-8'}" class="{$key}" />
@@ -129,6 +129,6 @@
 	</tr>
 {/foreach}
 {else}
-	<tr><td class="center" colspan="{count($fields_display) + 2}">{l s='No items found'}</td></tr>
+	<tr><td class="center" colspan="{count($fields_display) + 2}">{l s='No items found' mod='bpostshm'}</td></tr>
 {/if}
 </tbody>

@@ -8,12 +8,7 @@
  * @license   BSD License
  */
 
-namespace TijsVerkoyen\Bpost\Bpost\Order\Box;
-
-use TijsVerkoyen\Bpost\Bpost\Order\ParcelsDepotAddress;
-use TijsVerkoyen\Bpost\Exception;
-
-class At247 extends National
+class TijsVerkoyenBpostBpostOrderBoxAt247 extends TijsVerkoyenBpostBpostOrderBoxNational
 {
 	/**
 	 * @var string
@@ -26,7 +21,7 @@ class At247 extends National
 	private $parcels_depot_name;
 
 	/**
-	 * @var \TijsVerkoyen\Bpost\Bpost\Order\ParcelsDepotAddress
+	 * @var TijsVerkoyenBpostBpostOrderParcelsDepotAddress
 	 */
 	private $parcels_depot_address;
 
@@ -67,7 +62,7 @@ class At247 extends National
 	}
 
 	/**
-	 * @param \TijsVerkoyen\Bpost\Bpost\Order\ParcelsDepotAddress $parcels_depot_address
+	 * @param TijsVerkoyenBpostBpostOrderParcelsDepotAddress $parcels_depot_address
 	 */
 	public function setParcelsDepotaddress($parcels_depot_address)
 	{
@@ -75,7 +70,7 @@ class At247 extends National
 	}
 
 	/**
-	 * @return \TijsVerkoyen\Bpost\Bpost\Order\ParcelsDepotAddress
+	 * @return TijsVerkoyenBpostBpostOrderParcelsDepotAddress
 	 */
 	public function getParcelsDepotaddress()
 	{
@@ -116,12 +111,12 @@ class At247 extends National
 
 	/**
 	 * @param string $product Possible values are: bpack 24h Pro
-	 * @throws Exception
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public function setProduct($product)
 	{
 		if (!in_array($product, self::getPossibleProductValues()))
-			throw new Exception(
+			throw new TijsVerkoyenBpostException(
 				sprintf(
 					'Invalid value, possible values are: %1$s.',
 					implode(', ', self::getPossibleProductValues())
@@ -249,12 +244,12 @@ class At247 extends National
 
 	/**
 	 * @param  \SimpleXMLElement $xml
-	 * @return At247
-	 * @throws Exception
+	 * @return TijsVerkoyenBpostBpostOrderBoxAt247
+	 * @throws TijsVerkoyenBpostException
 	 */
 	public static function createFromXML(\SimpleXMLElement $xml)
 	{
-		$at247 = new At247();
+		$at247 = new TijsVerkoyenBpostBpostOrderBoxAt247();
 
 		if (isset($xml->{'at24-7'}->product) && $xml->{'at24-7'}->product != '')
 			$at247->setProduct((string)$xml->{'at24-7'}->product);
@@ -264,12 +259,12 @@ class At247 extends National
 				$option_data = $option_data->children('http://schema.post.be/shm/deepintegration/v3/common');
 
 				if (in_array($option_data->getName(), array('infoDistributed')))
-					$option = Option\Messaging::createFromXML($option_data);
+					$option = TijsVerkoyenBpostBpostOrderBoxOptionMessaging::createFromXML($option_data);
 				else
 				{
-					$class_name = '\\TijsVerkoyen\\Bpost\\Bpost\\Order\\Box\\Option\\'.\Tools::ucfirst($option_data->getName());
+					$class_name = 'TijsVerkoyenBpostBpostOrderBoxOption'.\Tools::ucfirst($option_data->getName());
 					if (!method_exists($class_name, 'createFromXML'))
-						throw new Exception('Not Implemented');
+						throw new TijsVerkoyenBpostException('Not Implemented');
 					$option = call_user_func(
 						array($class_name, 'createFromXML'),
 						$option_data
@@ -295,7 +290,7 @@ class At247 extends National
 			$parcels_depot_address_data = $xml->{'at24-7'}->parcels_depot_address->children(
 				'http://schema.post.be/shm/deepintegration/v3/common'
 			);
-			$at247->setParcelsDepotaddress(ParcelsDepotAddress::createFromXML($parcels_depot_address_data));
+			$at247->setParcelsDepotaddress(TijsVerkoyenBpostBpostOrderParcelsDepotAddress::createFromXML($parcels_depot_address_data));
 		}
 
 		return $at247;

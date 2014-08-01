@@ -8,9 +8,7 @@
  * @license   BSD License
  */
 
-namespace TijsVerkoyen\Bpost\Bpost\Order;
-
-class PugoAddress extends Address
+class TijsVerkoyenBpostBpostOrderPugoAddress extends TijsVerkoyenBpostBpostOrderAddress
 {
 	const TAG_NAME = 'pugoAddress';
 }
