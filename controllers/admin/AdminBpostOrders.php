@@ -39,6 +39,7 @@ class AdminBpostOrdersController extends ModuleAdminController
 		$this->lang = false;
 		$this->explicitSelect = true;
 		$this->deleted = false;
+		$this->list_no_link = true;
 		$this->context = Context::getContext();
 
 		$this->module = new BpostShm();
@@ -57,7 +58,7 @@ class AdminBpostOrdersController extends ModuleAdminController
 		$this->bulk_actions = array(
 			'markTreated' => array('text' => $this->l('Mark treated'), 'confirm' => $this->l('Mark order as treated?')),
 			'printLabels' => array('text' => $this->l('Print labels')),
-			'sendTTEmail' => array('text' => $this->l('Send T&T e-mail'), 'confirm' => $this->l('Send track & trace email to sender?')),
+			'sendTTEmail' => array('text' => $this->l('Send T&T e-mail'), 'confirm' => $this->l('Send track & trace email to recipient?')),
 		);
 
 		$this->_select = '
@@ -496,11 +497,11 @@ class AdminBpostOrdersController extends ModuleAdminController
 		if (empty($reference))
 			return;
 
-		$ps_order = Order::getByReference(Tools::substr($reference, 7))->getFirst();
+		/*$ps_order = Order::getByReference(Tools::substr($reference, 7))->getFirst();
 		$treated_status = Configuration::get('BPOST_ORDER_STATE_TREATED_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id));
 		// do not display if order is not TREATED
 		if ($ps_order->current_state != $treated_status)
-			return;
+			return;*/
 
 		$pdf_dir = _PS_MODULE_DIR_.'bpostshm/pdf/'.$reference;
 		// do not display if labels are not PRINTED
@@ -529,7 +530,8 @@ class AdminBpostOrdersController extends ModuleAdminController
 				}
 		$tracking_url .= '?'.http_build_query($this->tracking_params);
 
-		return '<a href="'.$tracking_url.'" target="_blank"><img class="t_t" src="'._MODULE_DIR_.'bpostshm/views/img/icons/track_and_trace.png" /></a>';
+		return '<a href="'.$tracking_url.'" target="_blank" title="'.$this->l('View Track & Trace status').'">
+			<img class="t_t" src="'._MODULE_DIR_.'bpostshm/views/img/icons/track_and_trace.png" /></a>';
 	}
 
 	/**
@@ -550,13 +552,13 @@ class AdminBpostOrdersController extends ModuleAdminController
 		$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
 
 		// Disable if retours auto-generation is OFF
-		if (!(bool)Configuration::get('BPOST_LABEL_RETOUR_LABEL_'.$context_shop_id))
+		/*if (!(bool)Configuration::get('BPOST_LABEL_RETOUR_LABEL_'.$context_shop_id))
 		{
 			$pdf_dir = _PS_MODULE_DIR_.'bpostshm/pdf/'.$reference.'/retours';
 			// disable if labels are not PRINTED
 			if (is_dir($pdf_dir))
 				$tpl_vars['disabled'] = $this->l('A retour has already been created.');
-		}
+		}*/
 
 		$tpl = $this->createTemplate('helpers/list/list_action_option.tpl');
 		$tpl->assign($tpl_vars);
