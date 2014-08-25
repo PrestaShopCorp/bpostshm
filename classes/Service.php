@@ -13,6 +13,7 @@
  */
 
 require_once(_PS_CLASS_DIR_.'Tools.php');
+require_once(_PS_MODULE_DIR_.'bpostshm/bpostshm.php');
 
 class Service
 {
@@ -43,8 +44,8 @@ class Service
 			spl_autoload_register(array(Autoloader::getInstance(), 'loadPS14'));
 
 		$this->context = $context;
-
 		$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
+
 		$this->bpost = new TijsVerkoyenBpostBpost(
 			Configuration::get('BPOST_ACCOUNT_ID_'.$context_shop_id),
 			Configuration::get('BPOST_ACCOUNT_PASSPHRASE_'.$context_shop_id)
@@ -52,6 +53,19 @@ class Service
 		$this->geo6 = new TijsVerkoyenBpostGeo6(
 			self::GEO6_PARTNER,
 			self::GEO6_APP_ID
+		);
+		$this->module = new BpostShm();
+
+		$this->delivery_methods_list = array(
+			(int)Configuration::get('BPOST_SHIP_METHOD_'.BpostShm::SHIPPING_METHOD_AT_HOME.'_ID_CARRIER_'
+					.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id))
+				=> $this->module->shipping_methods[BpostShm::SHIPPING_METHOD_AT_HOME]['slug'],
+			(int)Configuration::get('BPOST_SHIP_METHOD_'.BpostShm::SHIPPING_METHOD_AT_SHOP.'_ID_CARRIER_'
+					.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id))
+				=> $this->module->shipping_methods[BpostShm::SHIPPING_METHOD_AT_SHOP]['slug'],
+			(int)Configuration::get('BPOST_SHIP_METHOD_'.BpostShm::SHIPPING_METHOD_AT_24_7.'_ID_CARRIER_'
+					.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id))
+				=> $this->module->shipping_methods[BpostShm::SHIPPING_METHOD_AT_24_7]['slug'],
 		);
 	}
 
@@ -370,7 +384,7 @@ class Service
 	 * @param array $params
 	 * @param int $type
 	 * @param bool $is_retour
-	 * @return TijsVerkoyenBpostbpostOrder
+	 * @return TijsVerkoyenBpostOrder
 	 */
 	public function makeOrder($id_order = 0, $type = 3, $is_retour = false)
 	{
@@ -379,26 +393,15 @@ class Service
 		if (empty($id_order) || !is_numeric($id_order))
 			return !$response;
 
-		$ps_order = new Order((int)$id_order);
+		if ($is_retour)
+			$type = 1;
+
 		$weight = 0;
-
-		if (!empty($ps_order->reference))
-			$reference = $ps_order->reference;
-		else
-		{
-			$reference = $ps_order->id;
-			$length = Tools::strlen($reference);
-			if ($length < 5)
-				while ($length < 5)
-				{
-					$reference = '0'.$reference;
-					$length += 1;
-				}
-		}
+		$ps_order = new Order((int)$id_order);
 		$reference = Configuration::get('BPOST_ACCOUNT_ID_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id)).'_'
-			.Tools::substr($reference, 0, 53);
+			.Tools::substr($ps_order->reference, 0, 53);
 
-		$order = new TijsVerkoyenBpostbpostOrder($reference);
+		$order = new TijsVerkoyenBpostOrder($reference);
 		//$order->setCostCenter('Cost Center');
 
 		// add product lines
@@ -411,83 +414,6 @@ class Service
 			}
 		$weight *= 1000;
 
-		// create $sender
-		$invoice_address = new Address($ps_order->id_address_invoice, $this->context->language->id);
-		preg_match('#([0-9]+)?[, ]*([a-zA-Z ]+)[, ]*([0-9]+)?#i', $invoice_address->address1, $matches);
-		if (!empty($matches[1]) && is_numeric($matches[1]))
-			$nr = $matches[1];
-		elseif (!empty($matches[3]) && is_numeric($matches[3]))
-			$nr = $matches[3];
-		else
-			$nr = (!empty($invoice_address->address2) && is_numeric($invoice_address->address2) ? $invoice_address->address2 : 0);
-		$street = !empty($matches[2]) ? $matches[2] : $invoice_address->address1;
-
-		$address = new TijsVerkoyenBpostBpostOrderAddress();
-		$address->setNumber(Tools::substr($nr, 0, 8));
-		$address->setStreetName(Tools::substr($street.(!empty($invoice_address->address2) ? ' '.$invoice_address->address2 : ''), 0, 40));
-		$address->setPostalCode(Tools::substr((int)$invoice_address->postcode, 0, 32));
-		$address->setLocality(Tools::substr($invoice_address->city, 0, 40));
-		$address->setCountryCode(Tools::strtoupper(Country::getIsoById($invoice_address->id_country)));
-
-		$customer = new Customer((int)$ps_order->id_customer);
-		$sender = new TijsVerkoyenBpostBpostOrderSender();
-		$sender->setAddress($address);
-		$sender->setName(Tools::substr($customer->firstname.' '.$customer->lastname, 0, 40));
-		if (!empty($customer->company))
-			$sender->setCompany(Tools::substr($customer->company, 0, 40));
-		$sender->setPhoneNumber(Tools::substr(!empty($invoice_address->phone) ? $invoice_address->phone : $invoice_address->phone_mobile, 0, 20));
-		$sender->setEmailAddress(Tools::substr($customer->email, 0, 50));
-
-		// create $receiver
-		if ($is_retour)
-		{
-			$address1 	= Configuration::get('PS_SHOP_ADDR1');
-			$address2 	= Configuration::get('PS_SHOP_ADDR2');
-			$postcode 	= Configuration::get('PS_SHOP_CODE');
-			$city 		= Configuration::get('PS_SHOP_CITY');
-			$id_country	= Configuration::get('PS_SHOP_COUNTRY_ID');
-			$phone		= Configuration::get('PS_SHOP_PHONE');
-		}
-		else
-		{
-			$delivery_address = new Address($ps_order->id_address_delivery, $this->context->language->id);
-
-			$address1 	= $delivery_address->address1;
-			$address2 	= $delivery_address->address2;
-			$postcode 	= $delivery_address->postcode;
-			$city 		= $delivery_address->city;
-			$id_country	= $delivery_address->id_country;
-			$phone		= !empty($invoice_address->phone) ? $invoice_address->phone : $invoice_address->phone_mobile;
-		}
-
-		preg_match('#([0-9]+)?[, ]*([a-zA-Z ]+)[, ]*([0-9]+)?#i', $address1, $matches);
-		if (!empty($matches[1]) && is_numeric($matches[1]))
-			$nr = $matches[1];
-		elseif (!empty($matches[3]) && is_numeric($matches[3]))
-			$nr = $matches[3];
-		else
-			$nr = (!empty($address2) && is_numeric($address2) ? $address2 : 0);
-		$street = !empty($matches[2]) ? $matches[2] : $address1;
-
-		$address = new TijsVerkoyenBpostBpostOrderAddress();
-		$address->setNumber(Tools::substr($nr, 0, 8));
-		$address->setStreetName(Tools::substr($street.(!empty($address2) ? ' '.$address2 : ''), 0, 40));
-		$address->setPostalCode(Tools::substr((int)$postcode, 0, 32));
-		$address->setLocality(Tools::substr($city, 0, 40));
-		$address->setCountryCode(Tools::strtoupper(Country::getIsoById($id_country)));
-
-		$receiver = new TijsVerkoyenBpostBpostOrderReceiver();
-		$receiver->setAddress($address);
-		$receiver->setPhoneNumber($phone);
-		if ($is_retour)
-			$receiver->setName(Tools::substr(Configuration::get('PS_SHOP_NAME'), 0, 40));
-		else
-		{
-			$receiver->setName(Tools::substr($delivery_address->firstname.' '.$delivery_address->lastname, 0, 40));
-			if (!empty($delivery_address->company))
-				$receiver->setCompany(Tools::substr($delivery_address->company, 0, 40));
-		}
-
 		$service_point_id = null;
 		if ((int)$type == (int)BpostShm::SHIPPING_METHOD_AT_SHOP)
 		{
@@ -498,13 +424,32 @@ class Service
 		// add box
 		if ($is_retour)
 		{
+			$shippers = $this->getReceiverAndSender($ps_order, true);
+
 			if (empty(self::$cache[$reference]) || !$base_order = self::$cache[$reference])
 				$base_order = $this->bpost->fetchOrder($reference);
 			foreach ($base_order->getBoxes() as $box)
-				$response = $response && $this->addBox($order, (int)$type, $sender, $receiver, $weight, $service_point_id, $box);
+				if ($national_box = $box->getNationalBox())
+					if ('bpack Easy Retour' != $national_box->getProduct())
+					{
+						$response = $response && $this->addBox(
+							$order,
+							(int)$type,
+							$shippers['sender'],
+							$shippers['receiver'],
+							$weight,
+							$service_point_id,
+							$box
+						);
+
+						$response = $response && $this->createPSLabel($reference);
+					}
 		}
-		else
-			$response &= $this->addBox($order, (int)$type, $sender, $receiver, $weight, $service_point_id);
+		else{
+			$shippers = $this->getReceiverAndSender($ps_order);
+			$response = $response && $this->addBox($order, (int)$type, $shippers['sender'], $shippers['receiver'], $weight, $service_point_id);
+			$response = $response && $this->createPSLabel($reference);
+		}
 
 		/*
 		// international
@@ -527,14 +472,6 @@ class Service
 			$response = $response && $this->bpost->createOrReplaceOrder($order);
 			//$response &= $this->updateOrderStatus($reference);
 			//$response &= $this->bpost->modifyOrderStatus($order->getReference(), 'OPEN');
-			if ($is_retour)
-			{
-				$boxes_count = count($base_order->getBoxes());
-				for ($i = 0; $i < $boxes_count; $i++)
-					$response = $response && $this->createPSLabel($reference);
-			}
-			else
-				$response = $response && $this->createPSLabel($reference);
 		} catch (TijsVerkoyenBpostException $e) {
 			$response = false;
 		}
@@ -543,7 +480,7 @@ class Service
 	}
 
 	/**
-	 * @param TijsVerkoyenBpostbpostOrder $order
+	 * @param TijsVerkoyenBpostOrder $order
 	 * @param int $type
 	 * @param TijsVerkoyenBpostBpostOrderSender $sender
 	 * @param TijsVerkoyenBpostBpostOrderReceiver $receiver
@@ -552,7 +489,7 @@ class Service
 	 * @param TijsVerkoyenBpostBpostOrderBox $box
 	 * @return bool
 	 */
-	public function addBox(TijsVerkoyenBpostbpostOrder $order = null, $type = 0, TijsVerkoyenBpostBpostOrderSender $sender,
+	public function addBox(TijsVerkoyenBpostOrder $order = null, $type = 0, TijsVerkoyenBpostBpostOrderSender $sender,
 		TijsVerkoyenBpostBpostOrderReceiver $receiver, $weight = 0, $service_point_id = null, $box = null)
 	{
 		$response = true;
@@ -564,8 +501,7 @@ class Service
 		$is_retour = false;
 		if (!is_null($box))
 			$is_retour = true;
-
-		if (!$is_retour)
+		else
 		{
 			$box = new TijsVerkoyenBpostBpostOrderBox();
 			$box->setStatus('OPEN');
@@ -672,6 +608,9 @@ class Service
 					foreach ($order_boxes as $box)
 						if ($national_box = $box->getNationalBox())
 						{
+							if ('bpack Easy Retour' == $national_box->getProduct())
+								continue;
+
 							if (method_exists($national_box, 'getReceiver'))
 							{
 								$receiver = $national_box->getReceiver();
@@ -879,5 +818,181 @@ WHERE
 				$order['labels'][] = $row;
 
 		return $order;
+	}
+
+	/**
+	 * @param Order $ps_order
+	 * @param bool $is_retour
+	 * @return array
+	 */
+	public function getReceiverAndSender($ps_order, $is_retour = false)
+	{
+		$shop = array(
+			'address1' 	=> Configuration::get('PS_SHOP_ADDR1'),
+			'address2' 	=> Configuration::get('PS_SHOP_ADDR2'),
+			'city' 		=> Configuration::get('PS_SHOP_CITY'),
+			'email' 	=> Configuration::get('PS_SHOP_EMAIL'),
+			'id_country'=> Configuration::get('PS_SHOP_COUNTRY_ID'),
+			'name'		=> Configuration::get('PS_SHOP_NAME'),
+			'phone'		=> Configuration::get('PS_SHOP_PHONE'),
+			'postcode' 	=> Configuration::get('PS_SHOP_CODE'),
+		);
+
+		$customer = new Customer((int)$ps_order->id_customer);
+		$delivery_address = new Address($ps_order->id_address_delivery, $this->context->language->id);
+		$client = array(
+			'address1' 	=> $delivery_address->address1,
+			'address2' 	=> $delivery_address->address2,
+			'city' 		=> $delivery_address->city,
+			'company'	=> $customer->company,
+			'email'		=> $customer->email,
+			'id_country'=> $delivery_address->id_country,
+			'name'		=> $customer->firstname.' '.$customer->lastname,
+			'phone'		=> !empty($delivery_address->phone) ? $delivery_address->phone : $delivery_address->phone_mobile,
+			'postcode' 	=> $delivery_address->postcode,
+		);
+
+		$sender_type = 'shop';
+		$receiver_type = 'client';
+		if ($is_retour)
+		{
+			$sender_type = 'client';
+			$receiver_type = 'shop';
+		}
+
+		// create $sender
+		preg_match('#([0-9]+)?[, ]*([a-zA-Z ]+)[, ]*([0-9]+)?#i', ${$sender_type}['address1'], $matches);
+		if (!empty($matches[1]) && is_numeric($matches[1]))
+			$nr = $matches[1];
+		elseif (!empty($matches[3]) && is_numeric($matches[3]))
+			$nr = $matches[3];
+		else
+			$nr = (!empty( ${$sender_type}['address2']) && is_numeric( ${$sender_type}['address2']) ?  ${$sender_type}['address2'] : 0);
+		$street = !empty($matches[2]) ? $matches[2] :  ${$sender_type}['address1'];
+
+		$address = new TijsVerkoyenBpostBpostOrderAddress();
+		$address->setNumber(Tools::substr($nr, 0, 8));
+		$address->setStreetName(Tools::substr($street.(!empty( ${$sender_type}['address2']) && !is_numeric( ${$sender_type}['address2'])
+					? ' '. ${$sender_type}['address2'] : ''), 0, 40));
+		$address->setPostalCode(Tools::substr((int) ${$sender_type}['postcode'], 0, 32));
+		$address->setLocality(Tools::substr( ${$sender_type}['city'], 0, 40));
+		$address->setCountryCode(Tools::strtoupper(Country::getIsoById( ${$sender_type}['id_country'])));
+
+		$sender = new TijsVerkoyenBpostBpostOrderSender();
+		$sender->setAddress($address);
+		$sender->setName(Tools::substr(${$sender_type}['name'], 0, 40));
+		if (!empty(${$sender_type}['company']))
+			$sender->setCompany(Tools::substr(${$sender_type}['company'], 0, 40));
+		$sender->setPhoneNumber(Tools::substr(${$sender_type}['phone'], 0, 20));
+		$sender->setEmailAddress(Tools::substr(${$sender_type}['email'], 0, 50));
+
+		// create $receiver
+		preg_match('#([0-9]+)?[, ]*([a-zA-Z ]+)[, ]*([0-9]+)?#i', ${$receiver_type}['address1'], $matches);
+		if (!empty($matches[1]) && is_numeric($matches[1]))
+			$nr = $matches[1];
+		elseif (!empty($matches[3]) && is_numeric($matches[3]))
+			$nr = $matches[3];
+		else
+			$nr = (!empty( ${$receiver_type}['address2']) && is_numeric( ${$receiver_type}['address2']) ?  ${$receiver_type}['address2'] : 0);
+		$street = !empty($matches[2]) ? $matches[2] :  ${$receiver_type}['address1'];
+
+		$address = new TijsVerkoyenBpostBpostOrderAddress();
+		$address->setNumber(Tools::substr($nr, 0, 8));
+		$address->setStreetName(Tools::substr($street.(!empty( ${$receiver_type}['address2']) && !is_numeric( ${$receiver_type}['address2'])
+					? ' '. ${$receiver_type}['address2'] : ''), 0, 40));
+		$address->setPostalCode(Tools::substr((int) ${$receiver_type}['postcode'], 0, 32));
+		$address->setLocality(Tools::substr( ${$receiver_type}['city'], 0, 40));
+		$address->setCountryCode(Tools::strtoupper(Country::getIsoById( ${$receiver_type}['id_country'])));
+
+		$receiver = new TijsVerkoyenBpostBpostOrderReceiver();
+		$receiver->setAddress($address);
+		$receiver->setName(Tools::substr(${$receiver_type}['name'], 0, 40));
+		if (!empty(${$receiver_type}['company']))
+			$receiver->setCompany(Tools::substr(${$receiver_type}['company'], 0, 40));
+		$receiver->setPhoneNumber(Tools::substr(${$receiver_type}['phone'], 0, 20));
+
+		return array('receiver' => $receiver, 'sender' => $sender);
+	}
+
+	/**
+	 * @param int $id_carrier
+	 * @param bool $slug
+	 * @return mixed|string
+	 */
+	public function getOrderShippingMethod($id_carrier = 0, $slug = true)
+	{
+		$shipping_method = '';
+
+		if ($id_reference = Db::getInstance()->getValue('
+SELECT
+	MAX(occ.`id_carrier`)
+FROM
+	`'._DB_PREFIX_.'carrier` oc
+LEFT JOIN
+	`'._DB_PREFIX_.'carrier` occ
+ON
+	occ.`id_reference` = oc.`id_reference`
+WHERE
+	oc.`id_carrier` = '.(int)$id_carrier))
+		{
+			$shipping_method = $this->delivery_methods_list[(int)$id_reference];
+			if (!$slug)
+				$shipping_method = array_search($this->delivery_methods_list[(int)$id_reference], $this->delivery_methods_list);
+		}
+
+		return $shipping_method;
+	}
+
+	/**
+	 * @param string $reference
+	 * @param bool $retour_only
+	 * @return bool
+	 */
+	public function addLabel($reference = '', $retour_only = false)
+	{
+		$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
+		$response = true;
+
+		$order = $this->bpost->fetchOrder($reference);
+		$ps_order = Order::getByReference(Tools::substr($reference, 7))->getFirst();
+
+		$cart = new Cart((int)$ps_order->id_cart);
+		$id_carrier = $this->getOrderShippingMethod($ps_order->id_carrier, false);
+
+		$boxes = $order->getBoxes();
+		$box = $boxes[0];
+		// Remove existing boxes so that they won't get duplicated
+		$order->setBoxes(array());
+
+		switch ($id_carrier)
+		{
+			case (int)Configuration::get('BPOST_SHIP_METHOD_'.BpostShm::SHIPPING_METHOD_AT_HOME.'_ID_CARRIER_'.$this->context->shop->id):
+			default:
+				$type = BpostShm::SHIPPING_METHOD_AT_HOME;
+				break;
+			case (int)Configuration::get('BPOST_SHIP_METHOD_'.BpostShm::SHIPPING_METHOD_AT_SHOP.'_ID_CARRIER_'.$this->context->shop->id):
+				$type = BpostShm::SHIPPING_METHOD_AT_SHOP;
+				break;
+			case (int)Configuration::get('BPOST_SHIP_METHOD_'.BpostShm::SHIPPING_METHOD_AT_24_7.'_ID_CARRIER_'.$this->context->shop->id):
+				$type = BpostShm::SHIPPING_METHOD_AT_24_7;
+				break;
+		}
+
+		if ((bool)Configuration::get('BPOST_LABEL_RETOUR_LABEL_'.$context_shop_id))
+		{
+			$shippers = $this->getReceiverAndSender($ps_order, true);
+
+			$response = $response && $this->addBox($order, (int)$type, $shippers['sender'], $shippers['receiver'], 0, $cart->service_point_id, $box);
+			$response = $response && $this->createPSLabel($order->getReference());
+		}
+
+		if (!$retour_only)
+		{
+			$shippers = $this->getReceiverAndSender($ps_order);
+			$response = $response && $this->addBox($order, (int)$type, $shippers['sender'], $shippers['receiver'], 0, $cart->service_point_id);
+			$response = $response && $this->createPSLabel($order->getReference());
+		}
+
+		return $response && $this->bpost->createOrReplaceOrder($order);
 	}
 }

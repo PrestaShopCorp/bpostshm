@@ -259,11 +259,11 @@
 				<span class="control-label{if $version < 1.6}-bw{/if} col-lg-3">{l s='Retour label' mod='bpostshm'}</span>
 				<div class="margin-form col-lg-9">
 					<span class="switch prestashop-switch fixed-width-lg">
-						<input type="radio" name="label_retour_label" id="label_retour_label_1" value="1"{if !empty($display_home_delivery_only)} checked="checked"{/if} />
+						<input type="radio" name="label_retour_label" id="label_retour_label_1" value="1"{if !empty($label_retour_label)} checked="checked"{/if} />
 						<label class="col-lg-3" for="label_retour_label_1">
 							{if $version < 1.6}<img src="{$module_dir|escape}views/img/icons/tick.png" alt="{l s='Yes' mod='bpostshm'}" />{else}{l s='Yes' mod='bpostshm'}{/if}
 						</label>
-						<input type="radio" name="label_retour_label" id="label_retour_label_0" value="0"{if empty($display_home_delivery_only)} checked="checked"{/if} />
+						<input type="radio" name="label_retour_label" id="label_retour_label_0" value="0"{if empty($label_retour_label)} checked="checked"{/if} />
 						<label class="col-lg-3" for="label_retour_label_0">
 							{if $version < 1.6}<img src="{$module_dir|escape}views/img/icons/cross.png" alt="{l s='No' mod='bpostshm'}" />{else}{l s='No' mod='bpostshm'}{/if}
 						</label>

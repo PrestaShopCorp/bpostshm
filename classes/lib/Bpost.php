@@ -317,10 +317,10 @@ class TijsVerkoyenBpostBpost
 	/**
 	 * Creates a new order. If an order with the same orderReference already exists
 	 *
-	 * @param  TijsVerkoyenBpostbpostOrder $order
+	 * @param  TijsVerkoyenBpostOrder $order
 	 * @return bool
 	 */
-	public function createOrReplaceOrder(TijsVerkoyenBpostbpostOrder $order)
+	public function createOrReplaceOrder(TijsVerkoyenBpostOrder $order)
 	{
 		$url = '/orders';
 
@@ -354,7 +354,7 @@ class TijsVerkoyenBpostBpost
 	 * Fetch an order
 	 *
 	 * @param $reference
-	 * @return TijsVerkoyenBpostbpostOrder
+	 * @return TijsVerkoyenBpostOrder
 	 */
 	public function fetchOrder($reference)
 	{
@@ -369,7 +369,7 @@ class TijsVerkoyenBpostBpost
 			$headers
 		);
 
-		return TijsVerkoyenBpostbpostOrder::createFromXML($xml);
+		return TijsVerkoyenBpostOrder::createFromXML($xml);
 	}
 
 	/**

@@ -8,7 +8,7 @@
  * @license   BSD License
  */
 
-class TijsVerkoyenBpostbpostOrder
+class TijsVerkoyenBpostOrder
 {
 	/**
 	 * Order reference: unique ID used in your web shop to assign to an order.
@@ -220,7 +220,7 @@ class TijsVerkoyenBpostbpostOrder
 
 	/**
 	 * @param  \SimpleXMLElement $xml
-	 * @return TijsVerkoyenBpostbpostOrder
+	 * @return TijsVerkoyenBpostOrder
 	 * @throws TijsVerkoyenBpostException
 	 */
 	public static function createFromXML(\SimpleXMLElement $xml)
@@ -229,7 +229,7 @@ class TijsVerkoyenBpostbpostOrder
 		if (!isset($xml->reference))
 			throw new TijsVerkoyenBpostException('No reference found.');
 
-		$order = new TijsVerkoyenBpostbpostOrder((string)$xml->reference);
+		$order = new TijsVerkoyenBpostOrder((string)$xml->reference);
 
 		if (isset($xml->costCenter) && $xml->costCenter != '')
 			$order->setCostCenter((string)$xml->costCenter);

@@ -187,12 +187,11 @@ class BpostShm extends CarrierModule
 
 			if ($ret_tmp = $carrier->save())
 			{
-
 				// Affect carrier zones
 				if (in_array($shipping_method, array(
-						self::SHIPPING_METHOD_AT_HOME,
-						self::SHIPPING_METHOD_AT_SHOP))
-					&& method_exists('Country', 'affectZoneToSelection'))
+						//self::SHIPPING_METHOD_AT_HOME, @todo user may select at_home for an international shipping
+						self::SHIPPING_METHOD_AT_SHOP,
+					)) && method_exists('Country', 'affectZoneToSelection'))
 				{
 					$id_zone_be = false;
 					$country_labels = array('België', 'Belgique', 'Belgium');
@@ -213,12 +212,19 @@ class BpostShm extends CarrierModule
 					}
 
 					if ($id_zone_be)
+					{
+						Configuration::updateValue(
+							'BPOST_ID_COUNTRY_BELGIUM_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id),
+							(int)$id_zone_be
+						);
+
 						if ($id_country = Country::getByIso('BE'))
 						{
 							$country = new CountryCore($id_country);
 							if ($country->affectZoneToSelection(array($id_country), $id_zone_be))
 								$carrier->addZone((int)$id_zone_be);
 						}
+					}
 				}
 				else
 					if ($zones = Zone::getZones(true))
@@ -531,15 +537,8 @@ ADD COLUMN
 			{
 				if (Configuration::get('BPOST_LABEL_PDF_FORMAT_'.$context_shop_id) !== $label_pdf_format)
 					Configuration::updateValue('BPOST_LABEL_PDF_FORMAT_'.$context_shop_id, $label_pdf_format);
-				if (Configuration::get('BPOST_LABEL_RETOUR_LABEL_'.$context_shop_id) !== $label_retour_label && is_numeric($label_retour_label))
-					Configuration::updateValue('BPOST_LABEL_RETOUR_LABEL_'.$context_shop_id, (int)$label_retour_label);
-				if (Configuration::get('BPOST_LABEL_TT_INTEGRATION_'.$context_shop_id) !== $label_tt_integration && is_numeric($label_tt_integration))
-					Configuration::updateValue('BPOST_LABEL_TT_INTEGRATION_'.$context_shop_id, (int)$label_tt_integration);
 				if (Configuration::get('BPOST_LABEL_TT_FREQUENCY_'.$context_shop_id) !== $label_tt_frequency && is_numeric($label_tt_frequency))
 					Configuration::updateValue('BPOST_LABEL_TT_FREQUENCY_'.$context_shop_id, (int)$label_tt_frequency);
-				if (Configuration::get('BPOST_LABEL_TT_UPDATE_ON_OPEN_'.$context_shop_id) !== $label_tt_update_on_open
-						&& is_numeric($label_tt_update_on_open))
-					Configuration::updateValue('BPOST_LABEL_TT_UPDATE_ON_OPEN_'.$context_shop_id, (int)$label_tt_update_on_open);
 
 				$this->installModuleTab(
 					'AdminBpostOrders',
@@ -548,7 +547,21 @@ ADD COLUMN
 				);
 			}
 			else
+			{
+				$label_retour_label = false;
+				$label_tt_integration = false;
+				$label_tt_update_on_open = false;
+
 				$this->uninstallModuleTab('AdminBpostOrders');
+			}
+
+			if (Configuration::get('BPOST_LABEL_RETOUR_LABEL_'.$context_shop_id) !== $label_retour_label && is_numeric($label_retour_label))
+				Configuration::updateValue('BPOST_LABEL_RETOUR_LABEL_'.$context_shop_id, (int)$label_retour_label);
+			if (Configuration::get('BPOST_LABEL_TT_INTEGRATION_'.$context_shop_id) !== $label_tt_integration && is_numeric($label_tt_integration))
+				Configuration::updateValue('BPOST_LABEL_TT_INTEGRATION_'.$context_shop_id, (int)$label_tt_integration);
+			if (Configuration::get('BPOST_LABEL_TT_UPDATE_ON_OPEN_'.$context_shop_id) !== $label_tt_update_on_open
+					&& is_numeric($label_tt_update_on_open))
+				Configuration::updateValue('BPOST_LABEL_TT_UPDATE_ON_OPEN_'.$context_shop_id, (int)$label_tt_update_on_open);
 		}
 
 		$this->smarty->assign('account_id_account', $id_account, true);
@@ -677,7 +690,18 @@ ADD COLUMN
 			if ((int)$params['order']->id_carrier == $id_carrier)
 			{
 				$service = Service::getInstance($this->context);
-				$service->makeOrder($params['order']->id, $shipping_method);
+				$service->makeOrder((int)$params['order']->id, $shipping_method);
+
+				$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
+
+				// Generate retour if auto-generation is enabled
+				if ((bool)Configuration::get('BPOST_LABEL_RETOUR_LABEL_'.$context_shop_id))
+				{
+					$reference = Configuration::get('BPOST_ACCOUNT_ID_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id)).'_'
+						.Tools::substr($params['order']->reference, 0, 53);
+					$service->addLabel($reference, true);
+				}
+
 				break;
 			}
 		}
@@ -689,22 +713,36 @@ ADD COLUMN
 	}
 
 	/**
-	 * Used to ease order process testings, will be call on order confirmation page when refreshing page
+	 * Used to ease order process testings.
+	 * When hooked, will be call on order confirmation page when refreshing page
 	 * /!\ is a duplicate of $this->hookActionValidateOrder()
 	 *
 	 * @param $params
 	 */
 	public function hookDisplayOrderConfirmation($params)
 	{
-		/*foreach ($this->getIdCarriers() as $shipping_method => $id_carrier)
+		return;
+
+		foreach ($this->getIdCarriers() as $shipping_method => $id_carrier)
 		{
 			if ((int)$params['objOrder']->id_carrier == $id_carrier)
 			{
 				$service = Service::getInstance($this->context);
-				$service->makeOrder($params['objOrder']->id, $shipping_method);
+				$service->makeOrder((int)$params['objOrder']->id, $shipping_method);
+
+				$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
+
+				// Generate retour if auto-generation is enabled
+				if ((bool)Configuration::get('BPOST_LABEL_RETOUR_LABEL_'.$context_shop_id))
+				{
+					$reference = Configuration::get('BPOST_ACCOUNT_ID_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id)).'_'
+						.Tools::substr($params['objOrder']->reference, 0, 53);
+					$service->addLabel($reference, true);
+				}
+
 				break;
 			}
-		}*/
+		}
 	}
 
 	public function hookDisplayBackOfficeHeader()

@@ -129,6 +129,6 @@
 	</tr>
 {/foreach}
 {else}
-	<tr><td class="center" colspan="{count($fields_display|intval) + 2}">{l s='No items found' mod='bpostshm'}</td></tr>
+	<tr><td class="center" colspan="{count($fields_display) + 2}">{l s='No items found' mod='bpostshm'}</td></tr>
 {/if}
 </tbody>

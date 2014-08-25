@@ -27,6 +27,7 @@
 		$(function() {
 			/* Tabs */
 			var $table 	= $('.order_label'),
+				$thead  = $table.find('thead'),
 				tr_list = [];
 
 			$table.find('td.order_state').each(function(i, td) {
@@ -38,7 +39,9 @@
 			if (tr_list.length)
 			{
 				var $table_treated = $table.clone();
-				$table_treated.find('tbody').empty();
+				$table_treated
+					.find('thead').remove()
+					.find('tbody').empty();
 				$.each(tr_list, function(i, tr) {
 					$table_treated.append(tr);
 				});
@@ -48,7 +51,15 @@
 						$('<div id="tab1"/>').append($table),
 						$('<div id="tab2"/>').append($table_treated)
 					)
-					.children('ul').idTabs();
+					.children('ul').idTabs()
+					.find('a').on('click', function() {
+						$thead.appendTo('.order_label:visible');
+					});
+
+
+				if ('undefined' !== typeof location.hash && '#tab2' === location.hash)
+					$('#idTabs').find('li:eq(1) a').trigger('click');
+
 			}
 
 			var $first_row = $table.find('tbody tr:eq(0)'),
@@ -59,9 +70,6 @@
 			$('tr, colgroup', '.order_label').each(function() {
 				$(this).children(':eq('+position+')').remove();
 			});
-
-			if ('undefined' !== typeof location.hash && '#tab2' === location.hash)
-				$('#idTabs').find('li:eq(1) a').trigger('click');
 			/* /Tabs */
 
 			$('select.actions')
@@ -88,12 +96,26 @@
 								$.each(response.links, function(i, link) {
 									window.open(link);
 								});
-								location.reload();
+								window.location.reload();
 								return;
 							}
 
 							if (response)
-								location.reload();
+							{
+								if ($('#tab1').is(':visible') && location.href.substr(-5) === '#tab2')
+								{
+									window.location.href = location.href.substr(0, (location.href.length-5));
+									window.location.replace(location.href);
+								}
+								else if ($('#tab2').is(':visible') && location.href.substr(-5) !== '#tab2')
+								{
+									window.location.href += '#tab2';
+									window.location.replace(location.href);
+								}
+								else
+									window.location.reload();
+								return;
+							}
 
 						}, 'JSON');
 					}

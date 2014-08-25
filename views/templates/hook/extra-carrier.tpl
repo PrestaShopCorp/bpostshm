@@ -10,14 +10,16 @@
 		id_carrier			= {$id_carrier|intval|default:0},
 		opc 				= {if $opc}true{else}false{/if},
 		service_point_id	= {$service_point_id|intval|default:0},
+		shipping_methods 	= {$shipping_methods|json_encode},
 		version 			= {$version|floatval},
-		$button 			= $('<a id="bpostHandler" class="button" />'),
-		$carrierInputs,
-		l_s = {
+		l_s 				= {
 			"Select delivery point" : "{l s='Select delivery point' mod='bpostshm' js=1}",
 			"Edit bpost shipping configuration" : "{l s='Edit bpost shipping configuration' mod='bpostshm' js=1}",
 			"You must agree to the terms of service before continuing." : "{l s='You must agree to the terms of service before continuing.' mod='bpostshm' js=1}"
-		};
+		},
+		$button 			= $('<a id="bpostHandler" class="button" />'),
+		$carrierInput,
+		$carrierInputs;
 
 	fancyboxParams = {
 		autoWidth:		true,
@@ -47,12 +49,14 @@
 		fancyboxParams.height = 625;
 	}
 
-	$button.data('href', '{$url_lightbox|escape:'javascript'}');
 	$button = myButton($button);
+	$button.data('href', '{$url_lightbox|escape:'javascript'}');
+	$button.fancybox(fancyboxParams);
 
 	$carrierInputs = $('.delivery_option_radio');
 	if (version < 1.5)
 		$carrierInputs = $('[name="id_carrier"]');
+	$carrierInput = $carrierInputs.filter(function() { return parseInt(this.value, 10) === id_carrier; });
 
 	if ('undefined' === typeof acceptCGV)
 		function acceptCGV()
@@ -89,6 +93,7 @@
 	function showButton($carrier, shipping_method)
 	{
 		var href = $button.data('href'),
+			$button_,
 			$container;
 
 		href = href.replace(/(shipping_method=).*?(&)/,'$1' + shipping_method + '$2');
@@ -107,17 +112,13 @@
 		if (onLoad && $carrierAtStart.length && service_point_id)
 			myButton($button_, l_s['Edit bpost shipping configuration']);
 
-		$button_.data('href', href)
-			.fancybox(fancyboxParams);
-		$container.append('<br />', $button);
+		$button_.data('href', href);
+		$container.append('<br />', $button_);
 
 		$('[name="processCarrier"]').attr('disabled', true).css('opacity', .3);
 	}
 
 	$(function() {
-		var shipping_methods = {$shipping_methods|json_encode},
-			$carrierInput = $carrierInputs.filter(function() { return parseInt(this.value, 10) === id_carrier; });
-
 		if ('undefined' === typeof onLoad)
 			onLoad = true;
 
@@ -181,8 +182,6 @@
 						showButton($carrier, shipping_method);
 
 					$input.bind('change.bpost', function() {
-						var $input = $(this);
-
 						setTimeout(function(e) {
 							if ($input.is(':checked'))
 								showButton($carrier, shipping_method);
