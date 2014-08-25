@@ -761,7 +761,11 @@ class AdminBpostOrdersController extends ModuleAdminController
 		// disable if labels are not PRINTED
 		if (!is_dir($pdf_dir) || !opendir($pdf_dir))
 		{
-			$this->errors[] = $this->l('Order ref. '.$reference.' was not treated : action is only available for orders that are printed.');
+			$this->errors[] = str_replace(
+				'%reference%',
+				$reference,
+				$this->l('Order ref. %reference% was not treated : action is only available for orders that are printed.')
+			);
 			return false;
 		}
 
@@ -804,7 +808,11 @@ class AdminBpostOrdersController extends ModuleAdminController
 		if (!is_dir($pdf_dir) || !opendir($pdf_dir))
 		{
 			// disable if labels are not PRINTED
-			$this->errors[] = $this->l('Order ref. '.$reference.' was not treated : action is only available for orders that are printed.');
+			$this->errors[] = str_replace(
+				'%reference%',
+				$reference,
+				$this->l('Order ref. %reference% was not treated : action is only available for orders that are printed.')
+			);
 			return false;
 		}
 

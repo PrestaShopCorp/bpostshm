@@ -58,7 +58,7 @@ class BpostShm extends CarrierModule
 			),
 			self::SHIPPING_METHOD_AT_SHOP => array(
 				'name' 	=> $this->l('Pick-up in a PostOffice or Post Point'),
-				'delay' => $this->l('Over 1.400 locations nerby home or the office.'),
+				'delay' => $this->l('Over 1.400 locations nearby home or the office.'),
 				'slug' 	=> '@bpost',
 			),
 			self::SHIPPING_METHOD_AT_24_7 => array(

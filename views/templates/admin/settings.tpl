@@ -32,7 +32,7 @@
 				<li>{l s='Delivery in a pick-up point or postal office' mod='bpostshm'}</li>
 				<li>{l s='Delivery in a bpack 24/7 parcel machine' mod='bpostshm'}</li>
 			{/strip}</ul>
-			<p>{l s='When activated and correctlu installed, this module also allows you to completely integrate the bpost administration into your webshop. This means that orders are automatically added to the bpost portal. Furthermore, if enabled, it is possible to generate your labels and tracking codes directly from the Prestashop order admin page.' mod='bpostshm'}
+			<p>{l s='When activated and correctly installed, this module also allows you to completely integrate the bpost administration into your webshop. This means that orders are automatically added to the bpost portal. Furthermore, if enabled, it is possible to generate your labels and tracking codes directly from the Prestashop order admin page.' mod='bpostshm'}
 				<br />{l s='No more hassle and 100% transparent!' mod='bpostshm'}
 			</p>
 			<p>
