@@ -110,7 +110,7 @@
 					</div>
 					<div class="row last">
 						<input type="checkbox" name="cgv" id="cgv" value="1" required="required" />
-						<label for="cgv">{l s='I accept the' mod='bpostshm'} <a href="{l s='https://www.bpack247.be/en/general-terms-conditions.aspx'}"
+						<label for="cgv">{l s='I accept the' mod='bpostshm'} <a href="{l s='https://www.bpack247.be/en/general-terms-conditions.aspx' mod='bpostshm'}"
 							title="{l s='Terms and conditions' mod='bpostshm'}" target="_blank">{{l s='Terms and conditions' mod='bpostshm'}|lower}</a></label>
 						<sup>*</sup>
 						<br /><br />

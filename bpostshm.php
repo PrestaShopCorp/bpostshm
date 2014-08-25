@@ -721,9 +721,7 @@ ADD COLUMN
 	 */
 	public function hookDisplayOrderConfirmation($params)
 	{
-		return;
-
-		foreach ($this->getIdCarriers() as $shipping_method => $id_carrier)
+		/*foreach ($this->getIdCarriers() as $shipping_method => $id_carrier)
 		{
 			if ((int)$params['objOrder']->id_carrier == $id_carrier)
 			{
@@ -742,7 +740,7 @@ ADD COLUMN
 
 				break;
 			}
-		}
+		}*/
 	}
 
 	public function hookDisplayBackOfficeHeader()

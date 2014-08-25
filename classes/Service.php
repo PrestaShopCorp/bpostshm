@@ -445,7 +445,8 @@ class Service
 						$response = $response && $this->createPSLabel($reference);
 					}
 		}
-		else{
+		else
+		{
 			$shippers = $this->getReceiverAndSender($ps_order);
 			$response = $response && $this->addBox($order, (int)$type, $shippers['sender'], $shippers['receiver'], $weight, $service_point_id);
 			$response = $response && $this->createPSLabel($reference);
@@ -827,91 +828,96 @@ WHERE
 	 */
 	public function getReceiverAndSender($ps_order, $is_retour = false)
 	{
-		$shop = array(
-			'address1' 	=> Configuration::get('PS_SHOP_ADDR1'),
-			'address2' 	=> Configuration::get('PS_SHOP_ADDR2'),
-			'city' 		=> Configuration::get('PS_SHOP_CITY'),
-			'email' 	=> Configuration::get('PS_SHOP_EMAIL'),
-			'id_country'=> Configuration::get('PS_SHOP_COUNTRY_ID'),
-			'name'		=> Configuration::get('PS_SHOP_NAME'),
-			'phone'		=> Configuration::get('PS_SHOP_PHONE'),
-			'postcode' 	=> Configuration::get('PS_SHOP_CODE'),
-		);
-
 		$customer = new Customer((int)$ps_order->id_customer);
 		$delivery_address = new Address($ps_order->id_address_delivery, $this->context->language->id);
-		$client = array(
-			'address1' 	=> $delivery_address->address1,
-			'address2' 	=> $delivery_address->address2,
-			'city' 		=> $delivery_address->city,
-			'company'	=> $customer->company,
-			'email'		=> $customer->email,
-			'id_country'=> $delivery_address->id_country,
-			'name'		=> $customer->firstname.' '.$customer->lastname,
-			'phone'		=> !empty($delivery_address->phone) ? $delivery_address->phone : $delivery_address->phone_mobile,
-			'postcode' 	=> $delivery_address->postcode,
+
+		$shippers = array(
+			'client' => array(
+				'address1' 	=> $delivery_address->address1,
+				'address2' 	=> $delivery_address->address2,
+				'city' 		=> $delivery_address->city,
+				'company'	=> $customer->company,
+				'email'		=> $customer->email,
+				'id_country'=> $delivery_address->id_country,
+				'name'		=> $customer->firstname.' '.$customer->lastname,
+				'phone'		=> !empty($delivery_address->phone) ? $delivery_address->phone : $delivery_address->phone_mobile,
+				'postcode' 	=> $delivery_address->postcode,
+			),
+			'shop' =>  array(
+				'address1' 	=> Configuration::get('PS_SHOP_ADDR1'),
+				'address2' 	=> Configuration::get('PS_SHOP_ADDR2'),
+				'city' 		=> Configuration::get('PS_SHOP_CITY'),
+				'email' 	=> Configuration::get('PS_SHOP_EMAIL'),
+				'id_country'=> Configuration::get('PS_SHOP_COUNTRY_ID'),
+				'name'		=> Configuration::get('PS_SHOP_NAME'),
+				'phone'		=> Configuration::get('PS_SHOP_PHONE'),
+				'postcode' 	=> Configuration::get('PS_SHOP_CODE'),
+			),
 		);
 
-		$sender_type = 'shop';
-		$receiver_type = 'client';
+		$sender = $shippers['shop'];
+		$receiver = $shippers['client'];
 		if ($is_retour)
 		{
-			$sender_type = 'client';
-			$receiver_type = 'shop';
+			$sender = $shippers['client'];
+			$receiver = $shippers['shop'];
 		}
 
-		// create $sender
-		preg_match('#([0-9]+)?[, ]*([a-zA-Z ]+)[, ]*([0-9]+)?#i', ${$sender_type}['address1'], $matches);
+		// create $bpost_sender
+		preg_match('#([0-9]+)?[, ]*([a-zA-Z ]+)[, ]*([0-9]+)?#i', $sender['address1'], $matches);
 		if (!empty($matches[1]) && is_numeric($matches[1]))
 			$nr = $matches[1];
 		elseif (!empty($matches[3]) && is_numeric($matches[3]))
 			$nr = $matches[3];
 		else
-			$nr = (!empty( ${$sender_type}['address2']) && is_numeric( ${$sender_type}['address2']) ?  ${$sender_type}['address2'] : 0);
-		$street = !empty($matches[2]) ? $matches[2] :  ${$sender_type}['address1'];
+			$nr = (!empty($sender['address2']) && is_numeric($sender['address2']) ? $sender['address2'] : 0);
+		$street = !empty($matches[2]) ? $matches[2] : $sender['address1'];
 
 		$address = new TijsVerkoyenBpostBpostOrderAddress();
 		$address->setNumber(Tools::substr($nr, 0, 8));
-		$address->setStreetName(Tools::substr($street.(!empty( ${$sender_type}['address2']) && !is_numeric( ${$sender_type}['address2'])
-					? ' '. ${$sender_type}['address2'] : ''), 0, 40));
-		$address->setPostalCode(Tools::substr((int) ${$sender_type}['postcode'], 0, 32));
-		$address->setLocality(Tools::substr( ${$sender_type}['city'], 0, 40));
-		$address->setCountryCode(Tools::strtoupper(Country::getIsoById( ${$sender_type}['id_country'])));
+		$address->setStreetName(Tools::substr($street.(!empty($sender['address2']) && !is_numeric($sender['address2'])
+			? ' '.$sender['address2'] : ''), 0, 40));
+		$address->setPostalCode(Tools::substr((int)$sender['postcode'], 0, 32));
+		$address->setLocality(Tools::substr($sender['city'], 0, 40));
+		$address->setCountryCode(Tools::strtoupper(Country::getIsoById($sender['id_country'])));
 
-		$sender = new TijsVerkoyenBpostBpostOrderSender();
-		$sender->setAddress($address);
-		$sender->setName(Tools::substr(${$sender_type}['name'], 0, 40));
-		if (!empty(${$sender_type}['company']))
-			$sender->setCompany(Tools::substr(${$sender_type}['company'], 0, 40));
-		$sender->setPhoneNumber(Tools::substr(${$sender_type}['phone'], 0, 20));
-		$sender->setEmailAddress(Tools::substr(${$sender_type}['email'], 0, 50));
+		$bpost_sender = new TijsVerkoyenBpostBpostOrderSender();
+		$bpost_sender->setAddress($address);
+		$bpost_sender->setName(Tools::substr($sender['name'], 0, 40));
+		if (!empty($sender['company']))
+			$bpost_sender->setCompany(Tools::substr($sender['company'], 0, 40));
+		$bpost_sender->setPhoneNumber(Tools::substr($sender['phone'], 0, 20));
+		$bpost_sender->setEmailAddress(Tools::substr($sender['email'], 0, 50));
 
-		// create $receiver
-		preg_match('#([0-9]+)?[, ]*([a-zA-Z ]+)[, ]*([0-9]+)?#i', ${$receiver_type}['address1'], $matches);
+		// create $bpost_receiver
+		preg_match('#([0-9]+)?[, ]*([a-zA-Z ]+)[, ]*([0-9]+)?#i', $receiver['address1'], $matches);
 		if (!empty($matches[1]) && is_numeric($matches[1]))
 			$nr = $matches[1];
 		elseif (!empty($matches[3]) && is_numeric($matches[3]))
 			$nr = $matches[3];
 		else
-			$nr = (!empty( ${$receiver_type}['address2']) && is_numeric( ${$receiver_type}['address2']) ?  ${$receiver_type}['address2'] : 0);
-		$street = !empty($matches[2]) ? $matches[2] :  ${$receiver_type}['address1'];
+			$nr = (!empty($receiver['address2']) && is_numeric($receiver['address2']) ? $receiver['address2'] : 0);
+		$street = !empty($matches[2]) ? $matches[2] : $receiver['address1'];
 
 		$address = new TijsVerkoyenBpostBpostOrderAddress();
 		$address->setNumber(Tools::substr($nr, 0, 8));
-		$address->setStreetName(Tools::substr($street.(!empty( ${$receiver_type}['address2']) && !is_numeric( ${$receiver_type}['address2'])
-					? ' '. ${$receiver_type}['address2'] : ''), 0, 40));
-		$address->setPostalCode(Tools::substr((int) ${$receiver_type}['postcode'], 0, 32));
-		$address->setLocality(Tools::substr( ${$receiver_type}['city'], 0, 40));
-		$address->setCountryCode(Tools::strtoupper(Country::getIsoById( ${$receiver_type}['id_country'])));
+		$address->setStreetName(Tools::substr($street.(!empty($receiver['address2']) && !is_numeric($receiver['address2'])
+			? ' '.$receiver['address2'] : ''), 0, 40));
+		$address->setPostalCode(Tools::substr((int)$receiver['postcode'], 0, 32));
+		$address->setLocality(Tools::substr($receiver['city'], 0, 40));
+		$address->setCountryCode(Tools::strtoupper(Country::getIsoById($receiver['id_country'])));
 
-		$receiver = new TijsVerkoyenBpostBpostOrderReceiver();
-		$receiver->setAddress($address);
-		$receiver->setName(Tools::substr(${$receiver_type}['name'], 0, 40));
-		if (!empty(${$receiver_type}['company']))
-			$receiver->setCompany(Tools::substr(${$receiver_type}['company'], 0, 40));
-		$receiver->setPhoneNumber(Tools::substr(${$receiver_type}['phone'], 0, 20));
+		$bpost_receiver = new TijsVerkoyenBpostBpostOrderReceiver();
+		$bpost_receiver->setAddress($address);
+		$bpost_receiver->setName(Tools::substr($receiver['name'], 0, 40));
+		if (!empty($receiver['company']))
+			$bpost_receiver->setCompany(Tools::substr($receiver['company'], 0, 40));
+		$bpost_receiver->setPhoneNumber(Tools::substr($receiver['phone'], 0, 20));
 
-		return array('receiver' => $receiver, 'sender' => $sender);
+		return array(
+			'receiver' => $bpost_receiver,
+			'sender' => $bpost_sender,
+		);
 	}
 
 	/**

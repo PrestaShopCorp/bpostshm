@@ -549,10 +549,11 @@ class AdminBpostOrdersController extends ModuleAdminController
 			'href' => Tools::safeOutput(self::$currentIndex.'&reference='.$reference.'&addLabel'.$this->table
 				.'&token='.($token != null ? $token : $this->token)),
 		);
-		$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
+
+		/*$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
 
 		// Disable if retours auto-generation is OFF
-		/*if (!(bool)Configuration::get('BPOST_LABEL_RETOUR_LABEL_'.$context_shop_id))
+		if (!(bool)Configuration::get('BPOST_LABEL_RETOUR_LABEL_'.$context_shop_id))
 		{
 			$pdf_dir = _PS_MODULE_DIR_.'bpostshm/pdf/'.$reference.'/retours';
 			// disable if labels are not PRINTED
