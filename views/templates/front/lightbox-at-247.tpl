@@ -13,13 +13,16 @@
 				<h1 class="col-xs-12">
 					<span class="step">1</span>
 					{l s='Select or create a bpack 24/7 account' mod='bpostshm'}
+					<!-- &nbsp;&nbsp;<img class="loader" src="{$module_dir|escape}views/img/ajax-loader2.gif" alt="{l s='Loading...' mod='bpostshm'}" /> -->
 				</h1>
+					
 				<form class="col-xs-12" action="" id="rc-form" method="POST" autocomplete="off">
 					<input name="bpack247_register" id="bpack247_register_0" type="radio" value="0" />
 					<label for="bpack247_register_0">{l s='I am a bpack 24/7 registered user' mod='bpostshm'}</label>
 					<label for="rc">{l s='RC:' mod='bpostshm'}</label>
 					<input type="text" name="rc" id="rc" type="text" value="" placeholder="{l s='123-456-789' mod='bpostshm'}" />
 					<a id="rc-info" href="#rc-info-content" title="{l s='Where can I find this info?' mod='bpostshm'}">{l s='Where can I find this info?' mod='bpostshm'}</a>
+					<img class="loader" src="{$module_dir|escape}views/img/ajax-loader.gif" alt="{l s='Loading...' mod='bpostshm'}" />
 					<br />
 					<input name="bpack247_register" id="bpack247_register_1" type="radio" value="1" />
 					<label for="bpack247_register_1">{l s='I would like to register for pack 24/7' mod='bpostshm'}</label>
@@ -48,7 +51,7 @@
 						<label for="title">{l s='Title' mod='bpostshm'}</label>
 						<select name="id_gender" id="title" required="required">
 							{foreach $genders as $_gender}
-								<option value="{$_gender->id}"{if $gender == $_gender->id} selected="selected"{/if}>{$_gender->name}.</option>
+								<option value="{$_gender->id}"{if $gender == $_gender->id} selected="selected"{/if}>{$_gender->name}</option>
 							{/foreach}
 						</select>
 						<sup>*</sup>
@@ -95,7 +98,7 @@
 						<sup>*</sup>
 					</div>
 					<div class="row clearfix">
-						<label for="mobile-number">{l s='Mobile phone' mod='bpostshm'}</label>
+						<label for="mobile-number">{l s='Mobile phone' mod='bpostshm'} +32</label>
 						<input type="text" name="mobile_number" id="mobile-number" value="{$mobile_phone|default:''}" required="required" />
 						<sup>*</sup>
 					</div>
@@ -110,8 +113,8 @@
 					</div>
 					<div class="row last">
 						<input type="checkbox" name="cgv" id="cgv" value="1" required="required" />
-						<label for="cgv">{l s='I accept the' mod='bpostshm'} <a href="{l s='https://www.bpack247.be/en/general-terms-conditions.aspx' mod='bpostshm'}"
-							title="{l s='Terms and conditions' mod='bpostshm'}" target="_blank">{{l s='Terms and conditions' mod='bpostshm'}|lower}</a></label>
+						<!-- <label for="cgv">{l s='I accept the' mod='bpostshm'} <a href="{l s='https://www.bpack247.be/en/general-terms-conditions.aspx' mod='bpostshm'}" title="{l s='Terms and conditions' mod='bpostshm'}" target="_blank">{{l s='Terms and conditions' mod='bpostshm'}|lower}</a></label> -->
+						<label for="cgv">{l s='I accept the' mod='bpostshm'} <a id="terms" href="" title="{l s='Terms and conditions' mod='bpostshm'}">{{l s='Terms and conditions' mod='bpostshm'}|lower}</a></label>
 						<sup>*</sup>
 						<br /><br />
 						<input type="submit" class="button" value="{l s='Create account' mod='bpostshm'}" />
@@ -124,8 +127,19 @@
 				<img src="{$module_dir|escape}views/img/card_{$lang_iso|escape}.png" alt="{l s='User card' mod='bpostshm'}" />
 				<p>{l s='Your bpack 24/7 user number is an unique nine-digit code that allows bpost to identify you and notify you when a package comes in the machine. The nine-digit user number is on your user card and begins with the letters RC.' mod='bpostshm'}</p>
 			</div>
+
 			<script type="text/javascript">
 				$(function() {
+
+					$(document)
+						.ajaxStart(function() {
+							$('.loader').css('display', 'inline-block');
+						})
+						.ajaxComplete(function() {
+							$('.loader').hide();
+						});
+
+					
 					$('#rc-info').fancybox({
 						fitToView: 	false,
 						helpers:	{
@@ -134,6 +148,39 @@
 						maxWidth	: 380
 					});
 
+					$("#terms").fancybox({
+					    'type' :  			'iframe',
+					    'href' : 			"{l s='https://www.bpack247.be/en/general-terms-conditions.aspx' mod='bpostshm'}",
+					    'autoDimensions' : 	false,
+					    'width' : 			1000,
+					    'height' : 			700,
+					    'autoScale' : 		true
+					}); 
+
+						
+					// still to do
+					$('input[name="rc"]').live('keyup', function(e) {
+						if (this.value.length >= 9) {
+							/*
+							$.post( "{$url_get_bpack247_member|escape:'javascript'}", function( data ) {
+							  //$( ".result" ).html( data );
+							  alert(data);
+							});*/
+							$.ajax({
+							  type: "POST",
+							  url: "{$url_get_bpack247_member|escape:'javascript'}",
+							  //data: data,
+							  success: 
+							  	function(response) {
+							  		alert(response);
+								}
+							  //dataType: dataType
+							});
+							
+						}
+					});
+					
+					
 					$('input[name="bpack247_register"]').live('change', function() {
 						if (this.value > 0)
 							$('#register').show();
