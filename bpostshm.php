@@ -109,7 +109,6 @@ class BpostShm extends CarrierModule
 		}
 
 		$return = $return && $this->registerHook('actionCarrierProcess');
-		$return = $return && $this->registerHook('displayAdminBpostOrdersView');
 		$return = $return && $this->registerHook('extraCarrier');
 		$return = $return && $this->registerHook('actionTopPayment');
 		$return = $return && $this->registerHook('updateCarrier');
@@ -148,9 +147,6 @@ class BpostShm extends CarrierModule
 		$return = $return && $this->unregisterHook('updateCarrier');
 		$return = $return && $this->deleteCarriers();
 		$return = $return && parent::uninstall();
-
-		// Db::execute ALTER TABLE will return nor TRUE nor FALSE
-		$this->alterCartTable(false);
 
 		return $return;
 	}
@@ -341,7 +337,7 @@ class BpostShm extends CarrierModule
 	{
 		Db::getInstance(_PS_USE_SQL_SLAVE_)->execute('
 CREATE TABLE IF NOT EXISTS
-	`'._DB_PREFIX_.'_order_label`
+	`'._DB_PREFIX_.'order_label`
 (
 	`id_order_label` int(11) NOT NULL AUTO_INCREMENT,
 	`reference` varchar(50) NOT NULL,
@@ -353,13 +349,11 @@ CREATE TABLE IF NOT EXISTS
 )');
 	}
 
-	private function alterCartTable($add = true)
+	private function alterCartTable()
 	{
 		$db = Db::getInstance(_PS_USE_SQL_SLAVE_);
 
-		if ($add)
-		{
-			if (!$db->getRow('
+		if (!$db->getRow('
 SELECT
 	column_name
 FROM
@@ -377,7 +371,6 @@ ADD COLUMN
 	`bpack247_customer` TEXT,
 ADD COLUMN
 	`service_point_id` INT(10) unsigned');
-		}
 	}
 
 	/**
@@ -705,11 +698,6 @@ ADD COLUMN
 				break;
 			}
 		}
-	}
-
-	public function hookDisplayAdminBpostOrdersView()
-	{
-		return $this->display(__FILE__, 'views/templates/hook/adminbpostorders-view.tpl', null, null);
 	}
 
 	/**

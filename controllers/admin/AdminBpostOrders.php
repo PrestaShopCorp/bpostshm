@@ -174,7 +174,6 @@ class AdminBpostOrdersController extends ModuleAdminController
 		parent::__construct();
 	}
 
-
 	public function getList($id_lang, $order_by = null, $order_way = null, $start = 0, $limit = null, $id_lang_shop = false)
 	{
 		parent::getList($id_lang, $order_by, $order_way, $start, $limit, $id_lang_shop);
@@ -304,17 +303,6 @@ class AdminBpostOrdersController extends ModuleAdminController
 
 				$this->jsonEncode($response);
 			}
-			elseif (Tools::getIsset('view'.$this->table))
-			{
-				$order = $this->service->bpost->fetchOrder($reference);
-				$boxes = $order->getBoxes();
-
-				$this->context->smarty->assign('boxes', array_reverse($boxes));
-				$this->context->smarty->assign('order', $order);
-				$this->context->smarty->assign('url_get_label', Tools::safeOutput(self::$currentIndex.'&reference='.$reference
-					.'&printLabels'.$this->table.'&token='.$this->token));
-
-			}
 			elseif (Tools::getIsset('cancel'.$this->table))
 			{
 				$errors = array();
@@ -388,8 +376,12 @@ class AdminBpostOrdersController extends ModuleAdminController
 
 		$this->tpl_list_vars = array_merge(
 			$this->tpl_list_vars,
-			array('treated_status' =>
-				Configuration::get('BPOST_ORDER_STATE_TREATED_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id)))
+			array(
+				'treated_status' =>
+					Configuration::get('BPOST_ORDER_STATE_TREATED_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id)),
+				'url_get_label' =>
+					'index.php?tab=AdminOrders&addorder&token='.Tools::getAdminTokenLite('AdminOrders'),
+			)
 		);
 
 		$this->setHelperDisplay($helper);

@@ -151,6 +151,8 @@
 					});
 				});
 			{/if}
+
+			$('#desc-order_label-new').attr('href', '{$url_get_label|urldecode}');
 		});
 	})(jQuery);
 </script>
