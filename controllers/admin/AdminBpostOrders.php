@@ -878,7 +878,7 @@ class AdminBpostOrdersController extends ModuleAdminController
 					'{firstname}' => $customer->firstname,
 					'{id_order}' => $ps_order->id,
 					'{order_name}' => $ps_order->getUniqReference(),
-					'{message}' => $message
+					'{message}' => $message,
 				);
 
 				Mail::Send((int)$ps_order->id_lang, 'order_merchant_comment',

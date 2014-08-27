@@ -99,18 +99,19 @@ class BpostShm extends CarrierModule
 
 		if (Service::isPrestashopFresherThan14())
 		{
+			$return = $return && $this->registerHook('actionTopPayment');
 			$return = $return && $this->registerHook('actionValidateOrder');
 			$return = $return && $this->registerHook('displayBackOfficeHeader');
+			$return = $return && $this->registerHook('actionCarrierProcess'); // OPC
 		}
 		else
 		{
+			$return = $return && $this->registerHook('paymentTop');
 			$return = $return && $this->registerHook('orderConfirmation');
 			$return = $return && $this->registerHook('backOfficeHeader');
 		}
 
-		$return = $return && $this->registerHook('actionCarrierProcess');
 		$return = $return && $this->registerHook('extraCarrier');
-		$return = $return && $this->registerHook('actionTopPayment');
 		$return = $return && $this->registerHook('updateCarrier');
 
 		$return = $return && Configuration::updateValue(
@@ -123,6 +124,9 @@ class BpostShm extends CarrierModule
 		// Db::execute ALTER TABLE will return nor TRUE nor FALSE
 		$this->alterCartTable();
 		$this->addOrderLabelTable();
+
+		if (!Service::isPrestashopFresherThan14())
+			$this->alterOrderTable();
 
 		return $return;
 	}
@@ -388,6 +392,28 @@ ADD COLUMN
 	`bpack247_customer` TEXT,
 ADD COLUMN
 	`service_point_id` INT(10) unsigned');
+	}
+
+	private function alterOrderTable()
+	{
+		$db = Db::getInstance(_PS_USE_SQL_SLAVE_);
+
+		if (!$db->getRow('
+SELECT
+	column_name
+FROM
+	information_schema.columns
+WHERE
+	table_schema = "'._DB_NAME_.'"
+AND
+	table_name = "'._DB_PREFIX_.'order"
+AND
+	column_name = "reference"'))
+				$db->execute('
+ALTER TABLE
+	`'._DB_PREFIX_.'order`
+ADD COLUMN
+	`reference` VARCHAR(9)');
 	}
 
 	/**
@@ -708,14 +734,26 @@ ADD COLUMN
 			if ((int)$params['order']->id_carrier == $id_carrier)
 			{
 				$service = Service::getInstance($this->context);
-				$service->makeOrder($params['order']->id, $shipping_method);
+				$service->makeOrder((int)$params['order']->id, $shipping_method);
+
+				$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
+
+				// Generate retour if auto-generation is enabled
+				if ((bool)Configuration::get('BPOST_LABEL_RETOUR_LABEL_'.$context_shop_id))
+				{
+					$reference = Configuration::get('BPOST_ACCOUNT_ID_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id)).'_'
+						.Tools::substr($params['order']->reference, 0, 53);
+					$service->addLabel($reference, true);
+				}
+
 				break;
 			}
 		}
 	}
 
 	/**
-	 * Used to ease order process testings, will be call on order confirmation page when refreshing page
+	 * Used to ease order process testings.
+	 * When hooked, will be call on order confirmation page when refreshing page
 	 * /!\ is a duplicate of $this->hookActionValidateOrder()
 	 *
 	 * @param $params
@@ -727,7 +765,25 @@ ADD COLUMN
 			if ((int)$params['objOrder']->id_carrier == $id_carrier)
 			{
 				$service = Service::getInstance($this->context);
-				$service->makeOrder($params['objOrder']->id, $shipping_method);
+				$service->makeOrder((int)$params['objOrder']->id, $shipping_method);
+
+				$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
+
+				// Generate retour if auto-generation is enabled
+				if ((bool)Configuration::get('BPOST_LABEL_RETOUR_LABEL_'.$context_shop_id))
+				{
+					$reference = Configuration::get('BPOST_ACCOUNT_ID_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id)).'_'
+						.Tools::substr($params['objOrder']->reference, 0, 53);
+					$service->addLabel($reference, true);
+				}
+
+				if (!Service::isPrestashopFresherThan14())
+				{
+					$ps_order = new Order((int)$params['order']->id);
+					$ps_order->reference = $ps_order->id;
+					$ps_order->update();
+				}
+
 				break;
 			}
 		}*/

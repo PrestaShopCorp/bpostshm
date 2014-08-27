@@ -52,16 +52,16 @@ class Autoloader
 	}
 
 	/**
-	 * @param string $classname
+	 * @param string $class_name
 	 */
-	public function load($classname)
+	public function load($class_name)
 	{
 		// regenerate the class index if the requested file doesn't exists
-		if (empty($this->index[$classname]) || !is_file($this->index[$classname]))
+		if (empty($this->index[$class_name]) || !is_file($this->index[$class_name]))
 			$this->generateIndex();
 
-		if (!empty($this->index[$classname]))
-			require_once($this->index[$classname]);
+		if (!empty($this->index[$class_name]))
+			require_once($this->index[$class_name]);
 
 	}
 
@@ -81,8 +81,10 @@ class Autoloader
 		$file_in_override = file_exists($override_dir.$class_name.'.php');
 		$file_in_classes = file_exists($class_dir.$class_name.'.php');
 
+		if (!empty($this->index[$class_name]))
+			require_once($this->index[$class_name]);
 		// This is a Core class and its name is the same as its declared name
-		if (Tools::substr($class_name, -4) == 'Core')
+		elseif (Tools::substr($class_name, -4) == 'Core')
 			require_once($class_dir.Tools::substr($class_name, 0, -4).'.php');
 		else
 		{
@@ -100,12 +102,6 @@ class Autoloader
 			}
 			elseif ($file_in_override && !$file_in_classes)
 				require_once($override_dir.$class_name.'.php');
-			else
-			{
-				$class_name = explode('\\', $class_name);
-				array_splice($class_name, 0, 2);
-				require_once(_PS_MODULE_DIR_.'bpostshm/classes/lib/'.implode('/', $class_name).'.php');
-			}
 		}
 	}
 

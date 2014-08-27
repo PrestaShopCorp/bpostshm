@@ -182,7 +182,7 @@ class TijsVerkoyenBpostBpost
 		// execute
 		$response = curl_exec($this->curl);
 		$headers = curl_getinfo($this->curl);
-//var_dump($response, $headers);
+//var_dump($response, $headers);exit;
 
 		// fetch errors
 		$error_number = curl_errno($this->curl);
@@ -317,10 +317,10 @@ class TijsVerkoyenBpostBpost
 	/**
 	 * Creates a new order. If an order with the same orderReference already exists
 	 *
-	 * @param  TijsVerkoyenBpostOrder $order
+	 * @param  TijsVerkoyenBpostBpostOrder $order
 	 * @return bool
 	 */
-	public function createOrReplaceOrder(TijsVerkoyenBpostOrder $order)
+	public function createOrReplaceOrder(TijsVerkoyenBpostBpostOrder $order)
 	{
 		$url = '/orders';
 
@@ -354,7 +354,7 @@ class TijsVerkoyenBpostBpost
 	 * Fetch an order
 	 *
 	 * @param $reference
-	 * @return TijsVerkoyenBpostOrder
+	 * @return TijsVerkoyenBpostBpostOrder
 	 */
 	public function fetchOrder($reference)
 	{
@@ -369,7 +369,7 @@ class TijsVerkoyenBpostBpost
 			$headers
 		);
 
-		return TijsVerkoyenBpostOrder::createFromXML($xml);
+		return TijsVerkoyenBpostBpostOrder::createFromXML($xml);
 	}
 
 	/**
