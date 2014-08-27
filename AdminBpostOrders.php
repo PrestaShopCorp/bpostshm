@@ -14,6 +14,7 @@ if (!defined('_PS_VERSION_'))
 
 if (_PS_VERSION_ >= 1.5)
 {
+	require_once(__DIR__.'/controllers/admin/AdminBpostOrders.php');
 	return;
 }
 
