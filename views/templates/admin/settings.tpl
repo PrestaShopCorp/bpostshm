@@ -32,7 +32,7 @@
 				<li>{l s='Delivery in a pick-up point or postal office' mod='bpostshm'}</li>
 				<li>{l s='Delivery in a bpack 24/7 parcel machine' mod='bpostshm'}</li>
 			{/strip}</ul>
-			<p>{l s='When activated and correctlu installed, this module also allows you to completely integrate the bpost administration into your webshop. This means that orders are automatically added to the bpost portal. Furthermore, if enabled, it is possible to generate your labels and tracking codes directly from the Prestashop order admin page.' mod='bpostshm'}
+			<p>{l s='When activated and correctly installed, this module also allows you to completely integrate the bpost administration into your webshop. This means that orders are automatically added to the bpost portal. Furthermore, if enabled, it is possible to generate your labels and tracking codes directly from the Prestashop order admin page.' mod='bpostshm'}
 				<br />{l s='No more hassle and 100% transparent!' mod='bpostshm'}
 			</p>
 			<p>
@@ -95,7 +95,7 @@
 				</div>
 				<div class="margin-form col-lg-9 col-lg-offset-3">
 					<p class="preference_description help-block">
-						{l s='Do not modify this setting if you are not 100%% sure of what you are doing' mod='bpostshm'}
+						{l s='Do not modify this setting if you are not 100&#37; sure of what you are doing' mod='bpostshm'}
 					</p>
 				</div>
 			</div>
@@ -175,15 +175,13 @@
 				</div>
 			</div>
 			<div class="clear"></div>
-			<div class="form-group">
-			<table class="select-multiple{if empty($country_international_orders) || 1 == $country_international_orders} hidden{/if}">
+			<table class="select-multiple">
 				<tbody>
 					<tr>
 						<td>
-							<select multiple="multiple" id="country-list">
-							{foreach $product_countries as $iso_code => $_country}
-								<option value="{$iso_code}">{$_country}</option>
-							{/foreach}
+							<select multiple="multiple" id="country_list">
+								<option value="1">1</option>
+								<option value="2">2</option>
 							</select>
 						</td>
 						<td width="50" align="center">
@@ -192,23 +190,19 @@
 							<img id="remove_country" src="{$module_dir|escape}views/img/icons/arrow-left.png" alt="{l s='Remove' mod='bpostshm'}" />
 						</td>
 						<td>
-							<select name="enabled_country_list[]" multiple="multiple" id="enabled-country-list">
-							{foreach $enabled_countries as $iso_code => $_country}
-								<option value="{$iso_code}">{$_country}</option>
-							{/foreach}
+							<select name="country_international_orders_list" multiple="multiple" id="enabled_country_list">
+								<option value="2">2</option>
 							</select>
 						</td>
 					</tr>
 					<tr>
 						<td colspan="3">
-							<img id="get_countries" src="{$module_dir|escape}views/img/ajax-refresh.gif" alt="{l s='Refresh' mod='bpostshm'}" />
-							&nbsp;&nbsp;{l s='Refresh left list' mod='bpostshm'}
-							<br><span id="tracie"></span>
+							<img src="{$module_dir|escape}views/img/icons/arrow-refresh.png" alt="{l s='Refresh' mod='bpostshm'}" />
+							&nbsp;{l s='Refresh left list' mod='bpostshm'}
 						</td>
 					</tr>
 				</tbody>
 			</table>
-			</div>
 			<br />
 			<div class="margin-form panel-footer">
 				<button class="button btn btn-default pull-right" type="submit" name="submitCountrySettings">
@@ -265,11 +259,11 @@
 				<span class="control-label{if $version < 1.6}-bw{/if} col-lg-3">{l s='Retour label' mod='bpostshm'}</span>
 				<div class="margin-form col-lg-9">
 					<span class="switch prestashop-switch fixed-width-lg">
-						<input type="radio" name="label_retour_label" id="label_retour_label_1" value="1"{if !empty($display_home_delivery_only)} checked="checked"{/if} />
+						<input type="radio" name="label_retour_label" id="label_retour_label_1" value="1"{if !empty($label_retour_label)} checked="checked"{/if} />
 						<label class="col-lg-3" for="label_retour_label_1">
 							{if $version < 1.6}<img src="{$module_dir|escape}views/img/icons/tick.png" alt="{l s='Yes' mod='bpostshm'}" />{else}{l s='Yes' mod='bpostshm'}{/if}
 						</label>
-						<input type="radio" name="label_retour_label" id="label_retour_label_0" value="0"{if empty($display_home_delivery_only)} checked="checked"{/if} />
+						<input type="radio" name="label_retour_label" id="label_retour_label_0" value="0"{if empty($label_retour_label)} checked="checked"{/if} />
 						<label class="col-lg-3" for="label_retour_label_0">
 							{if $version < 1.6}<img src="{$module_dir|escape}views/img/icons/cross.png" alt="{l s='No' mod='bpostshm'}" />{else}{l s='No' mod='bpostshm'}{/if}
 						</label>
@@ -335,16 +329,16 @@
 
 	<script type="text/javascript">
 	$(function() {
-		$('#country-list, #enabled-country-list').live('focus', function() {
+		$('#country_list, #enabled_country_list').live('focus', function() {
 			var $select = $(this),
-				$handler = $select.is('#country-list') ? $('#add_country') : $('#remove_country');
+				$handler = $select.is('#country_list') ? $('#add_country') : $('#remove_country');
 
 			if ($select.children(':selected').length) {
 				$handler.css('opacity', 1);
 			}
 		}).live('blur', function() {
 			var $select = $(this),
-				$handler = $select.is('#country-list') ? $('#add_country') : $('#remove_country');
+				$handler = $select.is('#country_list') ? $('#add_country') : $('#remove_country');
 
 			if (!$select.children(':selected').length) {
 				$handler.css('opacity', .3);
@@ -352,8 +346,8 @@
 		});
 
 		$('#add_country').live('click', function() {
-			var $countryList = $('#country-list'),
-				$enabledCountryList = $('#enabled-country-list'),
+			var $countryList = $('#country_list'),
+				$enabledCountryList = $('#enabled_country_list'),
 				$countries = $countryList.children(':selected'),
 				enabledCountries = [];
 
@@ -373,58 +367,12 @@
 		});
 
 		$('#remove_country').live('click', function() {
-			$('#enabled-country-list').children(':selected').remove();
-		});
-
-		var $intList = $('.select-multiple'),
-			$imgRef = $('#get_countries'),
-			$imgSrc = $imgRef.attr('src');
-		$imgRef.live('click', function() {
-			getEnabledCountries();
-		});
-
-		function trace(str) { $('span#tracie').html(str); }
-		function refreshingList(bState) {
-			$imgRef.attr('src', $imgSrc.replace(bState? '.gif':'-load.gif', bState? '-load.gif':'.gif'));
-		}
-
-		function getEnabledCountries() {
-			/*
-			$.post("{$url_get_available_countries|escape:'javascript'}", function(data) {
-					$('span#tracie').html(data);
-				});
-			*/
-		
-			refreshingList(true);
-			$.getJSON("{$url_get_available_countries|escape:'javascript'}", function(data) {
-
-				$options = '';
-				$.each(data, function (key, value) {
-        			$options += '<option value="'+key+'">'+value+'</option>';
-        		});
-				$('#country-list').html($options);
-				refreshingList(false);
-			});
-		}
-				
-		$('input[name="country_international_orders"]').live('change', function() {
-			$intList.toggleClass('hidden');
-		});
-
-		// form select elements are disfunctional so mimic the result
-		$('button[name="submitCountrySettings"]').live('click', function(e) {
-			//e.preventDefault();
-			
-			$.each($('#enabled-country-list').children(), function() {
-				//enabled_country_list.push(this.value);
-				this.selected = true;
-			});
+			$('#enabled_country_list').children(':selected').remove();
 		});
 
 		$('input[name="label_use_ps_labels"]').live('change', function() {
 			$(this).closest('.form-group').nextAll('.form-group').toggleClass('hidden');
 		});
-
 	});
 	</script>
 </div>

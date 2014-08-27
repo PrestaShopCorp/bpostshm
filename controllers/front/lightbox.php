@@ -62,15 +62,6 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 			$this->context->cart->service_point_id = $service_point_id;
 			$this->jsonEncode($this->context->cart->update());
 		}
-	// SRG todo
-		elseif (Tools::getValue('get_bpack247_member'))
-		{
-			//$this->context->cart->service_point_id = $service_point_id;
-			//$this->jsonEncode($this->context->cart->update());
-			$this->jsonEncode(array('testing !!'));
-			
-		}
-	// SRG todone
 		elseif (Tools::getValue('post_bpack247_register'))
 		{
 			$params = array();
@@ -220,14 +211,7 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 							'step'				=> 2,
 							'token'				=> Tools::getToken('bpostshm'),
 						)));
-// SRG bPackCheck
-						self::$smarty->assign('url_get_bpack247_member', $this->context->link->getModuleLink('bpostshm', 'lightbox', array(
-							'ajax'					=> true,
-							'get_bpack247_member'	=> true,
-							'shipping_method'		=> $shipping_method,
-							'token'					=> Tools::getToken('bpostshm'),
-						)));
-// SRG todo
+
 						$this->addJqueryPlugin('fancybox');
 						$this->setTemplate('lightbox-at-247.tpl');
 						break;

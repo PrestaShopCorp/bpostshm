@@ -337,11 +337,9 @@ class BpostShm extends CarrierModule
 		return $return;
 	}
 
-
 	private function addOrderLabelTable()
 	{
-/*
-		$sql = '
+		Db::getInstance(_PS_USE_SQL_SLAVE_)->execute('
 CREATE TABLE IF NOT EXISTS
 	`'._DB_PREFIX_.'order_label`
 (
@@ -352,22 +350,7 @@ CREATE TABLE IF NOT EXISTS
 	`date_add` datetime NOT NULL,
 	`date_upd` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	PRIMARY KEY (`id_order_label`)
-)';
-*/
-		$sql = '
-CREATE TABLE IF NOT EXISTS
-	`'._DB_PREFIX_.'order_label`
-(
-	`id_order_label` int(11) NOT NULL AUTO_INCREMENT,
-	`reference` varchar(50) NOT NULL,
-	`status` varchar(20) NOT NULL,
-	`barcode` varchar(25) NOT NULL,
-	`date_add` datetime NOT NULL,
-	`date_upd` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	PRIMARY KEY (`id_order_label`)
-)';
-
-		Db::getInstance(_PS_USE_SQL_SLAVE_)->execute($sql);
+)');
 	}
 
 	private function alterCartTable()
@@ -480,9 +463,9 @@ ADD COLUMN
 			'country_international_orders',
 			Configuration::get('BPOST_INTERNATIONAL_ORDERS_'.$context_shop_id)
 		);
-		$enabled_country_list = Tools::getValue(
-			'enabled_country_list',
-			Configuration::get('BPOST_ENABLED_COUNTRY_LIST_'.$context_shop_id)
+		$country_international_orders_list = Tools::getValue(
+			'country_international_orders_list',
+			Configuration::get('BPOST_INTERNATIONAL_ORDERS_LIST'.$context_shop_id)
 		);
 		$label_use_ps_labels = Tools::getValue(
 			'label_use_ps_labels',
@@ -550,21 +533,19 @@ ADD COLUMN
 		elseif (Tools::isSubmit('submitCountrySettings'))
 		{
 			Configuration::updateValue('BPOST_INTERNATIONAL_ORDERS_'.$context_shop_id, $country_international_orders);
-			
+
 			if (2 == $country_international_orders)
 			{
-				if (is_array($enabled_country_list))
+				if (is_array($country_international_orders_list))
 				{
-					
-					$enabled_country_list = implode('|', $enabled_country_list);
-					
-					if (Configuration::get('BPOST_ENABLED_COUNTRY_LIST_'.$context_shop_id) !== $enabled_country_list)
-						Configuration::updateValue('BPOST_ENABLED_COUNTRY_LIST_'.$context_shop_id, $enabled_country_list);
+					$country_international_orders_list = implode('|', $country_international_orders_list);
+
+					if (Configuration::get('BPOST_INTERNATIONAL_ORDERS_'.$context_shop_id) !== $country_international_orders_list)
+						Configuration::updateValue('BPOST_INTERNATIONAL_ORDERS_'.$context_shop_id, $country_international_orders_list);
 				}
 			}
 			else
-				Configuration::updateValue('BPOST_ENABLED_COUNTRY_LIST_'.$context_shop_id, '');
-			
+				Configuration::updateValue('BPOST_INTERNATIONAL_ORDERS_LIST'.$context_shop_id, '');
 		}
 		elseif (Tools::isSubmit('submitLabelSettings'))
 		{
@@ -575,15 +556,8 @@ ADD COLUMN
 			{
 				if (Configuration::get('BPOST_LABEL_PDF_FORMAT_'.$context_shop_id) !== $label_pdf_format)
 					Configuration::updateValue('BPOST_LABEL_PDF_FORMAT_'.$context_shop_id, $label_pdf_format);
-				if (Configuration::get('BPOST_LABEL_RETOUR_LABEL_'.$context_shop_id) !== $label_retour_label && is_numeric($label_retour_label))
-					Configuration::updateValue('BPOST_LABEL_RETOUR_LABEL_'.$context_shop_id, (int)$label_retour_label);
-				if (Configuration::get('BPOST_LABEL_TT_INTEGRATION_'.$context_shop_id) !== $label_tt_integration && is_numeric($label_tt_integration))
-					Configuration::updateValue('BPOST_LABEL_TT_INTEGRATION_'.$context_shop_id, (int)$label_tt_integration);
 				if (Configuration::get('BPOST_LABEL_TT_FREQUENCY_'.$context_shop_id) !== $label_tt_frequency && is_numeric($label_tt_frequency))
 					Configuration::updateValue('BPOST_LABEL_TT_FREQUENCY_'.$context_shop_id, (int)$label_tt_frequency);
-				if (Configuration::get('BPOST_LABEL_TT_UPDATE_ON_OPEN_'.$context_shop_id) !== $label_tt_update_on_open
-						&& is_numeric($label_tt_update_on_open))
-					Configuration::updateValue('BPOST_LABEL_TT_UPDATE_ON_OPEN_'.$context_shop_id, (int)$label_tt_update_on_open);
 
 				$this->installModuleTab(
 					'AdminBpostOrders',
@@ -592,7 +566,21 @@ ADD COLUMN
 				);
 			}
 			else
+			{
+				$label_retour_label = false;
+				$label_tt_integration = false;
+				$label_tt_update_on_open = false;
+
 				$this->uninstallModuleTab('AdminBpostOrders');
+			}
+
+			if (Configuration::get('BPOST_LABEL_RETOUR_LABEL_'.$context_shop_id) !== $label_retour_label && is_numeric($label_retour_label))
+				Configuration::updateValue('BPOST_LABEL_RETOUR_LABEL_'.$context_shop_id, (int)$label_retour_label);
+			if (Configuration::get('BPOST_LABEL_TT_INTEGRATION_'.$context_shop_id) !== $label_tt_integration && is_numeric($label_tt_integration))
+				Configuration::updateValue('BPOST_LABEL_TT_INTEGRATION_'.$context_shop_id, (int)$label_tt_integration);
+			if (Configuration::get('BPOST_LABEL_TT_UPDATE_ON_OPEN_'.$context_shop_id) !== $label_tt_update_on_open
+					&& is_numeric($label_tt_update_on_open))
+				Configuration::updateValue('BPOST_LABEL_TT_UPDATE_ON_OPEN_'.$context_shop_id, (int)$label_tt_update_on_open);
 		}
 
 		$this->smarty->assign('account_id_account', $id_account, true);
@@ -600,13 +588,7 @@ ADD COLUMN
 		$this->smarty->assign('account_api_url', $api_url, true);
 		$this->smarty->assign('display_home_delivery_only', $display_home_delivery_only, true);
 		$this->smarty->assign('country_international_orders', $country_international_orders, true);
-		//$this->smarty->assign('enabled_country_list', $enabled_country_list, true);
-		$service = Service::getInstance($this->context);
-		$product_countries = $service->getProductCountries();
-		$enabled_countries = $service->explodeCountryList($enabled_country_list);
-		$this->smarty->assign('product_countries', $product_countries, true);
-		$this->smarty->assign('enabled_countries', $enabled_countries, true);
-		//
+		$this->smarty->assign('country_international_orders_list', $country_international_orders_list, true);
 		$this->smarty->assign('label_use_ps_labels', $label_use_ps_labels, true);
 		$this->smarty->assign('label_pdf_format', $label_pdf_format, true);
 		$this->smarty->assign('label_retour_label', $label_retour_label, true);
@@ -615,13 +597,6 @@ ADD COLUMN
 		$this->smarty->assign('label_tt_update_on_open', $label_tt_update_on_open, true);
 
 		$this->smarty->assign('errors', $errors, true);
-		// SRG Refresher
-		$this->smarty->assign('url_get_available_countries', $this->context->link->getModuleLink('bpostshm', 'confighelper', array(
-							'ajax'						=> true,
-							'get_available_countries'	=> true,
-							'token'						=> Tools::getAdminToken('bpostshm'),
-						)));
-		
 	}
 
 	/**
@@ -775,13 +750,6 @@ ADD COLUMN
 					$reference = Configuration::get('BPOST_ACCOUNT_ID_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id)).'_'
 						.Tools::substr($params['objOrder']->reference, 0, 53);
 					$service->addLabel($reference, true);
-				}
-
-				if (!Service::isPrestashopFresherThan14())
-				{
-					$ps_order = new Order((int)$params['order']->id);
-					$ps_order->reference = $ps_order->id;
-					$ps_order->update();
 				}
 
 				break;
