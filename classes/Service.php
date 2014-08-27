@@ -417,6 +417,8 @@ class Service
 				$order->addLine($line);
 				$weight += $product['product_weight'];
 			}
+		if (empty($weight))
+			$weight = 1;
 		$weight *= 1000;
 
 		$service_point_id = null;
@@ -457,25 +459,9 @@ class Service
 			$response = $response && $this->createPSLabel($reference);
 		}
 
-		/*
-		// international
-		$customsInfo = new CustomsInfo();
-		$customsInfo->setParcelValue(700);
-		$customsInfo->setContentDescription('BOOK');
-		$customsInfo->setShipmentType('DOCUMENTS');
-		$customsInfo->setParcelReturnInstructions('RTS');
-		$customsInfo->setPrivateAddress(false);
-
-		$international = new International();
-		$international->setProduct('bpack World Express Pro');
-		$international->setReceiver($receiver);
-		$international->setParcelWeight(2000);
-		$international->setCustomsInfo($customsInfo);
-		//$box->setInternationalBox($international);
-		*/
-
 		try {
 			$response = $response && $this->bpost->createOrReplaceOrder($order);
+			exit;
 			//$response &= $this->updateOrderStatus($reference);
 			//$response &= $this->bpost->modifyOrderStatus($order->getReference(), 'OPEN');
 		} catch (TijsVerkoyenBpostException $e) {
@@ -517,25 +503,58 @@ class Service
 		switch ((int)$type)
 		{
 			case (int)BpostShm::SHIPPING_METHOD_AT_HOME:
-				// @Home
-				$at_home = new TijsVerkoyenBpostBpostOrderBoxAtHome();
-				$at_home->setWeight($weight);
-				$at_home->setReceiver($receiver);
-				if ($is_retour)
-					$at_home->setProduct('bpack Easy Retour');
+				$is_international = false;
+				$id_zone_be = Configuration::get('BPOST_ID_COUNTRY_BELGIUM_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id));
+				$receiver_id_country = Country::getByIso($receiver->getAddress()->getCountryCode());
+
+				if ($id_zone_be != Country::getIdZone((int)$receiver_id_country))
+					$is_international = true;
+
+				if ($this->isPrestashopFresherThan14())
+					$ps_order = Order::getByReference(Tools::substr($order->getReference(), 7))->getFirst();
+				else
+					$ps_order = new Order((int)Tools::substr($order->getReference(), 7));
+
+				if ($is_international)
+				{
+					// @International
+					$customsInfo = new TijsVerkoyenBpostBpostOrderBoxCustomsinfoCustomsInfo();
+					$customsInfo->setParcelValue((float)$ps_order->total_paid * 100);
+					$customsInfo->setContentDescription('ORDER '.Configuration::get('PS_SHOP_NAME'));
+					$customsInfo->setShipmentType('DOCUMENTS');
+					$customsInfo->setParcelReturnInstructions('RTS');
+					$customsInfo->setPrivateAddress(false);
+
+					$international = new TijsVerkoyenBpostBpostOrderBoxInternational();
+					$international->setProduct('bpack World Express Pro');
+					$international->setReceiver($receiver);
+					$international->setParcelWeight($weight);
+					$international->setCustomsInfo($customsInfo);
+
+					$box->setInternationalBox($international);
+				}
 				else
 				{
-					$at_home->setProduct('bpack 24h Pro');
+					// @Home
+					$at_home = new TijsVerkoyenBpostBpostOrderBoxAtHome();
+					$at_home->setWeight($weight);
+					$at_home->setReceiver($receiver);
+					if ($is_retour)
+						$at_home->setProduct('bpack Easy Retour');
+					else
+					{
+						$at_home->setProduct('bpack 24h Pro');
 
-					$option = new TijsVerkoyenBpostBpostOrderBoxOptionMessaging(
-						'infoDistributed',
-						$this->context->language->iso_code,
-						$sender->getEmailAddress()
-					);
-					$at_home->addOption($option);
+						$option = new TijsVerkoyenBpostBpostOrderBoxOptionMessaging(
+							'infoDistributed',
+							$this->context->language->iso_code,
+							$sender->getEmailAddress()
+						);
+						$at_home->addOption($option);
+					}
+
+					$box->setNationalBox($at_home);
 				}
-
-				$box->setNationalBox($at_home);
 				break;
 
 			case (int)BpostShm::SHIPPING_METHOD_AT_SHOP:

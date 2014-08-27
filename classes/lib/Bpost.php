@@ -182,7 +182,6 @@ class TijsVerkoyenBpostBpost
 		// execute
 		$response = curl_exec($this->curl);
 		$headers = curl_getinfo($this->curl);
-//var_dump($response, $headers);exit;
 
 		// fetch errors
 		$error_number = curl_errno($this->curl);

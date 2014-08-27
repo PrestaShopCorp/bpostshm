@@ -12,6 +12,11 @@
 if (!defined('_PS_VERSION_'))
 	exit();
 
+if (_PS_VERSION_ >= 1.5)
+{
+	return;
+}
+
 require_once(_PS_MODULE_DIR_.'bpostshm/bpostshm.php');
 require_once(_PS_MODULE_DIR_.'bpostshm/classes/Service.php');
 
