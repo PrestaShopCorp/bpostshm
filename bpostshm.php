@@ -192,7 +192,7 @@ class BpostShm extends CarrierModule
 						//self::SHIPPING_METHOD_AT_HOME, @todo user may select at_home for an international shipping
 						self::SHIPPING_METHOD_AT_SHOP,
 						self::SHIPPING_METHOD_AT_24_7,
-					)) && method_exists('Country', 'affectZoneToSelection'))
+					)))
 				{
 					$id_zone_be = false;
 					$country_labels = array('België', 'Belgique', 'Belgium');
@@ -219,9 +219,18 @@ class BpostShm extends CarrierModule
 
 					if ($id_country = Country::getByIso('BE'))
 					{
-						$country = new CountryCore($id_country);
-						if ($country->affectZoneToSelection(array($id_country), $id_zone_be))
-							$carrier->addZone((int)$id_zone_be);
+						$country = new Country($id_country);
+						if (method_exists('Country', 'affectZoneToSelection'))
+						{
+							if ($country->affectZoneToSelection(array($id_country), $id_zone_be))
+								$carrier->addZone((int)$id_zone_be);
+						}
+						else
+						{
+							$country->id_zone = (int)$id_zone_be;
+							if ($country->save())
+								$carrier->addZone((int)$id_zone_be);
+						}
 					}
 				}
 				else

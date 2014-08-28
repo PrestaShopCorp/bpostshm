@@ -11,8 +11,11 @@ class Carrier extends CarrierCore
 {
 	public function __construct($id = null, $id_lang = null)
 	{
-		$this->fieldsValidate['delay'] = 'isCleanHtml';
-		$this->fieldsSizeLang['delay'] = 255;
+		if (_PS_VERSION_ > 1.4)
+		{
+			$this->fieldsValidate['delay'] = 'isCleanHtml';
+			$this->fieldsSizeLang['delay'] = 255;
+		}
 
 		parent::__construct($id, $id_lang);
 	}

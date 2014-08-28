@@ -797,9 +797,9 @@ class AdminBpostOrders extends ModuleAdminController
 			return false;
 
 		$pdf_dir = _PS_MODULE_DIR_.'bpostshm/pdf/'.$reference;
+		// disable if labels are not PRINTED
 		if (!is_dir($pdf_dir) || !opendir($pdf_dir))
 		{
-			// disable if labels are not PRINTED
 			$this->errors[] = str_replace(
 				'%reference%',
 				$reference,

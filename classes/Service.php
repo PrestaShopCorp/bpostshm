@@ -437,7 +437,7 @@ class Service
 				$base_order = $this->bpost->fetchOrder($reference);
 			foreach ($base_order->getBoxes() as $box)
 				if ($national_box = $box->getNationalBox())
-					if ('bpack Easy Retour' != $national_box->getProduct())
+					if (!in_array($national_box->getProduct(), array('bpack Easy Retour',/* 'bpack World Easy Return',*/)))
 					{
 						$response = $response && $this->addBox(
 							$order,
@@ -461,7 +461,6 @@ class Service
 
 		try {
 			$response = $response && $this->bpost->createOrReplaceOrder($order);
-			exit;
 			//$response &= $this->updateOrderStatus($reference);
 			//$response &= $this->bpost->modifyOrderStatus($order->getReference(), 'OPEN');
 		} catch (TijsVerkoyenBpostException $e) {
@@ -526,7 +525,10 @@ class Service
 					$customsInfo->setPrivateAddress(false);
 
 					$international = new TijsVerkoyenBpostBpostOrderBoxInternational();
-					$international->setProduct('bpack World Express Pro');
+					/*if ($is_retour)
+						$international->setProduct('bpack World Easy Return');
+					else*/
+						$international->setProduct('bpack World Express Pro');
 					$international->setReceiver($receiver);
 					$international->setParcelWeight($weight);
 					$international->setCustomsInfo($customsInfo);
@@ -633,7 +635,7 @@ class Service
 					foreach ($order_boxes as $box)
 						if ($national_box = $box->getNationalBox())
 						{
-							if ('bpack Easy Retour' == $national_box->getProduct())
+							if (in_array($national_box->getProduct(), array('bpack Easy Retour',/* 'bpack World Easy Return',*/)))
 								continue;
 
 							if (method_exists($national_box, 'getReceiver'))

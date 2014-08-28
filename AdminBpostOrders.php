@@ -10,7 +10,7 @@
  */
 
 if (!defined('_PS_VERSION_'))
-	exit();
+	exit;
 
 if (_PS_VERSION_ >= 1.5)
 {
@@ -52,15 +52,8 @@ class AdminBpostOrders extends AdminTab
 		$this->view = true;
 		$this->context = Context::getContext();
 
-
 		$this->module = new BpostShm();
 		$this->service = Service::getInstance($this->context);
-
-		$this->bulk_actions = array(
-			'markTreated' => array('text' => $this->l('Mark treated'), 'confirm' => $this->l('Mark order as treated?')),
-			'printLabels' => array('text' => $this->l('Print labels')),
-			'sendTTEmail' => array('text' => $this->l('Send T&T e-mail'), 'confirm' => $this->l('Send track & trace email to recipient?')),
-		);
 
 		$this->_select = '
 		a.`reference` as print,
@@ -70,7 +63,7 @@ class AdminBpostOrders extends AdminTab
 		';
 
 		$this->_join = '
-		LEFT JOIN `'._DB_PREFIX_.'orders` o ON (o.`reference` = SUBSTRING(a.`reference`, 8))
+		LEFT JOIN `'._DB_PREFIX_.'orders` o ON (o.`id_order` = SUBSTRING(a.`reference`, 8))
 		LEFT JOIN `'._DB_PREFIX_.'carrier` c ON (c.`id_carrier` = o.`id_carrier`)
 		LEFT JOIN (
 		SELECT `id_order`, `id_order_state`
@@ -126,7 +119,7 @@ class AdminBpostOrders extends AdminTab
 			),
 			'shipping_method' => array(
 				'title' => $this->l('Delivery method'),
-				'width' => 150,
+				'width' => 130,
 				'type' => 'select',
 				'list' => $this->service->delivery_methods_list,
 				'filter_key' => 'oc!id_carrier',
@@ -135,33 +128,24 @@ class AdminBpostOrders extends AdminTab
 			),
 			'recipient' => array(
 				'title' => $this->l('Recipient'),
-				'width' => 300,
+				'width' => 240,
 				'callback' => 'getOrderRecipient',
 			),
 			'status' => array(
 				'title' => $this->l('Status'),
-				'width' => 80,
 			),
 			'date_add' => array(
 				'title' => $this->l('Creation date'),
-				'width' => 120,
 				'align' => 'right',
 				'type' => 'datetime',
 				'filter_key' => 'a!date_add'
 			),
 			'count' => array(
 				'title' => $this->l('Labels'),
-				'width' => 60,
 				'align' => 'center',
 				'callback' => 'getLabelsCount',
 				'search' => false,
 				'orderby' => false,
-			),
-			'current_state' => array(
-				'title' => $this->l('Order state'),
-				'width' => 100,
-				'align' => 'center',
-				'class' => 'order_state',
 			),
 		);
 
