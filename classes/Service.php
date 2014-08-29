@@ -31,6 +31,9 @@ class Service
 	const GEO6_PARTNER = 999999;
 	const GEO6_APP_ID = '';
 
+	const BPACK247_ID = 'test@bpost.be';
+	const BPACK247_PASS = 'test';
+
 	/**
 	 * @param Context $context
 	 */
@@ -894,11 +897,107 @@ WHERE
 /**
  * 	SRG additions
  */
-	
-/**
- * get full list bpost enabled countries
- * @return assoc array
- */
+
+	public function createBpack247Member($customer = array())
+	{
+		$new_member = new TijsVerkoyenBpostBpack247Customer();
+
+		if (isset($customer['UserID']) && $customer['UserID'] != '')
+			$new_member->setUserID((string)$customer['UserID']);
+		if (isset($customer['FirstName']) && $customer['FirstName'] != '')
+			$new_member->setFirstName((string)$customer['FirstName']);
+		if (isset($customer['LastName']) && $customer['LastName'] != '')
+			$new_member->setLastName((string)$customer['LastName']);
+		if (isset($customer['Street']) && $customer['Street'] != '')
+			$new_member->setStreet((string)$customer['Street']);
+		if (isset($customer['Number']) && $customer['Number'] != '')
+			$new_member->setNumber((string)$customer['Number']);
+		if (isset($customer['CompanyName']) && $customer['CompanyName'] != '')
+			$new_member->setCompanyName((string)$customer['CompanyName']);
+		if (isset($customer['DateOfBirth']) && $customer['DateOfBirth'] != '')
+		{
+			$date_time = new \DateTime((string)$customer['DateOfBirth']);
+			$new_member->setDateOfBirth($date_time);
+		}
+		if (isset($customer['DeliveryCode']) && $customer['DeliveryCode'] != '')
+			$new_member->setDeliveryCode((string)$customer['DeliveryCode']);
+		if (isset($customer['Email']) && $customer['Email'] != '')
+			$new_member->setEmail((string)$customer['Email']);
+		if (isset($customer['MobilePrefix']) && $customer['MobilePrefix'] != '')
+			$new_member->setMobilePrefix(trim((string)$customer['MobilePrefix']));
+		if (isset($customer['MobileNumber']) && $customer['MobileNumber'] != '')
+			$new_member->setMobileNumber((string)$customer['MobileNumber']);
+		if (isset($customer['Postalcode']) && $customer['Postalcode'] != '')
+			$new_member->setPostalCode((string)$customer['Postalcode']);
+		if (isset($customer['PreferredLanguage']) && $customer['PreferredLanguage'] != '')
+			$new_member->setPreferredLanguage((string)$customer['PreferredLanguage']);
+		if (isset($customer['ReceivePromotions']) && $customer['ReceivePromotions'] != '')
+		{
+			$receive_promotions = in_array((string)$customer['ReceivePromotions'], array('true', '1'));
+			$new_member->setReceivePromotions($receive_promotions);
+		}
+		if (isset($customer['actived']) && $customer['actived'] != '')
+		{
+			$activated = in_array((string)$customer['actived'], array('true', '1'));
+			$new_member->setActivated($activated);
+		}
+		if (isset($customer['Title']) && $customer['Title'] != '')
+		{
+			$title = (string)$customer['Title'];
+			$title = Tools::ucfirst(Tools::strtolower($title));
+			if (Tools::substr($title, -1) != '.')
+				$title .= '.';
+
+			$new_member->setTitle($title);
+		}
+		if (isset($customer['Town']) && $customer['Town'] != '')
+			$new_member->setTown((string)$customer['Town']);
+
+		$bpack247 = new TijsVerkoyenBpostBpack247(
+			self::BPACK247_ID,
+			self::BPACK247_PASS
+		);
+
+		$member = array();
+/*
+		try {
+			$member = $bpack247->createMember($customer);
+		} catch (TijsVerkoyenBpostException $e) {
+			$response = false;
+		}
+
+		return $response;
+*/
+	}
+
+
+	/**
+	 * getBpack247Member 
+	 * @param  int 		$rcn customer delivery code RC#
+	 * @return string 	JSON encoded (bpack247Customer or error) 
+	 */
+	public function getBpack247Member($rcn)
+	{
+		$bpack247 = new TijsVerkoyenBpostBpack247(
+			self::BPACK247_ID,
+			self::BPACK247_PASS
+		);
+
+		try {
+			// return as JSON
+			$json = $bpack247->getMember($rcn, true);
+			
+		} catch (TijsVerkoyenBpostException $e) {
+			$json = '{"error":"'.$e->getMessage().'"}';
+		}
+
+		return $json;
+	}
+
+	/**
+	 * get full list bpost enabled countries
+	 * @return assoc array
+	 */
 	public function getProductCountries()
 	{
 		$product_config = $this->getProductConfig();
@@ -913,12 +1012,12 @@ WHERE
 		return $this->explodeCountryList($product_countries);
 	}
 
-/**
- * [explodeCountryList]
- * @param  string $iso_list delimited list of iso country codes
- * @param  string $glue     delimiter
- * @return array            assoc array of ps_countries [iso => name]
- */
+	/**
+	 * [explodeCountryList]
+	 * @param  string $iso_list delimited list of iso country codes
+	 * @param  string $glue     delimiter
+	 * @return array            assoc array of ps_countries [iso => name]
+	 */
 	public function explodeCountryList($iso_list, $glue = '|')
 	{
 		$iso_list = str_replace($glue, "','", $iso_list);

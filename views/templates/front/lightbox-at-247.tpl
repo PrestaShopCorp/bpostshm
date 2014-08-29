@@ -127,9 +127,51 @@
 				<img src="{$module_dir|escape}views/img/card_{$lang_iso|escape}.png" alt="{l s='User card' mod='bpostshm'}" />
 				<p>{l s='Your bpack 24/7 user number is an unique nine-digit code that allows bpost to identify you and notify you when a package comes in the machine. The nine-digit user number is on your user card and begins with the letters RC.' mod='bpostshm'}</p>
 			</div>
+			<a href="#trace-content" id="trace"></a>
+			<div id="trace-content" style="display: none;"></div>
 
 			<script type="text/javascript">
 				$(function() {
+
+					$('#rc-info').fancybox({
+						fitToView: 	false,
+						helpers: {
+							title:	null
+						},
+						closeBtn: 	false,
+						maxWidth: 	380
+					});
+
+					$("#terms").fancybox({
+					    type:  			'iframe',
+					    href: 			"{l s='https://www.bpack247.be/en/general-terms-conditions.aspx' mod='bpostshm'}",
+					    autoDimensions:	false,
+					    width: 			1000,
+					    height: 		700,
+					    closeBtn: 		false,
+					    autoScale: 		true
+					}); 
+
+					// Getbpack247Member
+					$('input[name="rc"]').live('keyup', function() {
+						$rcn = this.value;
+						if (rcRegX.test($rcn) || rcRegN.test($rcn)) {
+							
+							$.getJSON( "{$url_get_bpack247_member|escape:'javascript'}", { rcn: $rcn.replace(/-/g, '') } )
+							.done(function(json) {
+						  		if (null == json['UserID'])
+						  			trace(printJson(json));
+
+						  		$(location).attr('href', "{$url_get_point_list|escape:'javascript'}");
+						  	})
+						  	.fail(function( jqXHR, textStatus, error ) {
+						    	var err = textStatus + '<br>' + error + '<br>'; 
+						    	err += jqXHR.responseText;
+						    	trace(err);	
+							});
+
+						}
+					});
 
 					$(document)
 						.ajaxStart(function() {
@@ -139,48 +181,7 @@
 							$('.loader').hide();
 						});
 
-					
-					$('#rc-info').fancybox({
-						fitToView: 	false,
-						helpers:	{
-							title:		null
-						},
-						maxWidth	: 380
-					});
 
-					$("#terms").fancybox({
-					    'type' :  			'iframe',
-					    'href' : 			"{l s='https://www.bpack247.be/en/general-terms-conditions.aspx' mod='bpostshm'}",
-					    'autoDimensions' : 	false,
-					    'width' : 			1000,
-					    'height' : 			700,
-					    'autoScale' : 		true
-					}); 
-
-						
-					// still to do
-					$('input[name="rc"]').live('keyup', function(e) {
-						if (this.value.length >= 9) {
-							/*
-							$.post( "{$url_get_bpack247_member|escape:'javascript'}", function( data ) {
-							  //$( ".result" ).html( data );
-							  alert(data);
-							});*/
-							$.ajax({
-							  type: "POST",
-							  url: "{$url_get_bpack247_member|escape:'javascript'}",
-							  //data: data,
-							  success: 
-							  	function(response) {
-							  		alert(response);
-								}
-							  //dataType: dataType
-							});
-							
-						}
-					});
-					
-					
 					$('input[name="bpack247_register"]').live('change', function() {
 						if (this.value > 0)
 							$('#register').show();

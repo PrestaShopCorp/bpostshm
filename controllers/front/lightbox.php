@@ -62,15 +62,24 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 			$this->context->cart->service_point_id = $service_point_id;
 			$this->jsonEncode($this->context->cart->update());
 		}
-	// SRG todo
 		elseif (Tools::getValue('get_bpack247_member'))
 		{
-			//$this->context->cart->service_point_id = $service_point_id;
-			//$this->jsonEncode($this->context->cart->update());
-			$this->jsonEncode(array('testing !!'));
-			
+			$rcn = Tools::getValue('rcn');
+			$json_result = $service->getBpack247Member($rcn);
+			if (false === strpos($json_result, 'error'))
+			{	// no error
+				// Better to store the JSON string. serializing fails everytime
+				// Special NOTE: Cart.php override has changed to reflect this ('isSerializedArray' => 'isString')
+				try {
+					$this->context->cart->bpack247_customer = $json_result;
+					$this->context->cart->update();	
+				
+				} catch (Exception $e) {
+					$this->jsonEncode($e);	
+				}
+			}
+			die($json_result);
 		}
-	// SRG todone
 		elseif (Tools::getValue('post_bpack247_register'))
 		{
 			$params = array();
@@ -220,14 +229,14 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 							'step'				=> 2,
 							'token'				=> Tools::getToken('bpostshm'),
 						)));
-// SRG bPackCheck
+
 						self::$smarty->assign('url_get_bpack247_member', $this->context->link->getModuleLink('bpostshm', 'lightbox', array(
 							'ajax'					=> true,
 							'get_bpack247_member'	=> true,
 							'shipping_method'		=> $shipping_method,
 							'token'					=> Tools::getToken('bpostshm'),
 						)));
-// SRG todo
+
 						$this->addJqueryPlugin('fancybox');
 						$this->setTemplate('lightbox-at-247.tpl');
 						break;
@@ -236,20 +245,37 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 						self::$smarty->assign('module_dir', _MODULE_DIR_.$this->module->name.'/');
 						self::$smarty->assign('shipping_method', $shipping_method, true);
 
+						
 						if (!$customer = $this->context->cart->bpack247_customer)
 							return false;
 
-						$customer = unserialize($customer);
+						$customer = Tools::jsonDecode($customer, true);
+						
+						/*
 						self::$smarty->assign('city', $customer['town'], true);
 						self::$smarty->assign('postcode', '', true);
-
+						
 						$search_params = array(
 							'street' 	=> $customer['street'],
 							'nr' 		=> $customer['number'],
 							'zone'		=> $customer['town'],
 						);
+						*/
+					
+						self::$smarty->assign('city', $customer['Town'], true);
+						self::$smarty->assign('postcode', $customer['Postalcode'], true);
+						$default_station_id = '';
+						if (isset($customer['PackStations']))
+							$default_station_id = sprintf("%06s", $customer['PackStations']['CustomerPackStation']['PackstationID']);
+						
+						$search_params = array(
+							'street' 	=> $customer['Street'],
+							'nr' 		=> $customer['Number'],
+							'zone'		=> $customer['Town'],
+						);
 						$service_points = $service->getNearestServicePoint($search_params, $shipping_method);
 						self::$smarty->assign('servicePoints', $service_points, true);
+						self::$smarty->assign('defaultStation', $default_station_id, true);
 
 						self::$smarty->assign('url_get_nearest_service_points', $this->context->link->getModuleLink('bpostshm', 'lightbox', array(
 							'ajax'							=> true,
@@ -283,6 +309,7 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 
 		$this->addCSS(__PS_BASE_URI__.'modules/'.$this->module->name.'/views/css/lightbox.css');
 		$this->addJS(__PS_BASE_URI__.'modules/'.$this->module->name.'/views/js/bpostshm.js');
+		$this->addJS(__PS_BASE_URI__.'modules/'.$this->module->name.'/views/js/srgdebug.js');
 		$this->addJS('https://maps.googleapis.com/maps/api/js?v=3.16&key=AIzaSyAa4S8Br_5of6Jb_Gjv1WLldkobgExB2KY&sensor=false&language='
 			.$this->context->language->iso_code);
 	}

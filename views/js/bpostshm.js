@@ -184,6 +184,53 @@ BpostShm = {
 			$poi.siblings().removeClass('active').find('.hours').hide();
 			$poi.toggleClass('active');
 
+			if ($hours.length)
+				$hours.toggle();
+
+			else
+				switch (BpostShm.shipping_method) {
+				// if SHIPPING_METHOD_AT_SHOP
+				case 2:
+					if ('undefined' !== typeof BpostShm.cache.service_point_hours[ $poi.data('servicepointid') ])
+						return BpostShm.appendHours(BpostShm.cache.service_point_hours[ $poi.data('servicepointid') ], $poi);
+
+					$.get(BpostShm.services.get_service_point_hours, {
+						service_point_id: $poi.data('servicepointid')
+					}, function(response) {
+						if (response)
+						{
+							BpostShm.cache.service_point_hours[ $poi.data('servicepointid') ] = response;
+							BpostShm.appendHours(response, $poi);
+						}
+					});
+		
+					break;
+
+				// BPack24/7
+				case 4:
+					$button = $('<a />').addClass('button').text(BpostShm.lang['Next step']);	
+					$('<div class="hours" />').append($button).insertAfter( $poi.find('a') );
+					break;
+				}
+
+			$('#poi').scrollTo($poi);
+					
+		});
+/*
+		$('#poi li').live('click', function(e) {
+			if ($(e.target).is('.button'))
+				return;
+			else if ($(e.target).is('a'))
+				e.preventDefault();
+				e.stopPropagation();
+
+			// Retrieve and display OR hide hours
+			var $poi 	= $(this),
+				$hours 	= $poi.find('.hours');
+
+			$poi.siblings().removeClass('active').find('.hours').hide();
+			$poi.toggleClass('active');
+
 			// if SHIPPING_METHOD_AT_SHOP
 			if (2 == BpostShm.shipping_method)
 			{
@@ -211,6 +258,8 @@ BpostShm = {
 			else
 				BpostShm.appendHours(false, $poi);
 		});
+ */
+		
 	},
 	updatePointList: function()
 	{
@@ -340,7 +389,23 @@ BpostShm = {
 			$hours.append($table);
 		}
 
+		
 		$hours.append($button).insertAfter( $node.find('a') );
-		$('#poi').scrollTo($node);
+		//$('#poi').scrollTo($node);
+	},
+	setDefaultStation: function(station_id)
+	{
+		if ('' != station_id) {
+			elm = $("#poi li[data-servicepointid='"+station_id+"'] a");
+			name_elm = $('span.name')[0];
+			title_elm = elm.find(name_elm);
+			$title = title_elm.text() + ' @';
+			title_elm.text($title);
+		
+			setTimeout(function() {
+				elm.trigger('click');	
+			}, 2000);
+		}
+			
 	}
 };

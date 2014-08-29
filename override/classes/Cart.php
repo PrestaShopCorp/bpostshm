@@ -16,7 +16,8 @@ class Cart extends CartCore
 
 	public function __construct($id = null, $id_lang = null)
 	{
-		self::$definition['fields']['bpack247_customer'] 	= array('type' => self::TYPE_STRING, 'validate' => 'isSerializedArray');
+		//self::$definition['fields']['bpack247_customer'] 	= array('type' => self::TYPE_STRING, 'validate' => 'isSerializedArray');
+		self::$definition['fields']['bpack247_customer'] 	= array('type' => self::TYPE_STRING, 'validate' => 'isString');
 		self::$definition['fields']['service_point_id'] 	= array('type' => self::TYPE_INT, 'validate' => 'isUnsignedId');
 
 		parent::__construct($id, $id_lang);

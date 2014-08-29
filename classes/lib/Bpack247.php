@@ -105,14 +105,6 @@ class TijsVerkoyenBpostBpack247
 		if ($error_number != '')
 			throw new TijsVerkoyenBpostException($error_message, $error_number);
 
-var_dump(
-	$options[CURLOPT_URL],
-	$headers['http_code']
-);
-echo '<xmp style="text-align: left;">';
-print_r($response);
-echo '</xmp><br />';
-
 		// valid HTTP-code
 		if (!in_array($headers['http_code'], array(0, 200)))
 		{
@@ -237,12 +229,20 @@ echo '</xmp><br />';
 	 * @param  string   $id
 	 * @return TijsVerkoyenBpostBpack247Customer
 	 */
-	public function getMember($id)
+	public function getMember($id, $as_json = false)
 	{
 		$xml = $this->doCall(
 			'/customer/'.$id
 		);
 
+		if ($as_json)
+		{	
+			if (!isset($xml->UserID))
+				throw new TijsVerkoyenBpostException('No UserId found.');
+
+			return json_encode($xml);
+		}
+		
 		return TijsVerkoyenBpostBpack247Customer::createFromXML($xml);
 	}
 }
