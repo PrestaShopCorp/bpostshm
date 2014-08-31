@@ -783,6 +783,11 @@ ADD COLUMN
 			'token'				=> Tools::getToken('bpostshm'),
 		);
 
+// Srg
+		if (!empty($cart->bpack247_customer))
+			$url_params['step'] = 2;
+// Srg end
+
 		$this->smarty->assign('url_lightbox', (method_exists($this->context->link, 'getModuleLink')
 			? $this->context->link->getModuleLink($this->name, 'lightbox', $url_params)
 			:  Tools::getShopDomainSsl(true, true).'/'.Tools::substr($this->_path, 1)

@@ -898,7 +898,13 @@ WHERE
  * 	SRG additions
  */
 
-	public function createBpack247Member($customer = array())
+	/**
+	 * getBpack247Member 
+	 * @param  array 	$customer 	customer's new member details (validated)
+	 * @param  string 	$attribs 	required list of attributes (coma delimited)
+	 * @return array 	array of requested attributes | Error 
+	 */
+	public function createBpack247Member($customer, $attribs)
 	{
 		$new_member = new TijsVerkoyenBpostBpack247Customer();
 
@@ -953,45 +959,19 @@ WHERE
 		if (isset($customer['Town']) && $customer['Town'] != '')
 			$new_member->setTown((string)$customer['Town']);
 
-		$bpack247 = new TijsVerkoyenBpostBpack247(
-			self::BPACK247_ID,
-			self::BPACK247_PASS
-		);
-
-		$member = array();
-/*
-		try {
-			$member = $bpack247->createMember($customer);
-		} catch (TijsVerkoyenBpostException $e) {
-			$response = false;
-		}
-
-		return $response;
-*/
+		return $this->bpack247MemberFrom('createMember', array($new_member), $attribs);
 	}
 
 
 	/**
 	 * getBpack247Member 
-	 * @param  int 		$rcn customer delivery code RC#
-	 * @return string 	JSON encoded (bpack247Customer or error) 
+	 * @param  int 		$rcn 		customer delivery code RC#
+	 * @param  string 	$attribs 	required list of attributes (coma delimited)
+	 * @return array 	array of requested attributes | Error 
 	 */
-	public function getBpack247Member($rcn)
+	public function getBpack247Member($rcn, $attribs)
 	{
-		$bpack247 = new TijsVerkoyenBpostBpack247(
-			self::BPACK247_ID,
-			self::BPACK247_PASS
-		);
-
-		try {
-			// return as JSON
-			$json = $bpack247->getMember($rcn, true);
-			
-		} catch (TijsVerkoyenBpostException $e) {
-			$json = '{"error":"'.$e->getMessage().'"}';
-		}
-
-		return $json;
+		return $this->bpack247MemberFrom('getMember', array($rcn, true), $attribs);
 	}
 
 	/**
@@ -1049,6 +1029,50 @@ ORDER BY
 		}
 		
 		return array_filter($countries);
+	}
+
+	private function bpack247MemberFrom($method, $args, $with_attribs)
+	{
+		$member = array();
+		$bpack247 = new TijsVerkoyenBpostBpack247(
+			self::BPACK247_ID,
+			self::BPACK247_PASS
+		);
+
+		try {
+			if (!$xml = call_user_func_array( array($bpack247, $method), $args ))
+				$member['Error'] = 'Server or Developer Error !';
+			elseif (!isset($xml->DeliveryCode))
+				$member['Error'] = $method.': Invalid RC code';
+
+		} catch (TijsVerkoyenBpostException $e) {
+			$member['Error'] = $e->getMessage();
+		}
+
+		if (isset($member['Error']))
+			return $member;
+
+		$attribs = explode(',', $with_attribs);
+		foreach ($attribs as $attrib)
+		{
+			$attrib = trim($attrib);
+			$node = self::xmlSearch($attrib, $xml);
+			if (isset($node))
+				$member[$attrib] = (string) $node;	
+		}
+
+		return $member;
+	}
+
+	private static function xmlSearch($what, $nodes)
+	{	
+		foreach ($nodes as $key => $value)	
+			if ($what == $key)
+				return $value;
+			elseif ($value->count())
+				return self::xmlSearch($what, $value->children());
+		
+		return null;
 	}
 
 }

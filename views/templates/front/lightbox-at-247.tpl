@@ -46,7 +46,7 @@
 					{/strip}</ul>
 					<img src="{$module_dir|escape}views/img/bpack247.png" alt="{l s='bpost 24/7' mod='bpostshm'}" />
 				</div>
-				<form class="col-xs-6" action="{$url_post_bpack247_register|escape:'url'}" id="register-247" method="POST" autocomplete="off" novalidate="novalidate">
+				<form class="col-xs-6" action="{$url_post_bpack247_register|escape:'javascript'}" id="register-247" method="POST" autocomplete="off" novalidate="novalidate">
 					<div class="row clearfix">
 						<label for="title">{l s='Title' mod='bpostshm'}</label>
 						<select name="id_gender" id="title" required="required">
@@ -86,11 +86,16 @@
 						<input type="text" name="town" id="town" value="{$locality|default:''}" required="required" />
 						<sup>*</sup>
 					</div>
-					<div class="row clearfix">
+					<!-- <div class="row clearfix">
 						<label for="date-of-birth">{l s='Birthday' mod='bpostshm'}</label>
 						<input type="text" name="date_of_birth" id="date-of-birth" value="{$birthday|default:''}" placeholder="{l s='dd/mm/yyyy' mod='bpostshm'}" required="required" />
 						<sup>*</sup>
 						<span class="infos">{l s='dd/mm/yyyy' mod='bpostshm'}</span>
+					</div> -->
+					<div class="row clearfix">
+						<label for="date-of-birth">{l s='Birthday' mod='bpostshm'}</label>
+						<input type="text" name="date_of_birth" id="date-of-birth" value="{$birthday|default:''}" placeholder="{l s='yyyy-mm-dd' mod='bpostshm'}" />
+						<sup>*</sup>
 					</div>
 					<div class="row clearfix">
 						<label for="email">{l s='E-mail' mod='bpostshm'}</label>
@@ -114,6 +119,7 @@
 					<div class="row last">
 						<input type="checkbox" name="cgv" id="cgv" value="1" required="required" />
 						<!-- <label for="cgv">{l s='I accept the' mod='bpostshm'} <a href="{l s='https://www.bpack247.be/en/general-terms-conditions.aspx' mod='bpostshm'}" title="{l s='Terms and conditions' mod='bpostshm'}" target="_blank">{{l s='Terms and conditions' mod='bpostshm'}|lower}</a></label> -->
+						
 						<label for="cgv">{l s='I accept the' mod='bpostshm'} <a id="terms" href="" title="{l s='Terms and conditions' mod='bpostshm'}">{{l s='Terms and conditions' mod='bpostshm'}|lower}</a></label>
 						<sup>*</sup>
 						<br /><br />
@@ -153,24 +159,28 @@
 					}); 
 
 					// Getbpack247Member
-					$('input[name="rc"]').live('keyup', function() {
-						$rcn = this.value;
-						if (rcRegX.test($rcn) || rcRegN.test($rcn)) {
-							
-							$.getJSON( "{$url_get_bpack247_member|escape:'javascript'}", { rcn: $rcn.replace(/-/g, '') } )
+					function getBpack247Member($rcn)
+					{
+						$.getJSON( "{$url_get_bpack247_member|escape:'javascript'}", { rcn: $rcn } )
 							.done(function(json) {
-						  		if (null == json['UserID'])
-						  			trace(printJson(json));
-
-						  		$(location).attr('href', "{$url_get_point_list|escape:'javascript'}");
+						  		if (null != json['Error'])
+						  			//trace(printJson(json));
+						  			trace("{l s='RC# cannot be verified.' mod='bpostshm'}");
+						  		else
+						  			$(location).attr('href', "{$url_get_point_list|escape:'javascript'}");
 						  	})
 						  	.fail(function( jqXHR, textStatus, error ) {
 						    	var err = textStatus + '<br>' + error + '<br>'; 
 						    	err += jqXHR.responseText;
 						    	trace(err);	
 							});
+					}
 
-						}
+					$('input[name="rc"]').live('keyup', function() {
+						$rcn = this.value;
+						if (reRCn.test($rcn))
+							getBpack247Member( $rcn.replace(/-/g, '') );
+							
 					});
 
 					$(document)
@@ -194,6 +204,12 @@
 						e.preventDefault();
 						e.stopPropagation();
 
+						var dob = $('input[name="date_of_birth"]');
+						if ('' != dob.val() && !reDate.test(dob.val())) {
+							dob.fadeOut('slow').fadeIn('slow');
+							dob.val('');
+						} 
+
 						var $form 	= $(this),
 							$errors = [];
 
@@ -203,8 +219,16 @@
 							$field.removeClass('error');
 							if ($field.is('select, [type="text"]') && '' == field.value)
 								$errors.push($field);
+							else if ($field.is('#mobile-number')) {
+								val = field.value.replace(/[\s\(\)]/g, '');
+								if (reMobileBE.test(val))
+									field.value = val.substring(val.length-9);
+								else
+									$errors.push($field);
+							}
 							else if ($field.is('[type="checkbox"]') && !$field.is(':checked'))
-								$errors.push($field);
+								$errors.push($field.parent());
+								//$errors.push($('#uniform-cgv'));
 						});
 
 						if ($errors.length)
@@ -219,12 +243,26 @@
 						}
 
 						$.post( $form.attr('action'), $form.serialize() )
-							.success(function(response) {
+							.done(function(response) {								
+								if (null != response['Error'])
+									trace(printJson(response));
+									//trace("{l s='Registration failed.' mod='bpostshm'}");
+								else
+						  			$(location).attr('href', "{$url_get_point_list|escape:'javascript'}");
+								
+								/*
 								if (response)
 									$(location).attr('href', '{$url_get_point_list|escape:'javascript'}');
 								else
 									alert('{l s='An error has occured, please try again later.' js=1 mod='bpostshm'}');
+								*/	
+							}, "json")
+							.fail(function( jqXHR, textStatus, error ) {
+						    	var err = textStatus + '<br>' + error + '<br>'; 
+						    	err += jqXHR.responseText;
+						    	trace(err);	
 							});
+
 					});
 				});
 			</script>

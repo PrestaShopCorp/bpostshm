@@ -37,9 +37,9 @@ function printJson($jsn) {
 }
 
 //{literal}
-var rcRegX = /^[0-9]{3}-[0-9]{3}-[0-9]{3}$/; 
-var rcRegN = /^[0-9]{9}$/;
-//var reHtml = /\<\!DOCTYPE html(.*)\>(.*)\<\/html>/; 
+var reRCn = /^(\d{3}-\d{3}-\d{3})|\d{9}$/;
+var reDate = /^(19[0-9][0-9]|20[0-2][0-9])-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$/;
+var reMobileBE = /^(0{2}32|\+32)?0?(468|4[7-9]\d)(\d{6})$/;
 //{/literal}
 
 					
