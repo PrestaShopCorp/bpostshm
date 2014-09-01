@@ -95,7 +95,7 @@
 				</div>
 				<div class="margin-form col-lg-9 col-lg-offset-3">
 					<p class="preference_description help-block">
-						{l s='Do not modify this setting if you are not 100&#37; sure of what you are doing' mod='bpostshm'}
+						{l s='Do not modify this setting if you are not 100%% sure of what you are doing' mod='bpostshm'}
 					</p>
 				</div>
 			</div>
@@ -175,13 +175,15 @@
 				</div>
 			</div>
 			<div class="clear"></div>
-			<table class="select-multiple">
+			<div class="form-group">
+			<table class="select-multiple{if empty($country_international_orders) || 1 == $country_international_orders} hidden{/if}">
 				<tbody>
 					<tr>
 						<td>
-							<select multiple="multiple" id="country_list">
-								<option value="1">1</option>
-								<option value="2">2</option>
+							<select multiple="multiple" id="country-list">
+							{foreach $product_countries as $iso_code => $_country}
+								<option value="{$iso_code}">{$_country}</option>
+							{/foreach}
 							</select>
 						</td>
 						<td width="50" align="center">
@@ -190,19 +192,23 @@
 							<img id="remove_country" src="{$module_dir|escape}views/img/icons/arrow-left.png" alt="{l s='Remove' mod='bpostshm'}" />
 						</td>
 						<td>
-							<select name="country_international_orders_list" multiple="multiple" id="enabled_country_list">
-								<option value="2">2</option>
+							<select name="enabled_country_list[]" multiple="multiple" id="enabled-country-list">
+							{foreach $enabled_countries as $iso_code => $_country}
+								<option value="{$iso_code}">{$_country}</option>
+							{/foreach}
 							</select>
 						</td>
 					</tr>
 					<tr>
 						<td colspan="3">
-							<img src="{$module_dir|escape}views/img/icons/arrow-refresh.png" alt="{l s='Refresh' mod='bpostshm'}" />
-							&nbsp;{l s='Refresh left list' mod='bpostshm'}
+							<img id="get_countries" src="{$module_dir|escape}views/img/ajax-refresh.gif" alt="{l s='Refresh' mod='bpostshm'}" />
+							&nbsp;&nbsp;{l s='Refresh left list' mod='bpostshm'}
+							<br><span id="tracie"></span>
 						</td>
 					</tr>
 				</tbody>
 			</table>
+			</div>
 			<br />
 			<div class="margin-form panel-footer">
 				<button class="button btn btn-default pull-right" type="submit" name="submitCountrySettings">
@@ -329,16 +335,16 @@
 
 	<script type="text/javascript">
 	$(function() {
-		$('#country_list, #enabled_country_list').live('focus', function() {
+		$('#country-list, #enabled-country-list').live('focus', function() {
 			var $select = $(this),
-				$handler = $select.is('#country_list') ? $('#add_country') : $('#remove_country');
+				$handler = $select.is('#country-list') ? $('#add_country') : $('#remove_country');
 
 			if ($select.children(':selected').length) {
 				$handler.css('opacity', 1);
 			}
 		}).live('blur', function() {
 			var $select = $(this),
-				$handler = $select.is('#country_list') ? $('#add_country') : $('#remove_country');
+				$handler = $select.is('#country-list') ? $('#add_country') : $('#remove_country');
 
 			if (!$select.children(':selected').length) {
 				$handler.css('opacity', .3);
@@ -346,8 +352,8 @@
 		});
 
 		$('#add_country').live('click', function() {
-			var $countryList = $('#country_list'),
-				$enabledCountryList = $('#enabled_country_list'),
+			var $countryList = $('#country-list'),
+				$enabledCountryList = $('#enabled-country-list'),
 				$countries = $countryList.children(':selected'),
 				enabledCountries = [];
 
@@ -367,12 +373,58 @@
 		});
 
 		$('#remove_country').live('click', function() {
-			$('#enabled_country_list').children(':selected').remove();
+			$('#enabled-country-list').children(':selected').remove();
+		});
+
+		var $intList = $('.select-multiple'),
+			$imgRef = $('#get_countries'),
+			$imgSrc = $imgRef.attr('src');
+		$imgRef.live('click', function() {
+			getEnabledCountries();
+		});
+
+		function trace(str) { $('span#tracie').html(str); }
+		function refreshingList(bState) {
+			$imgRef.attr('src', $imgSrc.replace(bState? '.gif':'-load.gif', bState? '-load.gif':'.gif'));
+		}
+
+		function getEnabledCountries() {
+			/*
+			$.post("{$url_get_available_countries|escape:'javascript'}", function(data) {
+					$('span#tracie').html(data);
+				});
+			*/
+		
+			refreshingList(true);
+			$.getJSON("{$url_get_available_countries|escape:'javascript'}", function(data) {
+
+				$options = '';
+				$.each(data, function (key, value) {
+        			$options += '<option value="'+key+'">'+value+'</option>';
+        		});
+				$('#country-list').html($options);
+				refreshingList(false);
+			});
+		}
+				
+		$('input[name="country_international_orders"]').live('change', function() {
+			$intList.toggleClass('hidden');
+		});
+
+		// form select elements are disfunctional so mimic the result
+		$('button[name="submitCountrySettings"]').live('click', function(e) {
+			//e.preventDefault();
+			
+			$.each($('#enabled-country-list').children(), function() {
+				//enabled_country_list.push(this.value);
+				this.selected = true;
+			});
 		});
 
 		$('input[name="label_use_ps_labels"]').live('change', function() {
 			$(this).closest('.form-group').nextAll('.form-group').toggleClass('hidden');
 		});
+
 	});
 	</script>
 </div>

@@ -32,6 +32,9 @@ class Service
 	const GEO6_PARTNER = 999999;
 	const GEO6_APP_ID = '';
 
+	const BPACK247_ID = 'test@bpost.be';
+	const BPACK247_PASS = 'test';
+
 	/**
 	 * @param Context $context
 	 */
@@ -1032,4 +1035,194 @@ WHERE
 
 		return $response && $this->bpost->createOrReplaceOrder($order);
 	}
+
+////////////////////
+///
+///  SRG section
+///
+////////////////////
+
+	/**
+	 * getBpack247Member 
+	 * @param  array 	$customer 	customer's new member details (validated)
+	 * @param  string 	$attribs 	required list of attributes (coma delimited)
+	 * @return array 	array of requested attributes | Error 
+	 */
+	public function createBpack247Member($customer, $attribs)
+	{
+		$new_member = new TijsVerkoyenBpostBpack247Customer();
+
+		if (isset($customer['UserID']) && $customer['UserID'] != '')
+			$new_member->setUserID((string)$customer['UserID']);
+		if (isset($customer['FirstName']) && $customer['FirstName'] != '')
+			$new_member->setFirstName((string)$customer['FirstName']);
+		if (isset($customer['LastName']) && $customer['LastName'] != '')
+			$new_member->setLastName((string)$customer['LastName']);
+		if (isset($customer['Street']) && $customer['Street'] != '')
+			$new_member->setStreet((string)$customer['Street']);
+		if (isset($customer['Number']) && $customer['Number'] != '')
+			$new_member->setNumber((string)$customer['Number']);
+		if (isset($customer['CompanyName']) && $customer['CompanyName'] != '')
+			$new_member->setCompanyName((string)$customer['CompanyName']);
+		if (isset($customer['DateOfBirth']) && $customer['DateOfBirth'] != '')
+		{
+			$date_time = new \DateTime((string)$customer['DateOfBirth']);
+			$new_member->setDateOfBirth($date_time);
+		}
+		if (isset($customer['DeliveryCode']) && $customer['DeliveryCode'] != '')
+			$new_member->setDeliveryCode((string)$customer['DeliveryCode']);
+		if (isset($customer['Email']) && $customer['Email'] != '')
+			$new_member->setEmail((string)$customer['Email']);
+		if (isset($customer['MobilePrefix']) && $customer['MobilePrefix'] != '')
+			$new_member->setMobilePrefix(trim((string)$customer['MobilePrefix']));
+		if (isset($customer['MobileNumber']) && $customer['MobileNumber'] != '')
+			$new_member->setMobileNumber((string)$customer['MobileNumber']);
+		if (isset($customer['Postalcode']) && $customer['Postalcode'] != '')
+			$new_member->setPostalCode((string)$customer['Postalcode']);
+		if (isset($customer['PreferredLanguage']) && $customer['PreferredLanguage'] != '')
+			$new_member->setPreferredLanguage((string)$customer['PreferredLanguage']);
+		if (isset($customer['ReceivePromotions']) && $customer['ReceivePromotions'] != '')
+		{
+			$receive_promotions = in_array((string)$customer['ReceivePromotions'], array('true', '1'));
+			$new_member->setReceivePromotions($receive_promotions);
+		}
+		if (isset($customer['actived']) && $customer['actived'] != '')
+		{
+			$activated = in_array((string)$customer['actived'], array('true', '1'));
+			$new_member->setActivated($activated);
+		}
+		if (isset($customer['Title']) && $customer['Title'] != '')
+		{
+			$title = (string)$customer['Title'];
+			$title = Tools::ucfirst(Tools::strtolower($title));
+			if (Tools::substr($title, -1) != '.')
+				$title .= '.';
+
+			$new_member->setTitle($title);
+		}
+		if (isset($customer['Town']) && $customer['Town'] != '')
+			$new_member->setTown((string)$customer['Town']);
+
+		return $this->bpack247MemberFrom('createMember', array($new_member), $attribs);
+	}
+
+
+	/**
+	 * getBpack247Member 
+	 * @param  int 		$rcn 		customer delivery code RC#
+	 * @param  string 	$attribs 	required list of attributes (coma delimited)
+	 * @return array 	array of requested attributes | Error 
+	 */
+	public function getBpack247Member($rcn, $attribs)
+	{
+		return $this->bpack247MemberFrom('getMember', array($rcn, true), $attribs);
+	}
+
+	/**
+	 * get full list bpost enabled countries
+	 * @return assoc array
+	 */
+	public function getProductCountries()
+	{
+		$product_countries = array();
+		
+		try {
+			$product_config = $this->getProductConfig();
+			$prices = $product_config['deliveryMethod'][0]['product'][0]['price'];
+			
+			foreach ($prices as $price) 
+				$product_countries[] = $price['@attributes']['countryIso2Code'];
+			
+		} catch (Exception $e) {
+			
+		}
+
+		$product_countries = empty($product_countries) ? 'BE' : implode('|', $product_countries);
+
+		return $this->explodeCountryList($product_countries);
+	}
+
+	/**
+	 * [explodeCountryList]
+	 * @param  string $iso_list delimited list of iso country codes
+	 * @param  string $glue     delimiter
+	 * @return array            assoc array of ps_countries [iso => name]
+	 */
+	public function explodeCountryList($iso_list, $glue = '|')
+	{
+		$iso_list = str_replace($glue, "','", $iso_list);
+		$query = "
+SELECT 
+	c.id_country as id, c.iso_code as iso, cl.name  
+FROM 
+	`"._DB_PREFIX_."country` c, `"._DB_PREFIX_."country_lang` cl 
+WHERE
+	cl.id_lang = ".$this->context->language->id." 
+AND
+	c.id_country = cl.id_country
+AND 
+	c.iso_code in ('".$iso_list."')
+ORDER BY 
+	name
+		";
+
+		$countries = array();
+		try {
+			$db = Db::getInstance(_PS_USE_SQL_SLAVE_);
+			$db_res = $db->query($query);    
+			if($db_res)
+				while ($row = $db->nextRow($db_res))
+					$countries[$row['iso']] = $row['name'];
+	
+		} catch (Exception $e) {
+			$countries = array();
+		}
+		
+		return array_filter($countries);
+	}
+
+	private function bpack247MemberFrom($method, $args, $with_attribs)
+	{
+		$member = array();
+		$bpack247 = new TijsVerkoyenBpostBpack247(
+			self::BPACK247_ID,
+			self::BPACK247_PASS
+		);
+
+		try {
+			if (!$xml = call_user_func_array( array($bpack247, $method), $args ))
+				$member['Error'] = 'Server or Developer Error !';
+			elseif (!isset($xml->DeliveryCode))
+				$member['Error'] = $method.': Invalid RC code';
+
+		} catch (TijsVerkoyenBpostException $e) {
+			$member['Error'] = $e->getMessage();
+		}
+
+		if (isset($member['Error']))
+			return $member;
+
+		$attribs = explode(',', $with_attribs);
+		foreach ($attribs as $attrib)
+		{
+			$attrib = trim($attrib);
+			$node = self::xmlSearch($attrib, $xml);
+			if (isset($node))
+				$member[$attrib] = (string) $node;	
+		}
+
+		return $member;
+	}
+
+	private static function xmlSearch($what, $nodes)
+	{	
+		foreach ($nodes as $key => $value)	
+			if ($what == $key)
+				return $value;
+			elseif ($value->count())
+				return self::xmlSearch($what, $value->children());
+		
+		return null;
+	}
+
 }

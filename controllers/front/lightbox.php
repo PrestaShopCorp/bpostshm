@@ -62,44 +62,53 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 			$this->context->cart->service_point_id = $service_point_id;
 			$this->jsonEncode($this->context->cart->update());
 		}
+		elseif (Tools::getValue('get_bpack247_member'))
+		{
+			$rcn = Tools::getValue('rcn');
+			$member = $service->getBpack247Member($rcn, 'Number, Street, Town, Postalcode, PackstationID, DeliveryCode');
+			$this->validateStore($member);
+		}
 		elseif (Tools::getValue('post_bpack247_register'))
 		{
-			$params = array();
+			$customer = array();
 			if ($id_gender = (int)Tools::getValue('id_gender'))
 			{
 				$gender = new Gender($id_gender, $this->context->language->id, $this->context->shop->id);
 				if ($gender->type)
-					$params['title'] = 'Ms.';
+					$customer['Title'] = 'Ms.';
 				else
-					$params['title'] = 'Mr.';
+					$customer['Title'] = 'Mr.';
 			}
 			if ($firstname = (string)Tools::getValue('firstname'))
-				$params['firstname'] = $firstname;
+				$customer['FirstName'] = $firstname;
 			if ($lastname = (string)Tools::getValue('lastname'))
-				$params['lastname'] = $lastname;
+				$customer['LastName'] = $lastname;
 			if ($street = (string)Tools::getValue('street'))
-				$params['street'] = $street;
+				$customer['Street'] = $street;
 			if ($nr = (int)Tools::getValue('number'))
-				$params['number'] = $nr;
+				$customer['Number'] = $nr;
 			if ($postal_code = (int)Tools::getValue('postal_code'))
-				$params['postal_code'] = $postal_code;
+				$customer['Postalcode'] = $postal_code;
 			if ($town = (string)Tools::getValue('town'))
-				$params['town'] = $town;
+				$customer['Town'] = $town;
 			if ($date_of_birth = (string)Tools::getValue('date_of_birth'))
-				$params['date_of_birth'] = $date_of_birth;
+				$customer['DateOfBirth'] = $date_of_birth;
 			if ($email = (string)Tools::getValue('email'))
-				$params['email'] = Tools::strtoupper($email);
+				$customer['Email'] = Tools::strtoupper($email);
 			if ($mobile_number = (string)Tools::getValue('mobile_number'))
-				// int cast removes leading zero
-				$params['mobile_number'] = (int)$mobile_number;
+				// int cast removes leading zero 
+				// * Srg: int is the least of the problems. proper RE validation already done
+				$customer['MobileNumber'] = (int)$mobile_number;
 			if ($preferred_language = (string)Tools::getValue('preferred_language'))
-				$params['preferred_language'] = $preferred_language;
+				$customer['PreferredLanguage'] = $preferred_language;
 
-			$customer = $service->makerBpack247Customer($params);
-			exit();
-			//$this->context->cart->bpack247_customer = serialize($params);
-			//return $this->context->cart->update();
+//$customer['Error'] = 'Registering: is this correct?';
+//$this->jsonEncode($customer);
+
+			$member = $service->createBpack247Member($customer, 'Number, Street, Postalcode, DeliveryCode');
+			$this->validateStore($member);
 		}
+		
 
 		// Building display page
 		self::$smarty->assign('version', (Service::isPrestashop16() ? 1.6 : (Service::isPrestashopFresherThan14() ? 1.5 : 1.4)), true);
@@ -212,6 +221,13 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 							'token'				=> Tools::getToken('bpostshm'),
 						)));
 
+						self::$smarty->assign('url_get_bpack247_member', $this->context->link->getModuleLink('bpostshm', 'lightbox', array(
+							'ajax'					=> true,
+							'get_bpack247_member'	=> true,
+							'shipping_method'		=> $shipping_method,
+							'token'					=> Tools::getToken('bpostshm'),
+						)));
+
 						$this->addJqueryPlugin('fancybox');
 						$this->setTemplate('lightbox-at-247.tpl');
 						break;
@@ -220,21 +236,30 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 						self::$smarty->assign('module_dir', _MODULE_DIR_.$this->module->name.'/');
 						self::$smarty->assign('shipping_method', $shipping_method, true);
 
+						
 						if (!$customer = $this->context->cart->bpack247_customer)
 							return false;
 
-						$customer = unserialize($customer);
-						self::$smarty->assign('city', $customer['town'], true);
-						self::$smarty->assign('postcode', '', true);
+						$customer = Tools::jsonDecode($customer, true);
+
+						$zone = $customer['Postalcode'];
+						self::$smarty->assign('postcode', $customer['Postalcode'], true);
+						if (!empty($customer['Town']))
+						{
+							self::$smarty->assign('city', $customer['Town'], true);
+							$zone .= ' '.$customer['Town'];
+						}
+						if (!empty($customer['PackstationID']))
+							self::$smarty->assign('defaultStation', sprintf("%06s", $customer['PackstationID']), true);
 
 						$search_params = array(
-							'street' 	=> $customer['street'],
-							'nr' 		=> $customer['number'],
-							'zone'		=> $customer['town'],
+							'street' 	=> $customer['Street'],
+							'nr' 		=> $customer['Number'],
+							'zone'		=> $zone, //$customer['Town'],
 						);
 						$service_points = $service->getNearestServicePoint($search_params, $shipping_method);
 						self::$smarty->assign('servicePoints', $service_points, true);
-
+						
 						self::$smarty->assign('url_get_nearest_service_points', $this->context->link->getModuleLink('bpostshm', 'lightbox', array(
 							'ajax'							=> true,
 							'get_nearest_service_points' 	=> true,
@@ -267,8 +292,33 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 
 		$this->addCSS(__PS_BASE_URI__.'modules/'.$this->module->name.'/views/css/lightbox.css');
 		$this->addJS(__PS_BASE_URI__.'modules/'.$this->module->name.'/views/js/bpostshm.js');
+		$this->addJS(__PS_BASE_URI__.'modules/'.$this->module->name.'/views/js/srgdebug.js');
 		$this->addJS('https://maps.googleapis.com/maps/api/js?v=3.16&key=AIzaSyAa4S8Br_5of6Jb_Gjv1WLldkobgExB2KY&sensor=false&language='
 			.$this->context->language->iso_code);
+	}
+
+	private function validateStore($member)
+	{
+		$json_member = Tools::jsonEncode($member);
+		
+		// Better to store the JSON string. serializing fails everytime
+		// Special NOTE: Cart.php override has changed to reflect this ('isSerializedArray' => 'isString')	
+		if (!isset($member['Error']))
+			try {
+				$this->context->cart->bpack247_customer = $json_member;
+				$this->context->cart->update();	
+			
+			} catch (Exception $e) {
+				$json_member = Tools::jsonEncode(array('Error' => $e->getMessage()));	
+			}
+		
+		$this->terminateWith($json_member);
+	}
+
+	private function terminateWith($json)
+	{
+		header('Content-Type: application/json');
+		die($json);
 	}
 
 	private function jsonEncode($content)

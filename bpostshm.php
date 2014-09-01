@@ -470,9 +470,9 @@ ADD COLUMN
 			'country_international_orders',
 			Configuration::get('BPOST_INTERNATIONAL_ORDERS_'.$context_shop_id)
 		);
-		$country_international_orders_list = Tools::getValue(
-			'country_international_orders_list',
-			Configuration::get('BPOST_INTERNATIONAL_ORDERS_LIST'.$context_shop_id)
+		$enabled_country_list = Tools::getValue(
+			'enabled_country_list',
+			Configuration::get('BPOST_ENABLED_COUNTRY_LIST_'.$context_shop_id)
 		);
 		$label_use_ps_labels = Tools::getValue(
 			'label_use_ps_labels',
@@ -543,16 +543,16 @@ ADD COLUMN
 
 			if (2 == $country_international_orders)
 			{
-				if (is_array($country_international_orders_list))
+				if (is_array($enabled_country_list))
 				{
-					$country_international_orders_list = implode('|', $country_international_orders_list);
-
-					if (Configuration::get('BPOST_INTERNATIONAL_ORDERS_'.$context_shop_id) !== $country_international_orders_list)
-						Configuration::updateValue('BPOST_INTERNATIONAL_ORDERS_'.$context_shop_id, $country_international_orders_list);
+					$enabled_country_list = implode('|', $enabled_country_list);
+					
+					if (Configuration::get('BPOST_ENABLED_COUNTRY_LIST_'.$context_shop_id) !== $enabled_country_list)
+						Configuration::updateValue('BPOST_ENABLED_COUNTRY_LIST_'.$context_shop_id, $enabled_country_list);
 				}
 			}
 			else
-				Configuration::updateValue('BPOST_INTERNATIONAL_ORDERS_LIST'.$context_shop_id, '');
+				Configuration::updateValue('BPOST_ENABLED_COUNTRY_LIST_'.$context_shop_id, '');
 		}
 		elseif (Tools::isSubmit('submitLabelSettings'))
 		{
@@ -595,7 +595,11 @@ ADD COLUMN
 		$this->smarty->assign('account_api_url', $api_url, true);
 		$this->smarty->assign('display_home_delivery_only', $display_home_delivery_only, true);
 		$this->smarty->assign('country_international_orders', $country_international_orders, true);
-		$this->smarty->assign('country_international_orders_list', $country_international_orders_list, true);
+		$service = Service::getInstance($this->context);
+		$product_countries = $service->getProductCountries();
+		$enabled_countries = $service->explodeCountryList($enabled_country_list);
+		$this->smarty->assign('product_countries', $product_countries, true);
+		$this->smarty->assign('enabled_countries', $enabled_countries, true);
 		$this->smarty->assign('label_use_ps_labels', $label_use_ps_labels, true);
 		$this->smarty->assign('label_pdf_format', $label_pdf_format, true);
 		$this->smarty->assign('label_retour_label', $label_retour_label, true);
@@ -604,6 +608,12 @@ ADD COLUMN
 		$this->smarty->assign('label_tt_update_on_open', $label_tt_update_on_open, true);
 
 		$this->smarty->assign('errors', $errors, true);
+		$this->smarty->assign('url_get_available_countries', $this->context->link->getModuleLink('bpostshm', 'confighelper', array(
+							'ajax'						=> true,
+							'get_available_countries'	=> true,
+							'token'						=> Tools::getAdminToken('bpostshm'),
+						)));
+		
 	}
 
 	/**

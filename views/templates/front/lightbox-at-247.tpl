@@ -15,7 +15,7 @@
 					{l s='Select or create a bpack 24/7 account' mod='bpostshm'}
 				</h1>
 				<form class="col-xs-12" action="" id="rc-form" method="POST" autocomplete="off">
-					<input name="bpack247_register" id="bpack247_register_0" type="radio" value="0" />
+					<input name="bpack247_register" id="bpack247_register_0" type="radio" value="0" checked="checked" />
 					<label for="bpack247_register_0">{l s='I am a bpack 24/7 registered user' mod='bpostshm'}</label>
 					<label for="rc">{l s='RC:' mod='bpostshm'}</label>
 					<input type="text" name="rc" id="rc" type="text" value="" placeholder="{l s='123-456-789' mod='bpostshm'}" />
@@ -43,7 +43,7 @@
 					{/strip}</ul>
 					<img src="{$module_dir|escape}views/img/bpack247.png" alt="{l s='bpost 24/7' mod='bpostshm'}" />
 				</div>
-				<form class="col-xs-6" action="{$url_post_bpack247_register|escape:'url'}" id="register-247" method="POST" autocomplete="off" novalidate="novalidate">
+				<form class="col-xs-6" action="{$url_post_bpack247_register|escape:'javascript'}" id="register-247" method="POST" autocomplete="off" novalidate="novalidate">
 					<div class="row clearfix">
 						<label for="title">{l s='Title' mod='bpostshm'}</label>
 						<select name="id_gender" id="title" required="required">
@@ -83,11 +83,16 @@
 						<input type="text" name="town" id="town" value="{$locality|default:''}" required="required" />
 						<sup>*</sup>
 					</div>
-					<div class="row clearfix">
+					<!-- <div class="row clearfix">
 						<label for="date-of-birth">{l s='Birthday' mod='bpostshm'}</label>
 						<input type="text" name="date_of_birth" id="date-of-birth" value="{$birthday|default:''}" placeholder="{l s='dd/mm/yyyy' mod='bpostshm'}" required="required" />
 						<sup>*</sup>
 						<span class="infos">{l s='dd/mm/yyyy' mod='bpostshm'}</span>
+					</div> -->
+					<div class="row clearfix">
+						<label for="date-of-birth">{l s='Birthday' mod='bpostshm'}</label>
+						<input type="text" name="date_of_birth" id="date-of-birth" value="{$birthday|default:''}" placeholder="{l s='yyyy-mm-dd' mod='bpostshm'}" />
+						<sup>*</sup>
 					</div>
 					<div class="row clearfix">
 						<label for="email">{l s='E-mail' mod='bpostshm'}</label>
@@ -110,8 +115,10 @@
 					</div>
 					<div class="row last">
 						<input type="checkbox" name="cgv" id="cgv" value="1" required="required" />
-						<label for="cgv">{l s='I accept the' mod='bpostshm'} <a href="{l s='https://www.bpack247.be/en/general-terms-conditions.aspx' mod='bpostshm'}"
-							title="{l s='Terms and conditions' mod='bpostshm'}" target="_blank">{{l s='Terms and conditions' mod='bpostshm'}|lower}</a></label>
+
+						<!-- <label for="cgv">{l s='I accept the' mod='bpostshm'} <a href="{l s='https://www.bpack247.be/en/general-terms-conditions.aspx' mod='bpostshm'}" title="{l s='Terms and conditions' mod='bpostshm'}" target="_blank">{{l s='Terms and conditions' mod='bpostshm'}|lower}</a></label> -->
+						
+						<label for="cgv">{l s='I accept the' mod='bpostshm'} <a id="terms" href="" title="{l s='Terms and conditions' mod='bpostshm'}">{{l s='Terms and conditions' mod='bpostshm'}|lower}</a></label>
 						<sup>*</sup>
 						<br /><br />
 						<input type="submit" class="button" value="{l s='Create account' mod='bpostshm'}" />
@@ -124,15 +131,64 @@
 				<img src="{$module_dir|escape}views/img/card_{$lang_iso|escape}.png" alt="{l s='User card' mod='bpostshm'}" />
 				<p>{l s='Your bpack 24/7 user number is an unique nine-digit code that allows bpost to identify you and notify you when a package comes in the machine. The nine-digit user number is on your user card and begins with the letters RC.' mod='bpostshm'}</p>
 			</div>
+			
 			<script type="text/javascript">
 				$(function() {
+
+					srgDebug.init('srg-trace');
+			
 					$('#rc-info').fancybox({
 						fitToView: 	false,
-						helpers:	{
-							title:		null
+						helpers: {
+							title:	null
 						},
-						maxWidth	: 380
+						closeBtn: 	false,
+						maxWidth: 	380
 					});
+
+					$("#terms").fancybox({
+					    type:  			'iframe',
+					    href: 			"{l s='https://www.bpack247.be/en/general-terms-conditions.aspx' mod='bpostshm'}",
+					    autoDimensions:	false,
+					    width: 			1000,
+					    height: 		700,
+					    closeBtn: 		false,
+					    autoScale: 		true
+					}); 
+
+					// Getbpack247Member
+					function getBpack247Member($rcn)
+					{
+						$.getJSON( "{$url_get_bpack247_member|escape:'javascript'}", { rcn: $rcn } )
+							.done(function(json) {
+						  		if (null != json['Error'])
+						  			//srgDebug.traceJson(json);
+						  			srgDebug.trace("{l s='RC# cannot be verified.' mod='bpostshm'}");
+						  		else
+						  			$(location).attr('href', "{$url_get_point_list|escape:'javascript'}");
+						  	})
+						  	.fail(function( jqXHR, textStatus, error ) {
+						    	var err = textStatus + '<br>' + error + '<br>'; 
+						    	err += jqXHR.responseText;
+						    	srgDebug.trace(err);	
+							});
+					}
+
+					$('input[name="rc"]').live('keyup', function() {
+						$rcn = this.value;
+						if (reRCn.test($rcn))
+							getBpack247Member( $rcn.replace(/-/g, '') );
+							
+					});
+
+					$(document)
+						.ajaxStart(function() {
+							$('.loader').css('display', 'inline-block');
+						})
+						.ajaxComplete(function() {
+							$('.loader').hide();
+						});
+
 
 					$('input[name="bpack247_register"]').live('change', function() {
 						if (this.value > 0)
@@ -146,6 +202,12 @@
 						e.preventDefault();
 						e.stopPropagation();
 
+						var dob = $('input[name="date_of_birth"]');
+						if ('' != dob.val() && !reDate.test(dob.val())) {
+							dob.fadeOut('slow').fadeIn('slow');
+							dob.val('');
+						} 
+
 						var $form 	= $(this),
 							$errors = [];
 
@@ -155,8 +217,16 @@
 							$field.removeClass('error');
 							if ($field.is('select, [type="text"]') && '' == field.value)
 								$errors.push($field);
+							else if ($field.is('#mobile-number')) {
+								val = field.value.replace(/[\s\(\)]/g, '');
+								if (reMobileBE.test(val))
+									field.value = val.substring(val.length-9);
+								else
+									$errors.push($field);
+							}
 							else if ($field.is('[type="checkbox"]') && !$field.is(':checked'))
-								$errors.push($field);
+								$errors.push($field{if $version > 1.5}.parent(){/if});
+								
 						});
 
 						if ($errors.length)
@@ -171,12 +241,20 @@
 						}
 
 						$.post( $form.attr('action'), $form.serialize() )
-							.success(function(response) {
-								if (response)
-									$(location).attr('href', '{$url_get_point_list|escape:'javascript'}');
+							.done(function(response) {								
+								if (null != response['Error'])
+									srgDebug.traceJson(response);
+									//srgDebug.trace("{l s='Registration failed.' mod='bpostshm'}");
 								else
-									alert('{l s='An error has occured, please try again later.' js=1 mod='bpostshm'}');
+						  			$(location).attr('href', "{$url_get_point_list|escape:'javascript'}");
+								
+							}, "json")
+							.fail(function( jqXHR, textStatus, error ) {
+						    	var err = textStatus + '<br>' + error + '<br>'; 
+						    	err += jqXHR.responseText;
+						    	srgDebug.trace(err);	
 							});
+
 					});
 				});
 			</script>

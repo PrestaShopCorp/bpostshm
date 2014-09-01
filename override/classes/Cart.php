@@ -19,14 +19,17 @@ class Cart extends CartCore
 	{
 		if (Service::isPrestashopFresherThan14())
 		{
-			self::$definition['fields']['bpack247_customer'] 	= array('type' => self::TYPE_STRING, 'validate' => 'isSerializedArray');
+			//self::$definition['fields']['bpack247_customer'] 	= array('type' => self::TYPE_STRING, 'validate' => 'isSerializedArray');
+			self::$definition['fields']['bpack247_customer'] 	= array('type' => self::TYPE_STRING, 'validate' => 'isString');
 			self::$definition['fields']['service_point_id'] 	= array('type' => self::TYPE_INT, 'validate' => 'isUnsignedId');
 		}
 		else
 		{
-			$this->fieldsValidate['bpack247_customer'] = 'isSerializedArray';
+			//$this->fieldsValidate['bpack247_customer'] = 'isSerializedArray';
+			$this->fieldsValidate['bpack247_customer'] = 'isString';
 			$this->fieldsValidate['service_point_id'] = 'isUnsignedId';
 		}
+
 
 		parent::__construct($id, $id_lang);
 	}
