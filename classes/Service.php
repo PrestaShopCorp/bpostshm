@@ -980,13 +980,19 @@ WHERE
 	 */
 	public function getProductCountries()
 	{
-		$product_config = $this->getProductConfig();
-		$prices = $product_config['deliveryMethod'][0]['product'][0]['price'];
 		$product_countries = array();
 		
-		foreach ($prices as $price) 
-			$product_countries[] = $price['@attributes']['countryIso2Code'];
-		
+		try {
+			$product_config = $this->getProductConfig();
+			$prices = $product_config['deliveryMethod'][0]['product'][0]['price'];
+			
+			foreach ($prices as $price) 
+				$product_countries[] = $price['@attributes']['countryIso2Code'];
+			
+		} catch (Exception $e) {
+			
+		}
+
 		$product_countries = empty($product_countries) ? 'BE' : implode('|', $product_countries);
 
 		return $this->explodeCountryList($product_countries);

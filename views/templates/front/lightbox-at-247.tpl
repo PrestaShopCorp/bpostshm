@@ -17,7 +17,7 @@
 				</h1>
 					
 				<form class="col-xs-12" action="" id="rc-form" method="POST" autocomplete="off">
-					<input name="bpack247_register" id="bpack247_register_0" type="radio" value="0" />
+					<input name="bpack247_register" id="bpack247_register_0" type="radio" value="0" checked="checked" />
 					<label for="bpack247_register_0">{l s='I am a bpack 24/7 registered user' mod='bpostshm'}</label>
 					<label for="rc">{l s='RC:' mod='bpostshm'}</label>
 					<input type="text" name="rc" id="rc" type="text" value="" placeholder="{l s='123-456-789' mod='bpostshm'}" />
@@ -133,12 +133,12 @@
 				<img src="{$module_dir|escape}views/img/card_{$lang_iso|escape}.png" alt="{l s='User card' mod='bpostshm'}" />
 				<p>{l s='Your bpack 24/7 user number is an unique nine-digit code that allows bpost to identify you and notify you when a package comes in the machine. The nine-digit user number is on your user card and begins with the letters RC.' mod='bpostshm'}</p>
 			</div>
-			<a href="#trace-content" id="trace"></a>
-			<div id="trace-content" style="display: none;"></div>
-
+			
 			<script type="text/javascript">
 				$(function() {
 
+					srgDebug.init('srg-trace');
+			
 					$('#rc-info').fancybox({
 						fitToView: 	false,
 						helpers: {
@@ -164,15 +164,15 @@
 						$.getJSON( "{$url_get_bpack247_member|escape:'javascript'}", { rcn: $rcn } )
 							.done(function(json) {
 						  		if (null != json['Error'])
-						  			//trace(printJson(json));
-						  			trace("{l s='RC# cannot be verified.' mod='bpostshm'}");
+						  			//srgDebug.traceJson(json);
+						  			srgDebug.trace("{l s='RC# cannot be verified.' mod='bpostshm'}");
 						  		else
 						  			$(location).attr('href', "{$url_get_point_list|escape:'javascript'}");
 						  	})
 						  	.fail(function( jqXHR, textStatus, error ) {
 						    	var err = textStatus + '<br>' + error + '<br>'; 
 						    	err += jqXHR.responseText;
-						    	trace(err);	
+						    	srgDebug.trace(err);	
 							});
 					}
 
@@ -227,8 +227,8 @@
 									$errors.push($field);
 							}
 							else if ($field.is('[type="checkbox"]') && !$field.is(':checked'))
-								$errors.push($field.parent());
-								//$errors.push($('#uniform-cgv'));
+								$errors.push($field{if $version > 1.5}.parent(){/if});
+								
 						});
 
 						if ($errors.length)
@@ -245,8 +245,8 @@
 						$.post( $form.attr('action'), $form.serialize() )
 							.done(function(response) {								
 								if (null != response['Error'])
-									trace(printJson(response));
-									//trace("{l s='Registration failed.' mod='bpostshm'}");
+									srgDebug.traceJson(response);
+									//srgDebug.trace("{l s='Registration failed.' mod='bpostshm'}");
 								else
 						  			$(location).attr('href', "{$url_get_point_list|escape:'javascript'}");
 								
@@ -260,7 +260,7 @@
 							.fail(function( jqXHR, textStatus, error ) {
 						    	var err = textStatus + '<br>' + error + '<br>'; 
 						    	err += jqXHR.responseText;
-						    	trace(err);	
+						    	srgDebug.trace(err);	
 							});
 
 					});
