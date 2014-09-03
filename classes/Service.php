@@ -478,13 +478,13 @@ class Service
 	 * @param int $type
 	 * @param TijsVerkoyenBpostBpostOrderSender $sender
 	 * @param TijsVerkoyenBpostBpostOrderReceiver $receiver
-	 * @param int $weight
+	 * @param int $weight @todo Find a cleaner way to manage weight
 	 * @param null $service_point_id
 	 * @param TijsVerkoyenBpostBpostOrderBox $box
 	 * @return bool
 	 */
 	public function addBox(TijsVerkoyenBpostBpostOrder $order = null, $type = 0, TijsVerkoyenBpostBpostOrderSender $sender,
-		TijsVerkoyenBpostBpostOrderReceiver $receiver, $weight = 0, $service_point_id = null, $box = null)
+		TijsVerkoyenBpostBpostOrderReceiver $receiver, $weight = 1000, $service_point_id = null, $box = null)
 	{
 		$response = true;
 
@@ -505,6 +505,9 @@ class Service
 		switch ((int)$type)
 		{
 			case (int)BpostShm::SHIPPING_METHOD_AT_HOME:
+				if (empty($weight))
+					$weight = 1000;
+
 				$is_international = false;
 				$id_zone_be = Configuration::get('BPOST_ID_COUNTRY_BELGIUM_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id));
 				$receiver_id_country = Country::getByIso($receiver->getAddress()->getCountryCode());
@@ -626,6 +629,8 @@ class Service
 	 */
 	public function getOrderRecipient($reference = null)
 	{
+		$recipient = '-';
+
 		if (!is_null($reference))
 		{
 			$reference = Tools::substr($reference, 0, 50);
@@ -656,8 +661,6 @@ class Service
 				$recipient = '-';
 			}
 		}
-		else
-			$recipient = '-';
 
 		return $recipient;
 	}
@@ -989,8 +992,8 @@ WHERE
 	{
 		$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
 		$response = true;
-
 		$order = $this->bpost->fetchOrder($reference);
+
 		if ($this->isPrestashopFresherThan14())
 			$ps_order = Order::getByReference(Tools::substr($reference, 7))->getFirst();
 		else
@@ -1022,14 +1025,14 @@ WHERE
 		{
 			$shippers = $this->getReceiverAndSender($ps_order, true);
 
-			$response = $response && $this->addBox($order, (int)$type, $shippers['sender'], $shippers['receiver'], 0, $cart->service_point_id, $box);
+			$response = $response && $this->addBox($order, (int)$type, $shippers['sender'], $shippers['receiver'], null, $cart->service_point_id, $box);
 			$response = $response && $this->createPSLabel($order->getReference());
 		}
 
 		if (!$retour_only)
 		{
 			$shippers = $this->getReceiverAndSender($ps_order);
-			$response = $response && $this->addBox($order, (int)$type, $shippers['sender'], $shippers['receiver'], 0, $cart->service_point_id);
+			$response = $response && $this->addBox($order, (int)$type, $shippers['sender'], $shippers['receiver'], null, $cart->service_point_id);
 			$response = $response && $this->createPSLabel($order->getReference());
 		}
 
