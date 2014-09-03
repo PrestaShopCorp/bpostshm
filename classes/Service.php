@@ -1172,7 +1172,10 @@ ORDER BY
 		$countries = array();
 		try {
 			$db = Db::getInstance(_PS_USE_SQL_SLAVE_);
-			$db_res = $db->query($query);    
+			if (self::isPrestashopFresherThan14())
+				$db_res = $db->query($query);
+			else
+				$db_res = $db->execute($query);
 			if($db_res)
 				while ($row = $db->nextRow($db_res))
 					$countries[$row['iso']] = $row['name'];

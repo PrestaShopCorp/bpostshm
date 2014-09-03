@@ -145,80 +145,82 @@
 		</fieldset>
 	</form>
 	<br />
-	<form class="form-horizontal{if $version < 1.5} v1-4{elseif $version < 1.6} v1-5{/if}" action="#" method="POST" autocomplete="off">
-		<fieldset class="panel">
-			{if $version < 1.6}<legend><img src="{$module_dir|escape}views/img/icons/bpost.png" alt="bpost" />{else}<div class="panel-heading">{/if}
-				{l s='Country settings' mod='bpostshm'}
-			{if $version < 1.6}</legend>{else}</div>{/if}
-			<div class="form-group">
-				<span class="control-label{if $version < 1.6}-bw{/if} col-lg-3">{l s='International orders' mod='bpostshm'}</span>
-				<div class="margin-form col-lg-9">
-					<p class="radio">
-						<label for="country_international_orders_1">
-							<input type="radio" name="country_international_orders" id="country_international_orders_1" value="1"
-								{if empty($country_international_orders) || 1 == $country_international_orders} checked="checked"{/if} />
-							{l s='bpost is used for all available countries' mod='bpostshm'}
-						</label>
-					</p>
-					<p class="radio">
-						<label for="country_international_orders_2">
-							<input type="radio" name="country_international_orders" id="country_international_orders_2" value="2"
-								{if !empty($country_international_orders) && 2 == $country_international_orders} checked="checked"{/if} />
-							{l s='I want to manually configure the countries for which bpost needs to be enabled' mod='bpostshm'}
-						</label>
-					</p>
+	{if !empty($account_id_account) && !empty($account_passphrase)}
+		<form class="form-horizontal{if $version < 1.5} v1-4{elseif $version < 1.6} v1-5{/if}" action="#" method="POST" autocomplete="off">
+			<fieldset class="panel">
+				{if $version < 1.6}<legend><img src="{$module_dir|escape}views/img/icons/bpost.png" alt="bpost" />{else}<div class="panel-heading">{/if}
+					{l s='Country settings' mod='bpostshm'}
+				{if $version < 1.6}</legend>{else}</div>{/if}
+				<div class="form-group">
+					<span class="control-label{if $version < 1.6}-bw{/if} col-lg-3">{l s='International orders' mod='bpostshm'}</span>
+					<div class="margin-form col-lg-9">
+						<p class="radio">
+							<label for="country_international_orders_1">
+								<input type="radio" name="country_international_orders" id="country_international_orders_1" value="1"
+									{if empty($country_international_orders) || 1 == $country_international_orders} checked="checked"{/if} />
+								{l s='bpost is used for all available countries' mod='bpostshm'}
+							</label>
+						</p>
+						<p class="radio">
+							<label for="country_international_orders_2">
+								<input type="radio" name="country_international_orders" id="country_international_orders_2" value="2"
+									{if !empty($country_international_orders) && 2 == $country_international_orders} checked="checked"{/if} />
+								{l s='I want to manually configure the countries for which bpost needs to be enabled' mod='bpostshm'}
+							</label>
+						</p>
+					</div>
+					<div class="margin-form col-lg-9 col-lg-offset-3">
+						<p class="preference_description help-block">
+							<a href="" title="{l s='Click here' mod='bpostshm'}">{l s='Click here' mod='bpostshm'}</a> {l s='to see how this list is created' mod='bpostshm'}
+						</p>
+					</div>
 				</div>
-				<div class="margin-form col-lg-9 col-lg-offset-3">
-					<p class="preference_description help-block">
-						<a href="" title="{l s='Click here' mod='bpostshm'}">{l s='Click here' mod='bpostshm'}</a> {l s='to see how this list is created' mod='bpostshm'}
-					</p>
+				<div class="clear"></div>
+				<div class="form-group">
+				<table class="select-multiple{if empty($country_international_orders) || 1 == $country_international_orders} hidden{/if}">
+					<tbody>
+						<tr>
+							<td>
+								<select multiple="multiple" id="country-list">
+								{foreach $product_countries as $iso_code => $_country}
+									<option value="{$iso_code}">{$_country}</option>
+								{/foreach}
+								</select>
+							</td>
+							<td width="50" align="center">
+								<img id="add_country" src="{$module_dir|escape}views/img/icons/arrow-right.png" alt="{l s='Add' mod='bpostshm'}" />
+								<br />
+								<img id="remove_country" src="{$module_dir|escape}views/img/icons/arrow-left.png" alt="{l s='Remove' mod='bpostshm'}" />
+							</td>
+							<td>
+								<select name="enabled_country_list[]" multiple="multiple" id="enabled-country-list">
+								{foreach $enabled_countries as $iso_code => $_country}
+									<option value="{$iso_code}">{$_country}</option>
+								{/foreach}
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td colspan="3">
+								<img id="get_countries" src="{$module_dir|escape}views/img/ajax-refresh.gif" alt="{l s='Refresh' mod='bpostshm'}" />
+								&nbsp;&nbsp;{l s='Refresh left list' mod='bpostshm'}
+								<br><span id="tracie"></span>
+							</td>
+						</tr>
+					</tbody>
+				</table>
 				</div>
-			</div>
-			<div class="clear"></div>
-			<div class="form-group">
-			<table class="select-multiple{if empty($country_international_orders) || 1 == $country_international_orders} hidden{/if}">
-				<tbody>
-					<tr>
-						<td>
-							<select multiple="multiple" id="country-list">
-							{foreach $product_countries as $iso_code => $_country}
-								<option value="{$iso_code}">{$_country}</option>
-							{/foreach}
-							</select>
-						</td>
-						<td width="50" align="center">
-							<img id="add_country" src="{$module_dir|escape}views/img/icons/arrow-right.png" alt="{l s='Add' mod='bpostshm'}" />
-							<br />
-							<img id="remove_country" src="{$module_dir|escape}views/img/icons/arrow-left.png" alt="{l s='Remove' mod='bpostshm'}" />
-						</td>
-						<td>
-							<select name="enabled_country_list[]" multiple="multiple" id="enabled-country-list">
-							{foreach $enabled_countries as $iso_code => $_country}
-								<option value="{$iso_code}">{$_country}</option>
-							{/foreach}
-							</select>
-						</td>
-					</tr>
-					<tr>
-						<td colspan="3">
-							<img id="get_countries" src="{$module_dir|escape}views/img/ajax-refresh.gif" alt="{l s='Refresh' mod='bpostshm'}" />
-							&nbsp;&nbsp;{l s='Refresh left list' mod='bpostshm'}
-							<br><span id="tracie"></span>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-			</div>
-			<br />
-			<div class="margin-form panel-footer">
-				<button class="button btn btn-default pull-right" type="submit" name="submitCountrySettings">
-					<i class="process-icon-save"></i>
-					{l s='Save settings' mod='bpostshm'}
-				</button>
-			</div>
-		</fieldset>
-	</form>
-	<br />
+				<br />
+				<div class="margin-form panel-footer">
+					<button class="button btn btn-default pull-right" type="submit" name="submitCountrySettings">
+						<i class="process-icon-save"></i>
+						{l s='Save settings' mod='bpostshm'}
+					</button>
+				</div>
+			</fieldset>
+		</form>
+		<br />
+	{/if}
 	<form class="form-horizontal{if $version < 1.5} v1-4{elseif $version < 1.6} v1-5{/if}" action="#" method="POST" autocomplete="off">
 		<fieldset class="panel">
 			{if $version < 1.6}<legend><img src="{$module_dir|escape}views/img/icons/bpost.png" alt="bpost" />{else}<div class="panel-heading">{/if}
@@ -394,7 +396,7 @@
 					$('span#tracie').html(data);
 				});
 			*/
-		
+
 			refreshingList(true);
 			$.getJSON("{$url_get_available_countries|escape:'javascript'}", function(data) {
 
@@ -406,7 +408,7 @@
 				refreshingList(false);
 			});
 		}
-				
+
 		$('input[name="country_international_orders"]').live('change', function() {
 			$intList.toggleClass('hidden');
 		});
@@ -414,7 +416,7 @@
 		// form select elements are disfunctional so mimic the result
 		$('button[name="submitCountrySettings"]').live('click', function(e) {
 			//e.preventDefault();
-			
+
 			$.each($('#enabled-country-list').children(), function() {
 				//enabled_country_list.push(this.value);
 				this.selected = true;

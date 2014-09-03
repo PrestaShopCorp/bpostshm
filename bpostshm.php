@@ -595,9 +595,15 @@ ADD COLUMN
 		$this->smarty->assign('account_api_url', $api_url, true);
 		$this->smarty->assign('display_home_delivery_only', $display_home_delivery_only, true);
 		$this->smarty->assign('country_international_orders', $country_international_orders, true);
-		$service = Service::getInstance($this->context);
-		$product_countries = $service->getProductCountries();
-		$enabled_countries = $service->explodeCountryList($enabled_country_list);
+		$product_countries = array();
+		$enabled_countries = array();
+		if (Configuration::get('BPOST_ACCOUNT_ID_'.$context_shop_id) && Configuration::get('BPOST_ACCOUNT_PASSPHRASE_'.$context_shop_id))
+		{
+			$service = Service::getInstance($this->context);
+			$product_countries = $service->getProductCountries();
+			$enabled_countries = $service->explodeCountryList($enabled_country_list);
+		}
+
 		$this->smarty->assign('product_countries', $product_countries, true);
 		$this->smarty->assign('enabled_countries', $enabled_countries, true);
 		$this->smarty->assign('label_use_ps_labels', $label_use_ps_labels, true);
@@ -608,11 +614,17 @@ ADD COLUMN
 		$this->smarty->assign('label_tt_update_on_open', $label_tt_update_on_open, true);
 
 		$this->smarty->assign('errors', $errors, true);
-		$this->smarty->assign('url_get_available_countries', $this->context->link->getModuleLink('bpostshm', 'confighelper', array(
-							'ajax'						=> true,
-							'get_available_countries'	=> true,
-							'token'						=> Tools::getAdminToken('bpostshm'),
-						)));
+
+		$url_params = array(
+			'ajax'						=> true,
+			'get_available_countries'	=> true,
+			'token'						=> Tools::getAdminToken('bpostshm'),
+		);
+		$this->smarty->assign('url_get_available_countries', (method_exists($this->context->link, 'getModuleLink')
+				? $this->context->link->getModuleLink($this->name, 'confighelper', $url_params)
+				:  Tools::getShopDomainSsl(true, true).'/'.Tools::substr($this->_path, 1)
+				.'1.4/controllers/front/confighelper.php?'.http_build_query($url_params)
+			), true);
 		
 	}
 
