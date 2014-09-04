@@ -160,9 +160,14 @@
 					// Getbpack247Member
 					function getBpack247Member($rcn)
 					{
+						var dev_mode = false;
+						var	actual_error = false,
+							polling_time = dev_mode ? 100 : 5000;
+
 						$.getJSON( "{$url_get_bpack247_member|escape:'javascript'}", { rcn: $rcn } )
 							.done(function(json) {
-						  		if (null != json['Error'])
+						  		actual_error = null != json.Error; //['Error'];
+						  		if (actual_error)
 						  			//srgDebug.traceJson(json);
 						  			srgDebug.trace("{l s='RC# cannot be verified.' mod='bpostshm'}");
 						  		else
@@ -171,7 +176,11 @@
 						  	.fail(function( jqXHR, textStatus, error ) {
 						    	var err = textStatus + '<br>' + error + '<br>'; 
 						    	err += jqXHR.responseText;
-						    	srgDebug.trace(err);	
+						    	actual_error = true;
+						    	setTimeout(function() {
+									if (actual_error)
+										srgDebug.trace(err);
+								}, polling_time);
 							});
 					}
 
