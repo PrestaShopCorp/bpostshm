@@ -834,7 +834,7 @@ WHERE
 		}
 
 		// create $bpost_sender
-		preg_match('#([0-9]+)?[, ]*([a-zA-Z ]+)[, ]*([0-9]+)?#i', $sender['address1'], $matches);
+		preg_match('#([0-9]+)?[, ]*([\p{L}a-zA-Z -]+)[, ]*([0-9]+)?#iu', $sender['address1'], $matches);
 		if (!empty($matches[1]) && is_numeric($matches[1]))
 			$nr = $matches[1];
 		elseif (!empty($matches[3]) && is_numeric($matches[3]))
@@ -860,7 +860,7 @@ WHERE
 		$bpost_sender->setEmailAddress(Tools::substr($sender['email'], 0, 50));
 
 		// create $bpost_receiver
-		preg_match('#([0-9]+)?[, ]*([a-zA-Z ]+)[, ]*([0-9]+)?#i', $receiver['address1'], $matches);
+		preg_match('#([0-9]+)?[, ]*([\p{L}a-zA-Z -]+)[, ]*([0-9]+)?#iu', $receiver['address1'], $matches);
 		if (!empty($matches[1]) && is_numeric($matches[1]))
 			$nr = $matches[1];
 		elseif (!empty($matches[3]) && is_numeric($matches[3]))

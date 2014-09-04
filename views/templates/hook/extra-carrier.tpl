@@ -167,11 +167,7 @@
 						$carrier;
 
 					if (!$input.length)
-					{
-						if ('undefined' !== typeof console)
-							console.log('SHIPPING_METHOD_AT_SHOP carrier has not been found.');
 						return;
-					}
 
 					if (version < 1.5)
 						$carrier = $input.closest('tr');

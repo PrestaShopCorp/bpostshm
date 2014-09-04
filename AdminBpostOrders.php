@@ -424,7 +424,8 @@ class AdminBpostOrders extends AdminTab
 
 	/**
 	 * @param int $id_carrier
-	 * @return mixed
+	 * @param bool $slug
+	 * @return mixed|string
 	 */
 	public function getOrderShippingMethod($id_carrier = 0, $slug = true)
 	{

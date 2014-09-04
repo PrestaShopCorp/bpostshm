@@ -451,7 +451,6 @@ ADD COLUMN
 
 		// Check PrestaShop contact info, they will be used as shipper address
 		if (!Configuration::get('PS_SHOP_ADDR1')
-				|| !Configuration::get('PS_SHOP_ADDR2')
 				|| !Configuration::get('PS_SHOP_CITY')
 				|| !Configuration::get('PS_SHOP_EMAIL')
 				|| !Configuration::get('PS_SHOP_COUNTRY_ID')

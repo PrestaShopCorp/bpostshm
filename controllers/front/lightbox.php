@@ -172,7 +172,7 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 						self::$smarty->assign('firstname', $delivery_address->firstname, true);
 						self::$smarty->assign('lastname', $delivery_address->lastname, true);
 
-						preg_match('#([0-9]+)?[, ]*([a-zA-Z ]+)[, ]*([0-9]+)?#i', $delivery_address->address1, $matches);
+						preg_match('#([0-9]+)?[, ]*([\p{L}a-zA-Z -]+)[, ]*([0-9]+)?#iu', $delivery_address->address1, $matches);
 						if (!empty($matches[1]) && is_numeric($matches[1]))
 							$nr = $matches[1];
 						elseif (!empty($matches[3]) && is_numeric($matches[3]))
