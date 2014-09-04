@@ -8,5 +8,5 @@
 <option value="{$href|urldecode}"
 		{if !empty($disabled)} disabled="disabled" data-disabled="{$disabled}"{/if}
 		{if !empty($target)} data-target="{$target|escape}"{/if}>
-	{$action|escape}
+	{$action|strval}
 </option>

@@ -377,21 +377,30 @@ class Service
 							$service_point_id,
 							$box
 						);
-
-						$response = $response && $this->createPSLabel($reference);
 					}
 		}
 		else
 		{
 			$shippers = $this->getReceiverAndSender($ps_order);
 			$response = $response && $this->addBox($order, (int)$type, $shippers['sender'], $shippers['receiver'], $weight, $service_point_id);
-			$response = $response && $this->createPSLabel($reference);
 		}
 
 		try {
 			$response = $response && $this->bpost->createOrReplaceOrder($order);
 			//$response &= $this->updateOrderStatus($reference);
 			//$response &= $this->bpost->modifyOrderStatus($order->getReference(), 'OPEN');
+
+			if ($is_retour)
+			{
+				if (empty(self::$cache[$reference]) || !$base_order = self::$cache[$reference])
+					$base_order = $this->bpost->fetchOrder($reference);
+				foreach ($base_order->getBoxes() as $box)
+					if ($national_box = $box->getNationalBox())
+						if (!in_array($national_box->getProduct(), array('bpack Easy Retour',/* 'bpack World Easy Return',*/)))
+							$response = $response && $this->createPSLabel($reference);
+			}
+			else
+				$response = $response && $this->createPSLabel($reference);
 		} catch (TijsVerkoyenBpostException $e) {
 			$response = false;
 		}
@@ -684,17 +693,20 @@ class Service
 			return !$response;
 
 		$reference = Tools::substr($reference, 0, 50);
+		$recipient = $this->getOrderRecipient($reference);
 		$response &= Db::getInstance()->execute('
 INSERT INTO
 	'._DB_PREFIX_.'order_label
 (
 	`reference`,
 	`status`,
+	`recipient`,
 	`date_add`
 )
 VALUES(
 	"'.pSQL($reference).'",
 	"'.pSQL($status).'",
+	"'.pSQL($recipient).'",
 	NOW()
 )');
 
@@ -745,18 +757,6 @@ AND
 	`barcode` IS NULL'
 /*LIMIT
 	1'*/);
-	}
-
-	/**
-	 * @return bool
-	 */
-	public function cleanPSLabels()
-	{
-		return Db::getInstance()->execute('
-DELETE FROM
-	'._DB_PREFIX_.'order_label
-WHERE
-	`product_quantity` < 1');
 	}
 
 	/**
@@ -899,17 +899,32 @@ WHERE
 	{
 		$shipping_method = '';
 
-		if ($id_reference = Db::getInstance()->getValue('
+		if (Service::isPrestashopFresherThan14())
+		{
+			$id_reference = Db::getInstance()->getValue('
 SELECT
-	MAX(occ.`id_carrier`)
+	MAX(cc.`id_carrier`)
 FROM
-	`'._DB_PREFIX_.'carrier` oc
+	`'._DB_PREFIX_.'carrier` c
 LEFT JOIN
-	`'._DB_PREFIX_.'carrier` occ
+	`'._DB_PREFIX_.'carrier` cc
 ON
-	occ.`id_reference` = oc.`id_reference`
+	cc.`id_reference` = c.`id_reference`
 WHERE
-	oc.`id_carrier` = '.(int)$id_carrier))
+	c.`id_carrier` = '.(int)$id_carrier);
+		}
+		else
+		{
+			$id_reference = Db::getInstance()->getValue('
+SELECT
+	c.`id_carrier`
+FROM
+	`'._DB_PREFIX_.'carrier` c
+WHERE
+	c.`id_carrier` = '.(int)$id_carrier);
+		}
+
+		if (!empty($id_reference))
 		{
 			$shipping_method = $this->delivery_methods_list[(int)$id_reference];
 			if (!$slug)

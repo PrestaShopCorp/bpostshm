@@ -353,6 +353,7 @@ CREATE TABLE IF NOT EXISTS
 	`id_order_label` int(11) NOT NULL AUTO_INCREMENT,
 	`reference` varchar(50) NOT NULL,
 	`status` varchar(20) NOT NULL,
+	`recipient` varchar(255) NOT NULL,
 	`barcode` varchar(25) NOT NULL,
 	`date_add` datetime NOT NULL,
 	`date_upd` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,

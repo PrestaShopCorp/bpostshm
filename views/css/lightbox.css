@@ -150,8 +150,11 @@
   #lightbox.at-247 {
     min-height: 350px; }
     #lightbox.at-247 h1 {
+      background: transparent none;
       color: #c90200;
-      font-size: 16px; }
+      font-size: 16px;
+      height: auto;
+      text-transform: none; }
       #lightbox.at-247 h1 .step {
         background-color: #c90200;
         border: 1px solid #981b1e;
@@ -163,10 +166,13 @@
         margin-right: 20px;
         padding: 0 22px; }
     #lightbox.at-247 h2 {
+      background: transparent none;
       border-bottom: 1px solid #D2D2D2;
       font-size: 14px;
+      height: auto;
       margin: 20px 0;
-      padding-bottom: 5px; }
+      padding-bottom: 5px;
+      text-transform: none; }
     #lightbox.at-247 h3 {
       font-size: 12px;
       padding-bottom: 12px; }

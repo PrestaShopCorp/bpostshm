@@ -335,7 +335,7 @@ class Lightbox extends FrontController
 				<script src="https://maps.googleapis.com/maps/api/js?v=3.16&key=AIzaSyAa4S8Br_5of6Jb_Gjv1WLldkobgExB2KY&sensor=false&language=fr"'
 					.'type="text/javascript"></script>
 				<link href="'._THEME_CSS_DIR_.'global.css" type="text/css" rel="stylesheet" />
-				<link href="'.Tools::getShopDomainSsl(true, true).'/'._MODULE_DIR_.'bpostshm/views/css/lightbox.css" type="text/css" rel="stylesheet" />
+				<link href="'._MODULE_DIR_.'bpostshm/views/css/lightbox.css" type="text/css" rel="stylesheet" />
 				<link href="//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.css" type="text/css" rel="stylesheet" />';
 	}
 
@@ -343,13 +343,13 @@ class Lightbox extends FrontController
 	{
 		parent::setMedia();
 
-		Tools::addCSS('//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.css', 'screen');
+		Tools::addCSS(_PS_SSL_ENABLED_ ? 'https://' : 'http://'.'//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.css', 'screen');
 		Tools::addCSS(__PS_BASE_URI__.'/modules/bpostshm/views/css/lightbox.css');
 
-		Tools::addJS('//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js');
+		Tools::addJS(_PS_SSL_ENABLED_ ? 'https://' : 'http://'.'//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js');
 		Tools::addJS(__PS_BASE_URI__.'/modules/bpostshm/views/js/bpostshm.js');
 		Tools::addJS(__PS_BASE_URI__.'/modules/bpostshm/views/js/srgdebug.js');
-		Tools::addJS('//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.pack.js');
+		Tools::addJS(_PS_SSL_ENABLED_ ? 'https://' : 'http://'.'//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.pack.js');
 		Tools::addJS('https://maps.googleapis.com/maps/api/js?v=3.16&key=AIzaSyAa4S8Br_5of6Jb_Gjv1WLldkobgExB2KY&sensor=false&language=fr');
 	}
 

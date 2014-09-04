@@ -57,7 +57,6 @@ class AdminBpostOrders extends AdminTab
 
 		$this->_select = '
 		a.`reference` as print,
-		a.`reference` as recipient,
 		a.`reference` as t_t,
 		COUNT(a.`reference`) as count
 		';
@@ -69,7 +68,6 @@ class AdminBpostOrders extends AdminTab
 		SELECT `id_order`, `id_order_state`
 		FROM `'._DB_PREFIX_.'order_history`
 		ORDER BY `id_order_history` DESC
-		LIMIT 1
 		) oh ON oh.`id_order` = o.`id_order`';
 
 		$this->_where = '
@@ -122,14 +120,14 @@ class AdminBpostOrders extends AdminTab
 				'width' => 130,
 				'type' => 'select',
 				'list' => $this->service->delivery_methods_list,
-				'filter_key' => 'oc!id_carrier',
+				'filter_key' => 'o!id_order',
 				'callback' => 'getOrderShippingMethod',
 				'search' => false,
 			),
 			'recipient' => array(
 				'title' => $this->l('Recipient'),
-				'width' => 240,
-				'callback' => 'getOrderRecipient',
+				'width' => 450,
+				'filter_key' => 'a!recipient',
 			),
 			'status' => array(
 				'title' => $this->l('Status'),
@@ -202,9 +200,10 @@ class AdminBpostOrders extends AdminTab
 				$this->jsonEncode($this->service->addLabel($reference));
 			elseif (Tools::getIsset('printLabels'.$this->table))
 			{
+				$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
 				$links = $this->printLabels($reference);
 
-				if (!empty($links))
+				if (Configuration::get('BPOST_LABEL_TT_INTEGRATION_'.$context_shop_id) && !empty($links))
 					$this->sendTTEmail($reference);
 
 				$this->jsonEncode(array('links' => $links));
@@ -423,22 +422,23 @@ class AdminBpostOrders extends AdminTab
 	}
 
 	/**
-	 * @param int $id_carrier
-	 * @param bool $slug
-	 * @return mixed|string
+	 * @param int $id_order
+	 * @return mixed
 	 */
-	public function getOrderShippingMethod($id_carrier = 0, $slug = true)
+	public function getOrderShippingMethod($id_order = 0)
 	{
-		return $this->service->getOrderShippingMethod((int)$id_carrier, (bool)$slug);
-	}
+		if (empty($id_order))
+			return;
 
-	/**
-	 * @param string $reference
-	 * @return string
-	 */
-	public function getOrderRecipient($reference)
-	{
-		return $this->service->getOrderRecipient($reference);
+		$ps_order = new Order((int)$id_order);
+		$delivery_slug = $this->service->getOrderShippingMethod((int)$ps_order->id_carrier, true);
+		$id_address_delivery = $ps_order->id_address_delivery;
+		$delivery_address = new Address((int)$id_address_delivery);
+		$country = new Country((int)$delivery_address->id_country);
+
+		if ($delivery_slug == $this->module->shipping_methods[BpostShm::SHIPPING_METHOD_AT_HOME]['slug'] && 'BE' != $country->iso_code)
+			return '@international';
+		return $delivery_slug;
 	}
 
 	/**
