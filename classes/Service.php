@@ -311,80 +311,6 @@ class Service
 
 	/**
 	 * @param array $params
-	 */
-	public function makerBpack247Customer($params = array())
-	{
-		$customer = new TijsVerkoyenBpostBpack247Customer();
-
-		if (isset($params['user_id']) && $params['user_id'] != '')
-			$customer->setUserID((string)$params['user_id']);
-		if (isset($params['firstname']) && $params['firstname'] != '')
-			$customer->setFirstName((string)$params['firstname']);
-		if (isset($params['lastname']) && $params['lastname'] != '')
-			$customer->setLastName((string)$params['lastname']);
-		if (isset($params['street']) && $params['street'] != '')
-			$customer->setStreet((string)$params['street']);
-		if (isset($params['number']) && $params['number'] != '')
-			$customer->setNumber((string)$params['number']);
-		if (isset($params['company']) && $params['company'] != '')
-			$customer->setCompanyName((string)$params['company']);
-		if (isset($params['date_of_birth']) && $params['date_of_birth'] != '')
-		{
-			$date_time = new \DateTime((string)$params['date_of_birth']);
-			$customer->setDateOfBirth($date_time);
-		}
-		if (isset($params['delivery_code']) && $params['delivery_code'] != '')
-			$customer->setDeliveryCode((string)$params['delivery_code']);
-		if (isset($params['email']) && $params['email'] != '')
-			$customer->setEmail((string)$params['email']);
-		if (isset($params['mobile_prefix']) && $params['mobile_prefix'] != '')
-			$customer->setMobilePrefix(trim((string)$params['mobile_prefix']));
-		if (isset($params['mobile_number']) && $params['mobile_number'] != '')
-			$customer->setMobileNumber((string)$params['mobile_number']);
-		if (isset($params['postal_code']) && $params['postal_code'] != '')
-			$customer->setPostalCode((string)$params['postal_code']);
-		if (isset($params['preferred_language']) && $params['preferred_language'] != '')
-			$customer->setPreferredLanguage((string)$params['preferred_language']);
-		if (isset($params['receive_promotions']) && $params['receive_promotions'] != '')
-		{
-			$receive_promotions = in_array((string)$params['receive_promotions'], array('true', '1'));
-			$customer->setReceivePromotions($receive_promotions);
-		}
-		if (isset($params['actived']) && $params['actived'] != '')
-		{
-			$activated = in_array((string)$params['actived'], array('true', '1'));
-			$customer->setActivated($activated);
-		}
-		if (isset($params['title']) && $params['title'] != '')
-		{
-			$title = (string)$params['title'];
-			$title = Tools::ucfirst(Tools::strtolower($title));
-			if (Tools::substr($title, -1) != '.')
-				$title .= '.';
-
-			$customer->setTitle($title);
-		}
-		if (isset($params['town']) && $params['town'] != '')
-			$customer->setTown((string)$params['town']);
-
-		$bpack247 = new TijsVerkoyenBpostBpack247(
-			Configuration::get('BPOST_ACCOUNT_ID_'.$this->context->shop->id),
-			Configuration::get('BPOST_ACCOUNT_PASSPHRASE_'.$this->context->shop->id)
-		);
-
-		$response = true;
-
-		try {
-			$response = $response && $bpack247->createMember($customer);
-		} catch (TijsVerkoyenBpostException $e) {
-			$response = false;
-		}
-
-		return $response;
-	}
-
-	/**
-	 * @param array $params
 	 * @param int $type
 	 * @param bool $is_retour
 	 * @return TijsVerkoyenBpostBpostOrder
@@ -1122,6 +1048,28 @@ WHERE
 	}
 
 	/**
+	 * [getModuleLink description]
+	 * @param  string $module     name
+	 * @param  string $controller name
+	 * @param  array $params     request params
+	 * @return string             Module front controller link
+	 */
+	public function getModuleLink($module, $controller, $params)
+	{
+		if (self::isPrestashopFresherThan14())
+			return $this->context->link->getModuleLink($module, $controller, $params);
+		else
+			return  _MODULE_DIR_.$module.'/controllers/front/'.$controller.'.php?'.http_build_query($params);
+	}
+
+	public function getControllerLink($module, $controller, $params)
+	{
+		$params['ps14'] = !self::isPrestashopFresherThan14();
+		$params['root_dir'] = _PS_ROOT_DIR_;
+		return  _MODULE_DIR_.$module.'/controllers/front/'.$controller.'.php?'.http_build_query($params);
+	}
+
+	/**
 	 * get full list bpost enabled countries
 	 * @return assoc array
 	 */
@@ -1172,12 +1120,8 @@ ORDER BY
 		$countries = array();
 		try {
 			$db = Db::getInstance(_PS_USE_SQL_SLAVE_);
-			if (self::isPrestashopFresherThan14())
-				$db_res = $db->query($query);
-			else
-				$db_res = $db->execute($query);
-			if($db_res)
-				while ($row = $db->nextRow($db_res))
+			if ($results = $db->ExecuteS($query))
+				foreach ($results as $row)
 					$countries[$row['iso']] = $row['name'];
 	
 		} catch (Exception $e) {

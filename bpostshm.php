@@ -544,12 +544,13 @@ ADD COLUMN
 			if (2 == $country_international_orders)
 			{
 				if (is_array($enabled_country_list))
-				{
 					$enabled_country_list = implode('|', $enabled_country_list);
-					
-					if (Configuration::get('BPOST_ENABLED_COUNTRY_LIST_'.$context_shop_id) !== $enabled_country_list)
-						Configuration::updateValue('BPOST_ENABLED_COUNTRY_LIST_'.$context_shop_id, $enabled_country_list);
-				}
+
+				if ('REMOVE' === $enabled_country_list)
+					$enabled_country_list = '';
+
+				if (Configuration::get('BPOST_ENABLED_COUNTRY_LIST_'.$context_shop_id) !== $enabled_country_list)
+					Configuration::updateValue('BPOST_ENABLED_COUNTRY_LIST_'.$context_shop_id, $enabled_country_list);
 			}
 			else
 				Configuration::updateValue('BPOST_ENABLED_COUNTRY_LIST_'.$context_shop_id, '');
@@ -597,12 +598,13 @@ ADD COLUMN
 		$this->smarty->assign('country_international_orders', $country_international_orders, true);
 		$product_countries = array();
 		$enabled_countries = array();
-		if (Configuration::get('BPOST_ACCOUNT_ID_'.$context_shop_id) && Configuration::get('BPOST_ACCOUNT_PASSPHRASE_'.$context_shop_id))
-		{
+		// getProductCountries already catches all exception
+		//if (Configuration::get('BPOST_ACCOUNT_ID_'.$context_shop_id) && Configuration::get('BPOST_ACCOUNT_PASSPHRASE_'.$context_shop_id))
+		//{
 			$service = Service::getInstance($this->context);
 			$product_countries = $service->getProductCountries();
 			$enabled_countries = $service->explodeCountryList($enabled_country_list);
-		}
+		//}
 
 		$this->smarty->assign('product_countries', $product_countries, true);
 		$this->smarty->assign('enabled_countries', $enabled_countries, true);
@@ -614,17 +616,11 @@ ADD COLUMN
 		$this->smarty->assign('label_tt_update_on_open', $label_tt_update_on_open, true);
 
 		$this->smarty->assign('errors', $errors, true);
-
-		$url_params = array(
-			'ajax'						=> true,
-			'get_available_countries'	=> true,
-			'token'						=> Tools::getAdminToken('bpostshm'),
-		);
-		$this->smarty->assign('url_get_available_countries', (method_exists($this->context->link, 'getModuleLink')
-				? $this->context->link->getModuleLink($this->name, 'confighelper', $url_params)
-				:  Tools::getShopDomainSsl(true, true).'/'.Tools::substr($this->_path, 1)
-				.'1.4/controllers/front/confighelper.php?'.http_build_query($url_params)
-			), true);
+		$this->smarty->assign('url_get_available_countries', $service->getControllerLink('bpostshm', 'servicepoint', array(
+							'ajax'						=> true,
+							'get_available_countries'	=> true,
+							'token'						=> Tools::getAdminToken('bpostshm'),
+						)));
 		
 	}
 

@@ -12,6 +12,7 @@
  */
 
 require_once('../../../../../config/config.inc.php');
+// require_once('../../../../../sites/bpost/ps14/config/config.inc.php');
 require_once(_PS_MODULE_DIR_.'bpostshm/bpostshm.php');
 require_once(_PS_MODULE_DIR_.'bpostshm/classes/Service.php');
 
@@ -66,50 +67,57 @@ class Lightbox extends FrontController
 			$context->cart->service_point_id = $service_point_id;
 			$this->jsonEncode($context->cart->update());
 		}
+		elseif (Tools::getValue('get_bpack247_member'))
+		{
+			$rcn = Tools::getValue('rcn');
+			$member = $service->getBpack247Member($rcn, 'Number, Street, Town, Postalcode, PackstationID, DeliveryCode');
+			$this->validateStore($member);
+		}
 		elseif (Tools::getValue('post_bpack247_register'))
 		{
-			$params = array();
+			$customer = array();
 			if ($id_gender = (int)Tools::getValue('id_gender'))
-			{
 				switch ($id_gender)
 				{
 					case 1:
 					case 9:
 					default:
-					$params['title'] = 'Mr.';
+						$customer['Title'] = 'Mr.';
 						break;
 
 					case 2:
-						$params['title'] = 'Ms.';
+						$customer['Title'] = 'Ms.';
 						break;
 				}
-			}
+			
 			if ($firstname = (string)Tools::getValue('firstname'))
-				$params['firstname'] = $firstname;
+				$customer['FirstName'] = $firstname;
 			if ($lastname = (string)Tools::getValue('lastname'))
-				$params['lastname'] = $lastname;
+				$customer['LastName'] = $lastname;
 			if ($street = (string)Tools::getValue('street'))
-				$params['street'] = $street;
+				$customer['Street'] = $street;
 			if ($nr = (int)Tools::getValue('number'))
-				$params['number'] = $nr;
+				$customer['Number'] = $nr;
 			if ($postal_code = (int)Tools::getValue('postal_code'))
-				$params['postal_code'] = $postal_code;
+				$customer['Postalcode'] = $postal_code;
 			if ($town = (string)Tools::getValue('town'))
-				$params['town'] = $town;
+				$customer['Town'] = $town;
 			if ($date_of_birth = (string)Tools::getValue('date_of_birth'))
-				$params['date_of_birth'] = $date_of_birth;
+				$customer['DateOfBirth'] = $date_of_birth;
 			if ($email = (string)Tools::getValue('email'))
-				$params['email'] = Tools::strtoupper($email);
+				$customer['Email'] = Tools::strtoupper($email);
 			if ($mobile_number = (string)Tools::getValue('mobile_number'))
-				// int cast removes leading zero
-				$params['mobile_number'] = (int)$mobile_number;
+				// int cast removes leading zero 
+				// * Srg: int is the least of the problems. proper RE validation already done
+				$customer['MobileNumber'] = (int)$mobile_number;
 			if ($preferred_language = (string)Tools::getValue('preferred_language'))
-				$params['preferred_language'] = $preferred_language;
+				$customer['PreferredLanguage'] = $preferred_language;
 
-			$customer = $service->makerBpack247Customer($params);
-			exit();
-			//$context->cart->bpack247_customer = serialize($params);
-			//return $context->cart->update();
+//$customer['Error'] = 'Registering: is this correct?';
+//$this->jsonEncode($customer);
+
+			$member = $service->createBpack247Member($customer, 'Number, Street, Postalcode, DeliveryCode');
+			$this->validateStore($member);
 		}
 
 		// Building display page
@@ -172,9 +180,9 @@ class Lightbox extends FrontController
 
 						self::$smarty->assign('gender', $context->customer->id_gender);
 						self::$smarty->assign('genders', array(
-							(object)array('id' => 1, 'name' => 'Mr.'),
-							(object)array('id' => 2, 'name' => 'Ms.'),
-							(object)array('id' => 9, 'name' => 'Mr.'),
+							(object)array('id' => 1, 'name' => 'Mr'),
+							(object)array('id' => 2, 'name' => 'Ms'),
+							(object)array('id' => 9, 'name' => 'Mr'),
 						));
 						self::$smarty->assign('firstname', $delivery_address->firstname, true);
 						self::$smarty->assign('lastname', $delivery_address->lastname, true);
@@ -229,6 +237,14 @@ class Lightbox extends FrontController
 								'token'				=> Tools::getToken('bpostshm'),
 							)));
 
+						self::$smarty->assign('url_get_bpack247_member', _MODULE_DIR_.'bpostshm/1.4/controllers/front/lightbox.php?'
+							.http_build_query(array(
+							'ajax'					=> true,
+							'get_bpack247_member'	=> true,
+							'shipping_method'		=> $shipping_method,
+							'token'					=> Tools::getToken('bpostshm'),
+						)));
+
 						$this->setTemplate('lightbox-at-247.tpl');
 						break;
 
@@ -239,16 +255,26 @@ class Lightbox extends FrontController
 						if (!$customer = $context->cart->bpack247_customer)
 							return false;
 
-						$customer = unserialize($customer);
+						$customer = Tools::jsonDecode($customer, true);
+						$zone = $customer['Postalcode'];
+						self::$smarty->assign('postcode', $customer['Postalcode'], true);
+						if (!empty($customer['Town']))
+						{
+							self::$smarty->assign('city', $customer['Town'], true);
+							$zone .= ' '.$customer['Town'];
+						}
+						if (!empty($customer['PackstationID']))
+							self::$smarty->assign('defaultStation', sprintf("%06s", $customer['PackstationID']), true);
+
 						$search_params = array(
 							'street' 	=> $customer['street'],
 							'nr' 		=> $customer['number'],
-							'zone'		=> $customer['town'],
+							'zone'		=> $zone,
 						);
 						$service_points = $service->getNearestServicePoint($search_params, $shipping_method);
 
-						self::$smarty->assign('city', $customer['town'], true);
-						self::$smarty->assign('postcode', '', true);
+						//self::$smarty->assign('city', $customer['town'], true);
+						//self::$smarty->assign('postcode', '', true);
 						self::$smarty->assign('servicePoints', $service_points, true);
 
 						self::$smarty->assign('url_get_nearest_service_points', _MODULE_DIR_.'bpostshm/1.4/controllers/front/lightbox.php?'
@@ -290,26 +316,67 @@ class Lightbox extends FrontController
 	public function displayHeader()
 	{
 		if (!Tools::getValue('ajax', false))
-			echo '
+			/*echo '
 				<script src="'._MODULE_DIR_.'bpostshm/views/js/bpostshm.js" type="text/javascript"></script>
+				<script src="'._MODULE_DIR_.'bpostshm/views/js/srgdebug.js" type="text/javascript"></script>
 				<script src="'._PS_JS_DIR_.'jquery/jquery-1.4.4.min.js" type="text/javascript"></script>
 				<script src="'._PS_JS_DIR_.'jquery/jquery.fancybox-1.3.4.js" type="text/javascript"></script>
 				<script src="https://maps.googleapis.com/maps/api/js?v=3.16&key=AIzaSyAa4S8Br_5of6Jb_Gjv1WLldkobgExB2KY&sensor=false&language=fr"'
 					.'type="text/javascript"></script>
 				<link href="'._THEME_CSS_DIR_.'global.css" type="text/css" rel="stylesheet" />
 				<link href="'.Tools::getShopDomainSsl(true, true).'/'._MODULE_DIR_.'bpostshm/views/css/lightbox.css" type="text/css" rel="stylesheet" />
-				<link href="'._PS_CSS_DIR_.'jquery.fancybox-1.3.4.css" type="text/css" rel="stylesheet" />';
+				<link href="'._PS_CSS_DIR_.'jquery.fancybox-1.3.4.css" type="text/css" rel="stylesheet" />';*/
+			echo '
+				<script src="'._MODULE_DIR_.'bpostshm/views/js/bpostshm.js" type="text/javascript"></script>
+				<script src="'._MODULE_DIR_.'bpostshm/views/js/srgdebug.js" type="text/javascript"></script>
+				<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+				<script src="//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.pack.js" type="text/javascript"></script>
+				<script src="https://maps.googleapis.com/maps/api/js?v=3.16&key=AIzaSyAa4S8Br_5of6Jb_Gjv1WLldkobgExB2KY&sensor=false&language=fr"'
+					.'type="text/javascript"></script>
+				<link href="'._THEME_CSS_DIR_.'global.css" type="text/css" rel="stylesheet" />
+				<link href="'.Tools::getShopDomainSsl(true, true).'/'._MODULE_DIR_.'bpostshm/views/css/lightbox.css" type="text/css" rel="stylesheet" />
+				<link href="//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.css" type="text/css" rel="stylesheet" />';
 	}
 
 	public function setMedia()
 	{
 		parent::setMedia();
 
-		Tools::addCSS(_PS_CSS_DIR_.'jquery.fancybox-1.3.4.css', 'screen');
+		Tools::addCSS('//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.css', 'screen');
+		//Tools::addCSS(_PS_CSS_DIR_.'jquery.fancybox-1.3.4.css', 'screen');
 		Tools::addCSS(__PS_BASE_URI__.'/modules/bpostshm/views/css/lightbox.css');
-		Tools::addJS(_PS_JS_DIR_.'jquery/jquery.fancybox-1.3.4.js');
+		//Tools::addJS(_PS_JS_DIR_.'jquery/jquery.fancybox-1.3.4.js');
+		Tools::addJS('//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js');
+
 		Tools::addJS(__PS_BASE_URI__.'/modules/bpostshm/views/js/bpostshm.js');
+		Tools::addJS(__PS_BASE_URI__.'/modules/bpostshm/views/js/srgdebug.js');
 		Tools::addJS('https://maps.googleapis.com/maps/api/js?v=3.16&key=AIzaSyAa4S8Br_5of6Jb_Gjv1WLldkobgExB2KY&sensor=false&language=fr');
+	}
+
+	private function validateStore($member)
+	{
+		$json_member = (string)Tools::jsonEncode($member);
+		
+		// Better to store the JSON string. serializing fails everytime
+		// Special NOTE: Cart.php override has changed to reflect this ('isSerializedArray' => 'isString')	
+		if (!isset($member['Error']))
+			try {
+				$context = Context::getContext();
+		
+				$context->cart->bpack247_customer = $json_member;
+				$context->cart->update();	
+			
+			} catch (\Exception $e) {
+				$json_member = Tools::jsonEncode(array('Error' => $e->getMessage()));	
+			}
+		
+		$this->terminateWith($json_member);
+	}
+
+	private function terminateWith($json)
+	{
+		header('Content-Type: application/json');
+		die($json);
 	}
 
 	private function jsonEncode($content)

@@ -10,16 +10,17 @@
 	{if !empty($step)}
 		{if 1 == $step|intval}
 			<div class="row clearfix">
-				<h1 class="col-xs-12">
+				<h1 class="col-xs-12"{if $version < 1.5} style="line-height: 4.6em;"{/if}>
 					<span class="step">1</span>
 					{l s='Select or create a bpack 24/7 account' mod='bpostshm'}
 				</h1>
-				<form class="col-xs-12" action="" id="rc-form" method="POST" autocomplete="off">
+				<form class="col-xs-12" action="" id="rc-form" method="POST" autocomplete="off"{if $version < 1.5} style="margin-top: 46px;"{/if}>
 					<input name="bpack247_register" id="bpack247_register_0" type="radio" value="0" checked="checked" />
 					<label for="bpack247_register_0">{l s='I am a bpack 24/7 registered user' mod='bpostshm'}</label>
 					<label for="rc">{l s='RC:' mod='bpostshm'}</label>
 					<input type="text" name="rc" id="rc" type="text" value="" placeholder="{l s='123-456-789' mod='bpostshm'}" />
 					<a id="rc-info" href="#rc-info-content" title="{l s='Where can I find this info?' mod='bpostshm'}">{l s='Where can I find this info?' mod='bpostshm'}</a>
+					<img class="loader" src="{$module_dir|escape}views/img/ajax-loader.gif" alt="{l s='Loading...' mod='bpostshm'}" />
 					<br />
 					<input name="bpack247_register" id="bpack247_register_1" type="radio" value="1" />
 					<label for="bpack247_register_1">{l s='I would like to register for pack 24/7' mod='bpostshm'}</label>

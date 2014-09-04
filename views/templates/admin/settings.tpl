@@ -391,22 +391,36 @@
 		}
 
 		function getEnabledCountries() {
-			/*
-			$.post("{$url_get_available_countries|escape:'javascript'}", function(data) {
-					$('span#tracie').html(data);
-				});
-			*/
 
+			trace('');
 			refreshingList(true);
-			$.getJSON("{$url_get_available_countries|escape:'javascript'}", function(data) {
+			
+			$.ajax({
+			    type: "GET",
+			    url: "{$url_get_available_countries|escape:'javascript'}",
+			    data: {},
+			    contentType: "application/json; charset=utf-8",
+			    dataType: "json"
+			})
+			   	.success( function(data) {
+			   		if (data.Error)
+			        	trace(data.Error);
+			        else {
+			        	$options = '';
+						$.each(data, function (key, value) {
+		        			$options += '<option value="'+key+'">'+value+'</option>';
+		        		});
+						
+						if ($options.length)
+							$('#country-list').html($options);
+			        }
+			        refreshingList(false);
+			    })
+			    .error( function(error_msg){
+			        trace("{l s='Unable to retrieve the list. Please try again later.' mod='bpostshm'}");
+			    	refreshingList(false);
+			    });
 
-				$options = '';
-				$.each(data, function (key, value) {
-        			$options += '<option value="'+key+'">'+value+'</option>';
-        		});
-				$('#country-list').html($options);
-				refreshingList(false);
-			});
 		}
 
 		$('input[name="country_international_orders"]').live('change', function() {
@@ -415,12 +429,15 @@
 
 		// form select elements are disfunctional so mimic the result
 		$('button[name="submitCountrySettings"]').live('click', function(e) {
-			//e.preventDefault();
-
-			$.each($('#enabled-country-list').children(), function() {
-				//enabled_country_list.push(this.value);
-				this.selected = true;
-			});
+			// e.preventDefault();
+			eclist = $('#enabled-country-list').children();
+			if( eclist.length )
+				$.each(eclist, function() {
+					this.selected = true;
+				});
+			else
+				$('#enabled-country-list').html('<option selected value="REMOVE">(empty)</option>');
+				//eclist.remove().end().append('<option selected value="REMOVE">(empty)</option>') ;
 		});
 
 		$('input[name="label_use_ps_labels"]').live('change', function() {

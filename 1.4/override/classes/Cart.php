@@ -40,7 +40,7 @@ class Cart extends CartCore
 
 	public function __construct($id = null, $id_lang = null)
 	{
-		$this->fieldsValidate['bpack247_customer'] = 'isSerializedArray';
+		$this->fieldsValidate['bpack247_customer'] = 'isString';
 		$this->fieldsValidate['service_point_id'] = 'isUnsignedId';
 
 		parent::__construct($id, $id_lang);
