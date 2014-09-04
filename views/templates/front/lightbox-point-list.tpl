@@ -56,7 +56,10 @@
 				google.maps.event.trigger(BpostShm.map, 'resize');
 			});
 			google.maps.event.trigger(BpostShm.map, 'resize');
-			BpostShm.setDefaultStation( '{$defaultStation}' );
+
+			{if !empty($defaultStation)}
+				BpostShm.setDefaultStation('{$defaultStation}');
+			{/if}
 		});
 
 		$(function() {

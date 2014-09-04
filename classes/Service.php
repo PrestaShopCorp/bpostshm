@@ -336,7 +336,7 @@ class Service
 				.Tools::substr($ps_order->id, 0, 53);
 
 		$order = new TijsVerkoyenBpostBpostOrder($reference);
-		//$order->setCostCenter('Cost Center');
+		$order->setCostCenter('PrestaShop_'._PS_VERSION_);
 
 		// add product lines
 		if ($products = $ps_order->getProducts())
@@ -377,21 +377,30 @@ class Service
 							$service_point_id,
 							$box
 						);
-
-						$response = $response && $this->createPSLabel($reference);
 					}
 		}
 		else
 		{
 			$shippers = $this->getReceiverAndSender($ps_order);
 			$response = $response && $this->addBox($order, (int)$type, $shippers['sender'], $shippers['receiver'], $weight, $service_point_id);
-			$response = $response && $this->createPSLabel($reference);
 		}
 
 		try {
 			$response = $response && $this->bpost->createOrReplaceOrder($order);
 			//$response &= $this->updateOrderStatus($reference);
 			//$response &= $this->bpost->modifyOrderStatus($order->getReference(), 'OPEN');
+
+			if ($is_retour)
+			{
+				if (empty(self::$cache[$reference]) || !$base_order = self::$cache[$reference])
+					$base_order = $this->bpost->fetchOrder($reference);
+				foreach ($base_order->getBoxes() as $box)
+					if ($national_box = $box->getNationalBox())
+						if (!in_array($national_box->getProduct(), array('bpack Easy Retour',/* 'bpack World Easy Return',*/)))
+							$response = $response && $this->createPSLabel($reference);
+			}
+			else
+				$response = $response && $this->createPSLabel($reference);
 		} catch (TijsVerkoyenBpostException $e) {
 			$response = false;
 		}
@@ -569,7 +578,7 @@ class Service
 					foreach ($order_boxes as $box)
 						if ($national_box = $box->getNationalBox())
 						{
-							if (in_array($national_box->getProduct(), array('bpack Easy Retour',/* 'bpack World Easy Return',*/)))
+							if (in_array($national_box->getProduct(), array('bpack Easy Retour',)))
 								continue;
 
 							if (method_exists($national_box, 'getReceiver'))
@@ -582,6 +591,16 @@ class Service
 							elseif ($address = $national_box->getPugoAddress())
 								$recipient = $national_box->getReceiverName().' '.$national_box->getPugoName().' '.$address->getPostalCode().' '
 									.$address->getLocality();
+						}
+						elseif ($international_box = $box->getInternationalBox())
+						{
+							if (in_array($international_box->getProduct(), array('bpack World Easy Return',)))
+								continue;
+
+							$receiver = $international_box->getReceiver();
+							$address = $receiver->getAddress();
+							$recipient = $receiver->getName().' '.$address->getStreetName().' '.$address->getNumber().' '
+								.$address->getPostalCode().' '.$address->getLocality();
 						}
 			} catch (TijsVerkoyenBpostException $e) {
 				$recipient = '-';
@@ -674,17 +693,20 @@ class Service
 			return !$response;
 
 		$reference = Tools::substr($reference, 0, 50);
+		$recipient = $this->getOrderRecipient($reference);
 		$response &= Db::getInstance()->execute('
 INSERT INTO
 	'._DB_PREFIX_.'order_label
 (
 	`reference`,
 	`status`,
+	`recipient`,
 	`date_add`
 )
 VALUES(
 	"'.pSQL($reference).'",
 	"'.pSQL($status).'",
+	"'.pSQL($recipient).'",
 	NOW()
 )');
 
@@ -735,18 +757,6 @@ AND
 	`barcode` IS NULL'
 /*LIMIT
 	1'*/);
-	}
-
-	/**
-	 * @return bool
-	 */
-	public function cleanPSLabels()
-	{
-		return Db::getInstance()->execute('
-DELETE FROM
-	'._DB_PREFIX_.'order_label
-WHERE
-	`product_quantity` < 1');
 	}
 
 	/**
@@ -824,7 +834,7 @@ WHERE
 		}
 
 		// create $bpost_sender
-		preg_match('#([0-9]+)?[, ]*([a-zA-Z ]+)[, ]*([0-9]+)?#i', $sender['address1'], $matches);
+		preg_match('#([0-9]+)?[, ]*([\p{L}a-zA-Z -]+)[, ]*([0-9]+)?#iu', $sender['address1'], $matches);
 		if (!empty($matches[1]) && is_numeric($matches[1]))
 			$nr = $matches[1];
 		elseif (!empty($matches[3]) && is_numeric($matches[3]))
@@ -850,7 +860,7 @@ WHERE
 		$bpost_sender->setEmailAddress(Tools::substr($sender['email'], 0, 50));
 
 		// create $bpost_receiver
-		preg_match('#([0-9]+)?[, ]*([a-zA-Z ]+)[, ]*([0-9]+)?#i', $receiver['address1'], $matches);
+		preg_match('#([0-9]+)?[, ]*([\p{L}a-zA-Z -]+)[, ]*([0-9]+)?#iu', $receiver['address1'], $matches);
 		if (!empty($matches[1]) && is_numeric($matches[1]))
 			$nr = $matches[1];
 		elseif (!empty($matches[3]) && is_numeric($matches[3]))
@@ -889,17 +899,32 @@ WHERE
 	{
 		$shipping_method = '';
 
-		if ($id_reference = Db::getInstance()->getValue('
+		if (Service::isPrestashopFresherThan14())
+		{
+			$id_reference = Db::getInstance()->getValue('
 SELECT
-	MAX(occ.`id_carrier`)
+	MAX(cc.`id_carrier`)
 FROM
-	`'._DB_PREFIX_.'carrier` oc
+	`'._DB_PREFIX_.'carrier` c
 LEFT JOIN
-	`'._DB_PREFIX_.'carrier` occ
+	`'._DB_PREFIX_.'carrier` cc
 ON
-	occ.`id_reference` = oc.`id_reference`
+	cc.`id_reference` = c.`id_reference`
 WHERE
-	oc.`id_carrier` = '.(int)$id_carrier))
+	c.`id_carrier` = '.(int)$id_carrier);
+		}
+		else
+		{
+			$id_reference = Db::getInstance()->getValue('
+SELECT
+	c.`id_carrier`
+FROM
+	`'._DB_PREFIX_.'carrier` c
+WHERE
+	c.`id_carrier` = '.(int)$id_carrier);
+		}
+
+		if (!empty($id_reference))
 		{
 			$shipping_method = $this->delivery_methods_list[(int)$id_reference];
 			if (!$slug)

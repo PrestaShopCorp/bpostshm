@@ -14,10 +14,10 @@
 		version 			= {$version|floatval},
 		l_s 				= {
 			"Select delivery point" : "{l s='Select delivery point' mod='bpostshm' js=1}",
-			"Edit bpost shipping configuration" : "{l s='Edit bpost shipping configuration' mod='bpostshm' js=1}",
+			"Change delivery point" : "{l s='Change delivery point' mod='bpostshm' js=1}",
 			"You must agree to the terms of service before continuing." : "{l s='You must agree to the terms of service before continuing.' mod='bpostshm' js=1}"
 		},
-		$button 			= $('<a id="bpostHandler" class="button" />'),
+		$button 			= $('<a id="bpostHandler" class="button" style="margin: 5px 0 2px;" />'),
 		$carrierInput,
 		$carrierInputs;
 
@@ -82,7 +82,7 @@
 		else
 		{
 			if (version < 1.5)
-				$button_.toggleClass('button exclusive_large');
+				$button_.addClass('button exclusive_large');
 
 			$button_.text(content);
 		}
@@ -110,7 +110,7 @@
 		$carrierAtStart = $carrierInputs.filter(function() { return parseInt(this.value, 10) === carrierAtStart && $(this).is(':checked'); });
 
 		if (onLoad && $carrierAtStart.length && service_point_id)
-			myButton($button_, l_s['Edit bpost shipping configuration']);
+			myButton($button_, l_s['Change delivery point']);
 
 		$button_.data('href', href);
 		$container.append('<br />', $button_);
@@ -151,7 +151,7 @@
 			$carrierAtStart = $carrierInputs.filter(function() { return parseInt(this.value, 10) === carrierAtStart && $(this).is(':checked'); });
 
 			if ($carrierAtStart.length && service_point_id)
-				myButton($('#bpostHandler'), l_s['Edit bpost shipping configuration']);
+				myButton($('#bpostHandler'), l_s['Change delivery point']);
 		}
 		else
 		{
@@ -167,11 +167,7 @@
 						$carrier;
 
 					if (!$input.length)
-					{
-						if ('undefined' !== typeof console)
-							console.log('SHIPPING_METHOD_AT_SHOP carrier has not been found.');
 						return;
-					}
 
 					if (version < 1.5)
 						$carrier = $input.closest('tr');

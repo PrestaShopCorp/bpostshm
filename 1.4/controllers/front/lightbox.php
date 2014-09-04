@@ -187,7 +187,7 @@ class Lightbox extends FrontController
 						self::$smarty->assign('firstname', $delivery_address->firstname, true);
 						self::$smarty->assign('lastname', $delivery_address->lastname, true);
 
-						preg_match('#([0-9]+)?[, ]*([a-zA-Z ]+)[, ]*([0-9]+)?#i', $delivery_address->address1, $matches);
+						preg_match('#([0-9]+)?[, ]*([\p{L}a-zA-Z -]+)[, ]*([0-9]+)?#iu', $delivery_address->address1, $matches);
 						if (!empty($matches[1]) && is_numeric($matches[1]))
 							$nr = $matches[1];
 						elseif (!empty($matches[3]) && is_numeric($matches[3]))
@@ -329,12 +329,13 @@ class Lightbox extends FrontController
 			echo '
 				<script src="'._MODULE_DIR_.'bpostshm/views/js/bpostshm.js" type="text/javascript"></script>
 				<script src="'._MODULE_DIR_.'bpostshm/views/js/srgdebug.js" type="text/javascript"></script>
-				<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+				<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript"></script>
+				<script src="//cdnjs.cloudflare.com/ajax/libs/jquery-scrollTo/1.4.11/jquery.scrollTo.min.js" type="text/javascript"></script>
 				<script src="//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.pack.js" type="text/javascript"></script>
 				<script src="https://maps.googleapis.com/maps/api/js?v=3.16&key=AIzaSyAa4S8Br_5of6Jb_Gjv1WLldkobgExB2KY&sensor=false&language=fr"'
 					.'type="text/javascript"></script>
 				<link href="'._THEME_CSS_DIR_.'global.css" type="text/css" rel="stylesheet" />
-				<link href="'.Tools::getShopDomainSsl(true, true).'/'._MODULE_DIR_.'bpostshm/views/css/lightbox.css" type="text/css" rel="stylesheet" />
+				<link href="'._MODULE_DIR_.'bpostshm/views/css/lightbox.css" type="text/css" rel="stylesheet" />
 				<link href="//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.css" type="text/css" rel="stylesheet" />';
 	}
 
@@ -342,14 +343,13 @@ class Lightbox extends FrontController
 	{
 		parent::setMedia();
 
-		Tools::addCSS('//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.css', 'screen');
-		//Tools::addCSS(_PS_CSS_DIR_.'jquery.fancybox-1.3.4.css', 'screen');
+		Tools::addCSS(_PS_SSL_ENABLED_ ? 'https://' : 'http://'.'//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.css', 'screen');
 		Tools::addCSS(__PS_BASE_URI__.'/modules/bpostshm/views/css/lightbox.css');
-		//Tools::addJS(_PS_JS_DIR_.'jquery/jquery.fancybox-1.3.4.js');
-		Tools::addJS('//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js');
 
+		Tools::addJS(_PS_SSL_ENABLED_ ? 'https://' : 'http://'.'//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js');
 		Tools::addJS(__PS_BASE_URI__.'/modules/bpostshm/views/js/bpostshm.js');
 		Tools::addJS(__PS_BASE_URI__.'/modules/bpostshm/views/js/srgdebug.js');
+		Tools::addJS(_PS_SSL_ENABLED_ ? 'https://' : 'http://'.'//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.pack.js');
 		Tools::addJS('https://maps.googleapis.com/maps/api/js?v=3.16&key=AIzaSyAa4S8Br_5of6Jb_Gjv1WLldkobgExB2KY&sensor=false&language=fr');
 	}
 

@@ -241,8 +241,11 @@
         min-height: 350px;
 
         h1 {
+            background: transparent none;
             color: #c90200;
             font-size: 16px;
+            height: auto;
+            text-transform: none;
 
             .step {
                 background-color: #c90200;
@@ -258,10 +261,13 @@
         }
 
         h2 {
+            background: transparent none;
             border-bottom: 1px solid #D2D2D2;
             font-size: 14px;
+            height: auto;
             margin: 20px 0;
             padding-bottom: 5px;
+            text-transform: none;
         }
 
         h3 {

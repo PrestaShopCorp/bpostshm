@@ -6,7 +6,7 @@
 * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
 *}
 
-<div id="lightbox" class="at-247{if $version < 1.6} v1-5{/if}">
+<div id="lightbox" class="at-247{if $version >= 1.5 && $version < 1.6} v1-5{/if}">
 	{if !empty($step)}
 		{if 1 == $step|intval}
 			<div class="row clearfix">
@@ -262,7 +262,7 @@
 							.fail(function( jqXHR, textStatus, error ) {
 						    	var err = textStatus + '<br>' + error + '<br>'; 
 						    	err += jqXHR.responseText;
-						    	srgDebug.trace(err);	
+						    	//srgDebug.trace(err);
 							});
 
 					});
