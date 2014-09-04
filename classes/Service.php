@@ -336,7 +336,7 @@ class Service
 				.Tools::substr($ps_order->id, 0, 53);
 
 		$order = new TijsVerkoyenBpostBpostOrder($reference);
-		//$order->setCostCenter('Cost Center');
+		$order->setCostCenter('PrestaShop_'._PS_VERSION_);
 
 		// add product lines
 		if ($products = $ps_order->getProducts())
@@ -569,7 +569,7 @@ class Service
 					foreach ($order_boxes as $box)
 						if ($national_box = $box->getNationalBox())
 						{
-							if (in_array($national_box->getProduct(), array('bpack Easy Retour',/* 'bpack World Easy Return',*/)))
+							if (in_array($national_box->getProduct(), array('bpack Easy Retour',)))
 								continue;
 
 							if (method_exists($national_box, 'getReceiver'))
@@ -582,6 +582,16 @@ class Service
 							elseif ($address = $national_box->getPugoAddress())
 								$recipient = $national_box->getReceiverName().' '.$national_box->getPugoName().' '.$address->getPostalCode().' '
 									.$address->getLocality();
+						}
+						elseif ($international_box = $box->getInternationalBox())
+						{
+							if (in_array($international_box->getProduct(), array('bpack World Easy Return',)))
+								continue;
+
+							$receiver = $international_box->getReceiver();
+							$address = $receiver->getAddress();
+							$recipient = $receiver->getName().' '.$address->getStreetName().' '.$address->getNumber().' '
+								.$address->getPostalCode().' '.$address->getLocality();
 						}
 			} catch (TijsVerkoyenBpostException $e) {
 				$recipient = '-';

@@ -189,15 +189,15 @@ class BpostShm extends CarrierModule
 			{
 				// Affect carrier zones
 				if (in_array($shipping_method, array(
-						//self::SHIPPING_METHOD_AT_HOME, @todo user may select at_home for an international shipping
+						self::SHIPPING_METHOD_AT_HOME,
 						self::SHIPPING_METHOD_AT_SHOP,
 						self::SHIPPING_METHOD_AT_24_7,
 					)))
 				{
 					$id_zone_be = false;
-					$country_labels = array('België', 'Belgique', 'Belgium');
-					foreach ($country_labels as $country_label)
-						if ($id_zone = Zone::getIdByName($country_label))
+					$zone_labels = array('België', 'Belgique', 'Belgium');
+					foreach ($zone_labels as $zone_label)
+						if ($id_zone = Zone::getIdByName($zone_label))
 						{
 							$id_zone_be = (int)$id_zone;
 							break;
@@ -449,6 +449,25 @@ ADD COLUMN
 		$errors = array();
 		$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
 
+		// Check PrestaShop contact info, they will be used as shipper address
+		if (!Configuration::get('PS_SHOP_ADDR1')
+				|| !Configuration::get('PS_SHOP_ADDR2')
+				|| !Configuration::get('PS_SHOP_CITY')
+				|| !Configuration::get('PS_SHOP_EMAIL')
+				|| !Configuration::get('PS_SHOP_COUNTRY_ID')
+				|| !Configuration::get('PS_SHOP_NAME')
+				|| !Configuration::get('PS_SHOP_PHONE')
+				|| !Configuration::get('PS_SHOP_CODE'))
+		{
+			$translate = 'Do not forget to fill in shipping address ';
+				if (!Service::isPrestashopFresherThan14())
+					$translate .= 'into Preferences > Contact Information';
+				else
+					$translate .= 'into Preferences > Store Contacts > Contact Details';
+			$translate .= '!';
+			$errors[] = $this->l($translate);
+		}
+
 		$id_account = Tools::getValue(
 			'account_id_account',
 			Configuration::get('BPOST_ACCOUNT_ID_'.$context_shop_id)
@@ -544,7 +563,46 @@ ADD COLUMN
 			if (2 == $country_international_orders)
 			{
 				if (is_array($enabled_country_list))
+				{
+					$id_carriers = array(
+						(int)Configuration::get('BPOST_SHIP_METHOD_'.self::SHIPPING_METHOD_AT_HOME.'_ID_CARRIER_'.$context_shop_id),
+					);
+
+					foreach ($enabled_country_list as $iso_code)
+						if ($id_country = Country::getByIso($iso_code))
+						{
+							$country = new Country((int)$id_country, 1);
+
+							if ($country_id_zone = Zone::getIdByName($country->name))
+								$id_zone = (int)$country_id_zone;
+							else
+							{
+								$zone = new Zone();
+								$zone->name = $country->name;
+								$zone->active = true;
+								$zone->save();
+								$id_zone = (int)$zone->id;
+							}
+
+							foreach ($id_carriers as $id_carrier)
+							{
+								$carrier = new Carrier((int)$id_carrier);
+								if (method_exists('Country', 'affectZoneToSelection'))
+								{
+									if ($country->affectZoneToSelection(array($id_country), $id_zone))
+										$carrier->addZone((int)$id_zone);
+								}
+								else
+								{
+									$country->id_zone = (int)$id_zone;
+									if ($country->save())
+										$carrier->addZone((int)$id_zone);
+								}
+							}
+						}
+
 					$enabled_country_list = implode('|', $enabled_country_list);
+				}
 
 				if ('REMOVE' === $enabled_country_list)
 					$enabled_country_list = '';
