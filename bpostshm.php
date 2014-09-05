@@ -564,48 +564,50 @@ ADD COLUMN
 			{
 				if (is_array($enabled_country_list))
 				{
-					$id_carriers = array(
-						(int)Configuration::get('BPOST_SHIP_METHOD_'.self::SHIPPING_METHOD_AT_HOME.'_ID_CARRIER_'.$context_shop_id),
-					);
+					if (1 === count($enabled_country_list) && 'REMOVE' === $enabled_country_list[0])
+						$enabled_country_list = '';
+					else
+					{
+						$id_carriers = array(
+							(int)Configuration::get('BPOST_SHIP_METHOD_'.self::SHIPPING_METHOD_AT_HOME.'_ID_CARRIER_'.$context_shop_id),
+						);
 
-					foreach ($enabled_country_list as $iso_code)
-						if ($id_country = Country::getByIso($iso_code))
-						{
-							$country = new Country((int)$id_country, 1);
-
-							if ($country_id_zone = Zone::getIdByName($country->name))
-								$id_zone = (int)$country_id_zone;
-							else
+						foreach ($enabled_country_list as $iso_code)
+							if ($id_country = Country::getByIso($iso_code))
 							{
-								$zone = new Zone();
-								$zone->name = $country->name;
-								$zone->active = true;
-								$zone->save();
-								$id_zone = (int)$zone->id;
-							}
+								$country = new Country((int)$id_country, 1);
 
-							foreach ($id_carriers as $id_carrier)
-							{
-								$carrier = new Carrier((int)$id_carrier);
-								if (method_exists('Country', 'affectZoneToSelection'))
-								{
-									if ($country->affectZoneToSelection(array($id_country), $id_zone))
-										$carrier->addZone((int)$id_zone);
-								}
+								if ($country_id_zone = Zone::getIdByName($country->name))
+									$id_zone = (int)$country_id_zone;
 								else
 								{
-									$country->id_zone = (int)$id_zone;
-									if ($country->save())
-										$carrier->addZone((int)$id_zone);
+									$zone = new Zone();
+									$zone->name = $country->name;
+									$zone->active = true;
+									$zone->save();
+									$id_zone = (int)$zone->id;
+								}
+
+								foreach ($id_carriers as $id_carrier)
+								{
+									$carrier = new Carrier((int)$id_carrier);
+									if (method_exists('Country', 'affectZoneToSelection'))
+									{
+										if ($country->affectZoneToSelection(array($id_country), $id_zone))
+											$carrier->addZone((int)$id_zone);
+									}
+									else
+									{
+										$country->id_zone = (int)$id_zone;
+										if ($country->save())
+											$carrier->addZone((int)$id_zone);
+									}
 								}
 							}
-						}
 
-					$enabled_country_list = implode('|', $enabled_country_list);
+						$enabled_country_list = implode('|', $enabled_country_list);
+					}
 				}
-
-				if ('REMOVE' === $enabled_country_list)
-					$enabled_country_list = '';
 
 				if (Configuration::get('BPOST_ENABLED_COUNTRY_LIST_'.$context_shop_id) !== $enabled_country_list)
 					Configuration::updateValue('BPOST_ENABLED_COUNTRY_LIST_'.$context_shop_id, $enabled_country_list);

@@ -137,24 +137,37 @@
 				$(function() {
 
 					srgDebug.init('srg-trace');
-			
+
+					var show_close_btn = true,
+						close_btn = show_close_btn ? '<div style="color:#e46;position:absolute;top:0px;right:0px;margin:8px;padding:8px;font-size:14px;font-weight:900;cursor:pointer">X</div>' : false;
+
 					$('#rc-info').fancybox({
 						fitToView: 	false,
 						helpers: {
 							title:	null
 						},
-						closeBtn: 	false,
-						maxWidth: 	380
+						maxWidth: 	380,
+						tpl : {
+						 closeBtn: 	close_btn
+						}
 					});
 
 					$("#terms").fancybox({
 					    type:  			'iframe',
 					    href: 			"{l s='https://www.bpack247.be/en/general-terms-conditions.aspx' mod='bpostshm'}",
 					    autoDimensions:	false,
-					    width: 			1000,
-					    height: 		700,
-					    closeBtn: 		false,
-					    autoScale: 		true
+					    width: 			'95%',
+					    height: 		'95%',
+					    autoScale: 		true,
+					    tpl : {
+						 closeBtn: 	close_btn
+						},
+					    helpers : {
+				            title : {
+				                type: 'inside',
+				                position : 'top'
+				            }
+				        }
 					}); 
 
 					// Getbpack247Member
