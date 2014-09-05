@@ -58,6 +58,7 @@ class AdminBpostOrders extends AdminTab
 		$this->_select = '
 		a.`reference` as print,
 		a.`reference` as t_t,
+		o.`id_order` as shipping_method,
 		COUNT(a.`reference`) as count
 		';
 
@@ -117,20 +118,18 @@ class AdminBpostOrders extends AdminTab
 			),
 			'shipping_method' => array(
 				'title' => $this->l('Delivery method'),
-				'width' => 130,
-				'type' => 'select',
-				'list' => $this->service->delivery_methods_list,
-				'filter_key' => 'o!id_order',
+				'width' => 135,
 				'callback' => 'getOrderShippingMethod',
 				'search' => false,
 			),
 			'recipient' => array(
 				'title' => $this->l('Recipient'),
-				'width' => 450,
+				'width' => 350,
 				'filter_key' => 'a!recipient',
 			),
 			'status' => array(
 				'title' => $this->l('Status'),
+				'width' => 80,
 			),
 			'date_add' => array(
 				'title' => $this->l('Creation date'),

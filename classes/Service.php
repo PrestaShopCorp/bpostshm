@@ -351,7 +351,7 @@ class Service
 		$weight *= 1000;
 
 		$service_point_id = null;
-		if ((int)$type == (int)BpostShm::SHIPPING_METHOD_AT_SHOP)
+		if (in_array((int)$type, array(BpostShm::SHIPPING_METHOD_AT_SHOP, BpostShm::SHIPPING_METHOD_AT_24_7)))
 		{
 			$cart = new Cart($ps_order->id_cart);
 			$service_point_id = (int)$cart->service_point_id;
@@ -529,28 +529,38 @@ class Service
 				$box->setNationalBox($at_bpost);
 				break;
 
-			/*case (int)BpostShm::SHIPPING_METHOD_AT_24_7:
+			case (int)BpostShm::SHIPPING_METHOD_AT_24_7:
 				// @24/7
-				$parcels_depot_address = new ParcelsDepotAddress(
-					'Turnhoutsebaan',
-					'468',
-					null,
-					'2110',
-					'Wijnegem',
+				if ($this->isPrestashopFresherThan14())
+					$ps_order = Order::getByReference(Tools::substr($order->getReference(), 7))->getFirst();
+				else
+					$ps_order = new Order((int)Tools::substr($order->getReference(), 7));
+
+				$service_point = $this->getServicePointDetails($service_point_id, BpostShm::SHIPPING_METHOD_AT_24_7);
+				$cart = new Cart((int)$ps_order->id_cart);
+				$bpack247_customer = Tools::jsonDecode($cart->bpack247_customer);
+
+				$parcels_depot_address = new TijsVerkoyenBpostBpostOrderParcelsDepotAddress(
+					$service_point['street'],
+					$service_point['nr'],
+					'A',
+					$service_point['zip'],
+					$service_point['city'],
 					'BE'
 				);
-				$parcels_depot_address->setBox('A');
 
-				$at247 = new At247();
-				$at247->setParcelsDepotId('014472');
-				$at247->setParcelsDepotName('WIJNEGEM');
+				for ($i = Tools::strlen($service_point['id']); $i < 6; $i++)
+					$service_point['id'] = '0'.$service_point['id'];
+
+				$at247 = new TijsVerkoyenBpostBpostOrderBoxAt247();
+				$at247->setParcelsDepotId($service_point['id']);
+				$at247->setParcelsDepotName($service_point['office']);
 				$at247->setParcelsDepotAddress($parcels_depot_address);
-				$at247->setMemberId('188565346');
-				$at247->setReceiverName('Tijs Verkoyen');
-				$at247->setReceiverCompany('Sumo Coders');
+				$at247->setMemberId($bpack247_customer->DeliveryCode);
+				$at247->setReceiverName(Tools::substr($receiver->getName(), 0, 40));
+				$at247->setReceiverCompany(Tools::substr($receiver->getCompany(), 0, 40));
 				$box->setNationalBox($at247);
 				break;
-			*/
 		}
 
 		$order->addBox($box);
@@ -798,6 +808,7 @@ WHERE
 	{
 		$customer = new Customer((int)$ps_order->id_customer);
 		$delivery_address = new Address($ps_order->id_address_delivery, $this->context->language->id);
+		$invoice_address = new Address($ps_order->id_address_invoice, $this->context->language->id);
 
 		$shippers = array(
 			'client' => array(
@@ -806,7 +817,7 @@ WHERE
 				'city' 		=> $delivery_address->city,
 				'email'		=> $customer->email,
 				'id_country'=> $delivery_address->id_country,
-				'name'		=> $customer->firstname.' '.$customer->lastname,
+				'name'		=> $invoice_address->firstname.' '.$invoice_address->lastname,
 				'phone'		=> !empty($delivery_address->phone) ? $delivery_address->phone : $delivery_address->phone_mobile,
 				'postcode' 	=> $delivery_address->postcode,
 			),

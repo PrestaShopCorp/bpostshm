@@ -154,6 +154,7 @@
       color: #c90200;
       font-size: 16px;
       height: auto;
+      margin-top: 0;
       text-transform: none; }
       #lightbox.at-247 h1 .step {
         background-color: #c90200;
@@ -175,6 +176,7 @@
       text-transform: none; }
     #lightbox.at-247 h3 {
       font-size: 12px;
+      font-weight: bold;
       padding-bottom: 12px; }
     #lightbox.at-247 p {
       padding: 0 5% 12px 0; }
@@ -201,9 +203,9 @@
       margin-right: 3px; }
     #lightbox.at-247 #register-247 input[type="text"] {
       padding-left: 5px;
-      width: 30%; }
+      width: 40%; }
     #lightbox.at-247 #register-247 select {
-      width: 33.3%; }
+      width: 40%; }
     #lightbox.at-247 #register-247 .infos {
       font-style: italic;
       margin-left: 5px; }
@@ -216,13 +218,16 @@
         margin-left: 5px; }
       #lightbox.at-247 #register-247 .last label {
         float: none;
-        font-weight: normal; }
+        font-weight: normal;
+        width: auto; }
     #lightbox.at-247 #rc-info-content {
       display: none; }
     #lightbox.at-247 img {
       height: auto;
       max-width: 100%;
       width: auto; }
+    #lightbox.at-247 #uniform-cgv {
+      display: inline; }
 
 @media screen and (min-width: 480px) {
   .at-shop .col-xs-4 {

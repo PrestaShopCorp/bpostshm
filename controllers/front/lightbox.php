@@ -279,6 +279,7 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 							'token'				=> Tools::getToken('bpostshm'),
 						)));
 
+						$this->addJqueryPlugin('scrollTo');
 						$this->setTemplate('lightbox-point-list.tpl');
 						break;
 				}
@@ -306,7 +307,7 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 		if (!isset($member['Error']))
 			try {
 				$this->context->cart->bpack247_customer = $json_member;
-				$this->context->cart->update();	
+				$this->context->cart->update();
 			
 			} catch (Exception $e) {
 				$json_member = Tools::jsonEncode(array('Error' => $e->getMessage()));	
