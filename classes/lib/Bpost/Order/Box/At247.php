@@ -173,9 +173,10 @@ class TijsVerkoyenBpostBpostOrderBoxAt247 extends TijsVerkoyenBpostBpostOrderBox
 	 *
 	 * @param  \DomDocument $document
 	 * @param  string	   $prefix
+	 * @param  string	   $type
 	 * @return \DomElement
 	 */
-	public function toXML(\DOMDocument $document, $prefix = null)
+	public function toXML(\DOMDocument $document, $prefix = null, $type = null)
 	{
 		$tag_name = 'nationalBox';
 		if ($prefix !== null)
