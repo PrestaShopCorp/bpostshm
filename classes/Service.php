@@ -798,6 +798,7 @@ WHERE
 	{
 		$customer = new Customer((int)$ps_order->id_customer);
 		$delivery_address = new Address($ps_order->id_address_delivery, $this->context->language->id);
+		$invoice_address = new Address($ps_order->id_address_invoice, $this->context->language->id);
 
 		$shippers = array(
 			'client' => array(
@@ -806,7 +807,7 @@ WHERE
 				'city' 		=> $delivery_address->city,
 				'email'		=> $customer->email,
 				'id_country'=> $delivery_address->id_country,
-				'name'		=> $customer->firstname.' '.$customer->lastname,
+				'name'		=> $invoice_address->firstname.' '.$invoice_address->lastname,
 				'phone'		=> !empty($delivery_address->phone) ? $delivery_address->phone : $delivery_address->phone_mobile,
 				'postcode' 	=> $delivery_address->postcode,
 			),

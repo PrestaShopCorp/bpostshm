@@ -42,6 +42,8 @@ class AdminBpostOrders extends ModuleAdminController
 		$this->list_no_link = true;
 		$this->context = Context::getContext();
 
+		$this->bootstrap = true;
+		$this->show_filters = true;
 		$this->module = new BpostShm();
 		$this->service = Service::getInstance($this->context);
 
@@ -64,6 +66,7 @@ class AdminBpostOrders extends ModuleAdminController
 		$this->_select = '
 		a.`reference` as print,
 		a.`reference` as t_t,
+		o.`id_order` as shipping_method,
 		COUNT(a.`reference`) as count
 		';
 
@@ -129,9 +132,6 @@ class AdminBpostOrders extends ModuleAdminController
 		'shipping_method' => array(
 			'title' => $this->l('Delivery method'),
 			'width' => 150,
-			'type' => 'select',
-			'list' => $this->service->delivery_methods_list,
-			'filter_key' => 'o!id_order',
 			'callback' => 'getOrderShippingMethod',
 			'search' => false,
 		),

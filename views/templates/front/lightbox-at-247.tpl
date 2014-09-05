@@ -9,7 +9,7 @@
 <div id="lightbox" class="at-247{if $version >= 1.5 && $version < 1.6} v1-5{/if}">
 	{if !empty($step)}
 		{if 1 == $step|intval}
-			<div class="row clearfix">
+			<div class="clearfix">
 				<h1 class="col-xs-12"{if $version < 1.5} style="line-height: 4.6em;"{/if}>
 					<span class="step">1</span>
 					{l s='Select or create a bpack 24/7 account' mod='bpostshm'}
@@ -26,7 +26,7 @@
 					<label for="bpack247_register_1">{l s='I would like to register for pack 24/7' mod='bpostshm'}</label>
 				</form>
 			</div>
-			<div id="register" class="row clearfix">
+			<div id="register" class="clearfix">
 				<h2>{l s='What is bpack 24/7 ?' mod='bpostshm'}</h2>
 				<div class="col-xs-6">
 					<p>{l s='Are you rarely at home during the day? Do you have enough time to go when you want to send or retrieve packages to the post office?' mod='bpostshm'}</p>
@@ -118,7 +118,7 @@
 						<input type="checkbox" name="cgv" id="cgv" value="1" required="required" />
 
 						<!-- <label for="cgv">{l s='I accept the' mod='bpostshm'} <a href="{l s='https://www.bpack247.be/en/general-terms-conditions.aspx' mod='bpostshm'}" title="{l s='Terms and conditions' mod='bpostshm'}" target="_blank">{{l s='Terms and conditions' mod='bpostshm'}|lower}</a></label> -->
-						
+
 						<label for="cgv">{l s='I accept the' mod='bpostshm'} <a id="terms" href="" title="{l s='Terms and conditions' mod='bpostshm'}">{{l s='Terms and conditions' mod='bpostshm'}|lower}</a></label>
 						<sup>*</sup>
 						<br /><br />
@@ -132,18 +132,17 @@
 				<img src="{$module_dir|escape}views/img/card_{$lang_iso|escape}.png" alt="{l s='User card' mod='bpostshm'}" />
 				<p>{l s='Your bpack 24/7 user number is an unique nine-digit code that allows bpost to identify you and notify you when a package comes in the machine. The nine-digit user number is on your user card and begins with the letters RC.' mod='bpostshm'}</p>
 			</div>
-			
+
 			<script type="text/javascript">
 				$(function() {
 
 					srgDebug.init('srg-trace');
-			
+
 					$('#rc-info').fancybox({
 						fitToView: 	false,
 						helpers: {
 							title:	null
 						},
-						closeBtn: 	false,
 						maxWidth: 	380
 					});
 
@@ -153,9 +152,8 @@
 					    autoDimensions:	false,
 					    width: 			1000,
 					    height: 		700,
-					    closeBtn: 		false,
 					    autoScale: 		true
-					}); 
+					});
 
 					// Getbpack247Member
 					function getBpack247Member($rcn)
@@ -174,7 +172,7 @@
 						  			$(location).attr('href', "{$url_get_point_list|escape:'javascript'}");
 						  	})
 						  	.fail(function( jqXHR, textStatus, error ) {
-						    	var err = textStatus + '<br>' + error + '<br>'; 
+						    	var err = textStatus + '<br>' + error + '<br>';
 						    	err += jqXHR.responseText;
 						    	actual_error = true;
 						    	setTimeout(function() {
@@ -188,7 +186,7 @@
 						$rcn = this.value;
 						if (reRCn.test($rcn))
 							getBpack247Member( $rcn.replace(/-/g, '') );
-							
+
 					});
 
 					$(document)
@@ -216,7 +214,7 @@
 						if ('' != dob.val() && !reDate.test(dob.val())) {
 							dob.fadeOut('slow').fadeIn('slow');
 							dob.val('');
-						} 
+						}
 
 						var $form 	= $(this),
 							$errors = [];
@@ -236,7 +234,7 @@
 							}
 							else if ($field.is('[type="checkbox"]') && !$field.is(':checked'))
 								$errors.push($field{if $version > 1.5}.parent(){/if});
-								
+
 						});
 
 						if ($errors.length)
@@ -251,16 +249,16 @@
 						}
 
 						$.post( $form.attr('action'), $form.serialize() )
-							.done(function(response) {								
+							.done(function(response) {
 								if (null != response['Error'])
 									srgDebug.traceJson(response);
 									//srgDebug.trace("{l s='Registration failed.' mod='bpostshm'}");
 								else
 						  			$(location).attr('href', "{$url_get_point_list|escape:'javascript'}");
-								
+
 							}, "json")
 							.fail(function( jqXHR, textStatus, error ) {
-						    	var err = textStatus + '<br>' + error + '<br>'; 
+						    	var err = textStatus + '<br>' + error + '<br>';
 						    	err += jqXHR.responseText;
 						    	//srgDebug.trace(err);
 							});
