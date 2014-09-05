@@ -153,6 +153,6 @@ $_MODULE['<{bpostshm}prestashop>adminbpostorders-view_3dd42bfc8345e82c43b4a40a34
 $_MODULE['<{bpostshm}prestashop>adminbpostorders-view_c879cb3351593188d1178647eb2032fe'] = 'Imprimer les étiquettes';
 $_MODULE['<{bpostshm}prestashop>adminbpostorders-view_b021df6aac4654c454f46c77646e745f'] = 'Etiquette';
 $_MODULE['<{bpostshm}prestashop>adminbpostorders-view_24a23d787190f2c4812ff9ab11847a72'] = 'Statut :';
-$_MODULE['<{bpostshm}prestashop>extra-carrier_1d850fe4dde4180715bb412f350e096d'] = 'Choisisez un point de livraison';
+$_MODULE['<{bpostshm}prestashop>extra-carrier_1d850fe4dde4180715bb412f350e096d'] = 'Choisissez un point de livraison';
 $_MODULE['<{bpostshm}prestashop>extra-carrier_97e14aff12f6adb6c83de6e9feb52505'] = 'Modifier mon choix bpost';
 $_MODULE['<{bpostshm}prestashop>extra-carrier_5508a53851720a210e50f7b8a6f66f46'] = 'Vous devez accepter les conditions générales d\'utilisation du service avant de continuer';
