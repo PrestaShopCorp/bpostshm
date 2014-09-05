@@ -49,7 +49,7 @@
 						<label for="title">{l s='Title' mod='bpostshm'}</label>
 						<select name="id_gender" id="title" required="required">
 							{foreach $genders as $_gender}
-								<option value="{$_gender->id}"{if $gender == $_gender->id} selected="selected"{/if}>{$_gender->name}.</option>
+								<option value="{$_gender->id}"{if $gender == $_gender->id} selected="selected"{/if}>{$_gender->name}</option>
 							{/foreach}
 						</select>
 						<sup>*</sup>

@@ -180,9 +180,9 @@ class Lightbox extends FrontController
 
 						self::$smarty->assign('gender', $context->customer->id_gender);
 						self::$smarty->assign('genders', array(
-							(object)array('id' => 1, 'name' => 'Mr'),
-							(object)array('id' => 2, 'name' => 'Ms'),
-							(object)array('id' => 9, 'name' => 'Mr'),
+							(object)array('id' => 1, 'name' => 'Mr.'),
+							(object)array('id' => 2, 'name' => 'Ms.'),
+							(object)array('id' => 9, 'name' => 'Mr.'),
 						));
 						self::$smarty->assign('firstname', $delivery_address->firstname, true);
 						self::$smarty->assign('lastname', $delivery_address->lastname, true);
