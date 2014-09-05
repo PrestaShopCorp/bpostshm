@@ -902,7 +902,7 @@ class AdminBpostOrders extends AdminTab
 				fwrite($fp, $label->getBytes());
 				fclose($fp);
 
-				$links[] = _MODULE_DIR_.'bpostshm/pdf/'.$reference.'/'.$i.'.pheqdedf';
+				$links[] = _MODULE_DIR_.'bpostshm/pdf/'.$reference.'/'.$i.'.pdf';
 				$i++;
 			}
 
