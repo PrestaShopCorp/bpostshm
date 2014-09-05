@@ -28,7 +28,7 @@ class TijsVerkoyenBpostBpostOrderBoxAt247 extends TijsVerkoyenBpostBpostOrderBox
 	/**
 	 * @var string
 	 */
-	protected $product = 'bpack 24h Pro';
+	protected $product = 'bpack 24/7';
 
 	/**
 	 * @var string
@@ -110,7 +110,7 @@ class TijsVerkoyenBpostBpostOrderBoxAt247 extends TijsVerkoyenBpostBpostOrderBox
 	}
 
 	/**
-	 * @param string $product Possible values are: bpack 24h Pro
+	 * @param string $product Possible values are: bpack 24/7
 	 * @throws TijsVerkoyenBpostException
 	 */
 	public function setProduct($product)
@@ -132,7 +132,7 @@ class TijsVerkoyenBpostBpostOrderBoxAt247 extends TijsVerkoyenBpostBpostOrderBox
 	public static function getPossibleProductValues()
 	{
 		return array(
-			'bpack 24h Pro',
+			'bpack 24/7',
 		);
 	}
 
@@ -286,9 +286,9 @@ class TijsVerkoyenBpostBpostOrderBoxAt247 extends TijsVerkoyenBpostBpostOrderBox
 			$at247->setParcelsDepotid((string)$xml->{'at24-7'}->parcelsDepotId);
 		if (isset($xml->{'at24-7'}->parcelsDepotName) && $xml->{'at24-7'}->parcelsDepotName != '')
 			$at247->setParcelsDepotname((string)$xml->{'at24-7'}->parcelsDepotName);
-		if (isset($xml->{'at24-7'}->parcels_depot_address))
+		if (isset($xml->{'at24-7'}->parcelsDepotAddress))
 		{
-			$parcels_depot_address_data = $xml->{'at24-7'}->parcels_depot_address->children(
+			$parcels_depot_address_data = $xml->{'at24-7'}->parcelsDepotAddress->children(
 				'http://schema.post.be/shm/deepintegration/v3/common'
 			);
 			$at247->setParcelsDepotaddress(TijsVerkoyenBpostBpostOrderParcelsDepotAddress::createFromXML($parcels_depot_address_data));

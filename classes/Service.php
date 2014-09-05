@@ -559,6 +559,7 @@ class Service
 				$at247->setMemberId($bpack247_customer->DeliveryCode);
 				$at247->setReceiverName(Tools::substr($receiver->getName(), 0, 40));
 				$at247->setReceiverCompany(Tools::substr($receiver->getCompany(), 0, 40));
+
 				$box->setNationalBox($at247);
 				break;
 		}
@@ -591,6 +592,7 @@ class Service
 							if (in_array($national_box->getProduct(), array('bpack Easy Retour',)))
 								continue;
 
+							// @home
 							if (method_exists($national_box, 'getReceiver'))
 							{
 								$receiver = $national_box->getReceiver();
@@ -598,9 +600,20 @@ class Service
 								$recipient = $receiver->getName().' '.$address->getStreetName().' '.$address->getNumber().' '
 									.$address->getPostalCode().' '.$address->getLocality();
 							}
-							elseif ($address = $national_box->getPugoAddress())
+							// @bpost
+							elseif (method_exists($national_box, 'getPugoAddress'))
+							{
+								$address = $national_box->getPugoAddress();
 								$recipient = $national_box->getReceiverName().' '.$national_box->getPugoName().' '.$address->getPostalCode().' '
 									.$address->getLocality();
+							}
+							// @24/7
+							elseif (method_exists($national_box, 'getParcelsDepotaddress'))
+							{
+								$address = $national_box->getParcelsDepotaddress();
+								$recipient = $national_box->getReceiverName().' '.$national_box->getParcelsDepotname().' '
+									.$address->getPostalCode().' '.$address->getLocality();
+							}
 						}
 						elseif ($international_box = $box->getInternationalBox())
 						{

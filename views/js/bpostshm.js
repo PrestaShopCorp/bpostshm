@@ -69,7 +69,7 @@ BpostShm = {
 			e.preventDefault();
 			e.stopPropagation();
 
-			var postcode 	= $('#postcode').val(),
+			var postcode	= $('#postcode').val(),
 				city		= $('#city').val();
 
 			if ('undefined' !== typeof BpostShm.cache.nearest_service_points[postcode + '_' + city])
@@ -79,7 +79,7 @@ BpostShm = {
 				postcode:	postcode,
 				city:		city
 			}, function(response) {
-				if (response)
+				if ('undefined' !== typeof response.coords)
 				{
 					BpostShm.cache.nearest_service_points[postcode + '_' + city] = response;
 					BpostShm.update(response);

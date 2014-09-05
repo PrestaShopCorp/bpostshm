@@ -136,6 +136,11 @@ class Lightbox extends FrontController
 					'zone'		=> $delivery_address->postcode.' '.$delivery_address->city,
 				);
 				$service_points = $service->getNearestServicePoint($search_params, $shipping_method);
+				if (empty($service_points))
+				{
+					$search_params['zone'] = $delivery_address->postcode;
+					$service_points = $service->getNearestServicePoint($search_params, $shipping_method);
+				}
 
 				self::$smarty->assign('city', $delivery_address->city, true);
 				self::$smarty->assign('postcode', $delivery_address->postcode, true);
@@ -180,9 +185,9 @@ class Lightbox extends FrontController
 
 						self::$smarty->assign('gender', $context->customer->id_gender);
 						self::$smarty->assign('genders', array(
-							(object)array('id' => 1, 'name' => 'Mr.'),
-							(object)array('id' => 2, 'name' => 'Ms.'),
-							(object)array('id' => 9, 'name' => 'Mr.'),
+							(object)array('id' => 1, 'name' => 'Mr'),
+							(object)array('id' => 2, 'name' => 'Ms'),
+							(object)array('id' => 9, 'name' => 'Mr'),
 						));
 						self::$smarty->assign('firstname', $delivery_address->firstname, true);
 						self::$smarty->assign('lastname', $delivery_address->lastname, true);
@@ -272,6 +277,11 @@ class Lightbox extends FrontController
 							'zone'		=> $zone,
 						);
 						$service_points = $service->getNearestServicePoint($search_params, $shipping_method);
+						if (empty($service_points))
+						{
+							$search_params['zone'] = $customer['Postalcode'];
+							$service_points = $service->getNearestServicePoint($search_params, $shipping_method);
+						}
 
 						//self::$smarty->assign('city', $customer['town'], true);
 						//self::$smarty->assign('postcode', '', true);

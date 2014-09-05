@@ -130,6 +130,11 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 					'zone'		=> $delivery_address->postcode.' '.$delivery_address->city,
 				);
 				$service_points = $service->getNearestServicePoint($search_params, $shipping_method);
+				if (empty($service_points))
+				{
+					$search_params['zone'] = $delivery_address->postcode;
+					$service_points = $service->getNearestServicePoint($search_params, $shipping_method);
+				}
 				self::$smarty->assign('servicePoints', $service_points, true);
 
 				self::$smarty->assign('url_get_nearest_service_points', $this->context->link->getModuleLink('bpostshm', 'lightbox', array(
@@ -258,6 +263,11 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 							'zone'		=> $zone, //$customer['Town'],
 						);
 						$service_points = $service->getNearestServicePoint($search_params, $shipping_method);
+						if (empty($service_points))
+						{
+							$search_params['zone'] = $customer['Postalcode'];
+							$service_points = $service->getNearestServicePoint($search_params, $shipping_method);
+						}
 						self::$smarty->assign('servicePoints', $service_points, true);
 						
 						self::$smarty->assign('url_get_nearest_service_points', $this->context->link->getModuleLink('bpostshm', 'lightbox', array(
