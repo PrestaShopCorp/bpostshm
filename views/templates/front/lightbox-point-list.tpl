@@ -58,7 +58,7 @@
 			google.maps.event.trigger(BpostShm.map, 'resize');
 
 			{if !empty($defaultStation)}
-				BpostShm.setDefaultStation('{$defaultStation}');
+				BpostShm.setDefaultStation('{$defaultStation|strval}');
 			{/if}
 		});
 

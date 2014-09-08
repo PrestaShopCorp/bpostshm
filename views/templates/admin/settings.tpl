@@ -183,7 +183,7 @@
 							<td>
 								<select multiple="multiple" id="country-list">
 								{foreach $product_countries as $iso_code => $_country}
-									<option value="{$iso_code}">{$_country}</option>
+									<option value="{$iso_code|escape}">{$_country|escape}</option>
 								{/foreach}
 								</select>
 							</td>
@@ -195,7 +195,7 @@
 							<td>
 								<select name="enabled_country_list[]" multiple="multiple" id="enabled-country-list">
 								{foreach $enabled_countries as $iso_code => $_country}
-									<option value="{$iso_code}">{$_country}</option>
+									<option value="{$iso_code|escape}">{$_country|escape}</option>
 								{/foreach}
 								</select>
 							</td>

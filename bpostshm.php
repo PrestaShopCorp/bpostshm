@@ -682,11 +682,10 @@ ADD COLUMN
 
 		$this->smarty->assign('errors', $errors, true);
 		$this->smarty->assign('url_get_available_countries', $service->getControllerLink('bpostshm', 'servicepoint', array(
-							'ajax'						=> true,
-							'get_available_countries'	=> true,
-							'token'						=> Tools::getAdminToken('bpostshm'),
-						)));
-		
+			'ajax'						=> true,
+			'get_available_countries'	=> true,
+			'token'						=> Tools::getAdminToken('bpostshm'),
+		)));
 	}
 
 	/**

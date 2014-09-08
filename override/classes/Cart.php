@@ -30,7 +30,6 @@ class Cart extends CartCore
 			$this->fieldsValidate['service_point_id'] = 'isUnsignedId';
 		}
 
-
 		parent::__construct($id, $id_lang);
 	}
 

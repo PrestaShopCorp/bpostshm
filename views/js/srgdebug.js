@@ -1,7 +1,14 @@
-
 /**
- * srgDebug
- * Authour:  Serge
+ * 2014 Stigmi
+ *
+ * bpost Shipping Manager
+ *
+ * Allow your customers to choose their preferrred delivery method: delivery at home or the office, at a pick-up location or in a bpack 24/7 parcel
+ * machine.
+ *
+ * @author    Serge, Stigmi <www.stigmi.eu>
+ * @copyright 2014 Stigmi
+ * @license   http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
 //{literal}

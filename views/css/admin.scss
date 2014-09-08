@@ -143,47 +143,6 @@ option:disabled {
     }
 }
 
-#adminbpostorders-view {
-    .metadata-command {
-        a {
-            &,
-            &:visited {
-                color: #268ccd;
-            }
-
-            img {
-                margin-right: 6px;
-            }
-
-            span {
-                text-decoration: underline;
-            }
-        }
-
-        .actions {
-            float: right;
-            margin: 12px 10px;
-            width: 25%;
-
-            a + a {
-                display: inline-block;
-                padding-left: 10px;
-            }
-        }
-    }
-
-    .box {
-        background-color: #ececec;
-        border: 1px solid #ccc;
-        border-radius: 3px;
-        margin-bottom: 12px;
-
-        .box-title {
-            color: #333;
-        }
-    }
-}
-
 #adminbpostorders {
     #idTabs {
         li {
@@ -211,5 +170,12 @@ option:disabled {
 
     .block_hidden_only_for_screen {
         display: none;
+    }
+}
+
+#order_actions {
+    a {
+        cursor: pointer;
+        text-decoration: underline;
     }
 }

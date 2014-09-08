@@ -206,7 +206,7 @@ class TijsVerkoyenBpostBpostOrderBox
 			// build classname based on the tag name
 			$className = 'TijsVerkoyenBpostBpostOrderBox'.\Tools::ucfirst($national_box_data->getName());
 			if ($national_box_data->getName() == 'at24-7')
-				$className = 'TijsVerkoyenBpostBpostOrderBoxat247';
+				$className = 'TijsVerkoyenBpostBpostOrderBoxAt247';
 
 			if (!method_exists($className, 'createFromXML'))
 				throw new TijsVerkoyenBpostException('Not Implemented');

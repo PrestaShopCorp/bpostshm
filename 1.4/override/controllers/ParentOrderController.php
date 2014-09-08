@@ -22,9 +22,10 @@ class ParentOrderController extends ParentOrderControllerCore
 
 		// Adding JS files
 		Tools::addJS(_THEME_JS_DIR_.'tools.js');
-		if ((Configuration::get('PS_ORDER_PROCESS_TYPE') == 0 && Tools::getValue('step') == 1) || Configuration::get('PS_ORDER_PROCESS_TYPE') == 1 || Tools::getValue('step') == 2)
+		if ((Configuration::get('PS_ORDER_PROCESS_TYPE') == 0 && Tools::getValue('step') == 1)
+				|| Configuration::get('PS_ORDER_PROCESS_TYPE') == 1 || Tools::getValue('step') == 2)
 			Tools::addJS(_THEME_JS_DIR_.'order-address.js');
-		if ((int)(Configuration::get('PS_BLOCK_CART_AJAX')) OR Configuration::get('PS_ORDER_PROCESS_TYPE') == 1)
+		if ((int)Configuration::get('PS_BLOCK_CART_AJAX') || Configuration::get('PS_ORDER_PROCESS_TYPE') == 1)
 		{
 			Tools::addJS(_THEME_JS_DIR_.'cart-summary.js');
 			Tools::addJS(_PS_JS_DIR_.'jquery/jquery-typewatch.pack.js');

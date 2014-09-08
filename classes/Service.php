@@ -17,23 +17,20 @@ require_once(_PS_MODULE_DIR_.'bpostshm/bpostshm.php');
 
 class Service
 {
+	const GEO6_PARTNER = 999999;
+
+	/* Cache fetched orders */
+	const GEO6_APP_ID = '';
+	const BPACK247_ID = 'test@bpost.be';
+	const BPACK247_PASS = 'test';
+	public static $cache = array();
 	/**
 	 * @var Service
 	 */
 	protected static $instance;
-
-	/* Cache fetched orders */
-	public static $cache = array();
-
 	public $bpost;
 	private $context;
 	private $geo6;
-
-	const GEO6_PARTNER = 999999;
-	const GEO6_APP_ID = '';
-
-	const BPACK247_ID = 'test@bpost.be';
-	const BPACK247_PASS = 'test';
 
 	/**
 	 * @param Context $context
@@ -72,6 +69,11 @@ class Service
 		);
 	}
 
+	public static function isPrestashopFresherThan14()
+	{
+		return version_compare(_PS_VERSION_, '1.5', '>=');
+	}
+
 	/**
 	 * @param Context $context
 	 * @return Service
@@ -88,131 +90,9 @@ class Service
 		return Service::$instance;
 	}
 
-	/**
-	 * Make the call
-	 *
-	 * @param  string $url       The URL to call.
-	 * @param  string $body      The data to pass.
-	 * @param  array  $headers   The headers to pass.
-	 * @param  string $method    The HTTP-method to use.
-	 * @param  bool   $expect_xml Do we expect XML?
-	 * @return mixed
-	 */
-	private function doCall($url, $body = null, $headers = array(), $method = 'GET', $expect_xml = true)
-	{
-		// build Authorization header
-		$headers[] = 'Authorization: Basic '.$this->getAuthorizationHeader();
-
-		// set options
-		$options = array();
-		$options[CURLOPT_URL] = $url;
-		if ($this->bpost->getPort() != 0)
-			$options[CURLOPT_PORT] = $this->bpost->getPort();
-		$options[CURLOPT_USERAGENT] = $this->bpost->getUserAgent();
-		$options[CURLOPT_RETURNTRANSFER] = true;
-		$options[CURLOPT_TIMEOUT] = (int)$this->bpost->getTimeOut();
-		$options[CURLOPT_HTTP_VERSION] = CURL_HTTP_VERSION_1_1;
-		$options[CURLOPT_HTTPHEADER] = $headers;
-		$options[CURLOPT_SSL_VERIFYPEER] = false;
-
-		if ($method == 'POST')
-		{
-			$options[CURLOPT_POST] = true;
-			$options[CURLOPT_POSTFIELDS] = $body;
-		}
-
-		// init
-		$curl = curl_init();
-
-		// set options
-		curl_setopt_array($curl, $options);
-
-		// execute
-		$response = curl_exec($curl);
-		$headers = curl_getinfo($curl);
-
-		// fetch errors
-		$error_number = curl_errno($curl);
-		$error_message = curl_error($curl);
-
-		// error?
-		if ($error_number != '')
-			throw new Exception($error_message, $error_number);
-
-		// valid HTTP-code
-		if (!in_array($headers['http_code'], array(0, 200, 201)))
-		{
-			// convert into XML
-			$xml = simplexml_load_string($response);
-
-			// validate
-			if ($xml !== false && (Tools::substr($xml->getName(), 0, 7) == 'invalid'))
-			{
-				// message
-				$message = (string)$xml->error;
-				$code = isset($xml->code) ? (int)$xml->code : null;
-
-				// throw exception
-				throw new Exception($message, $code);
-			}
-
-			if ((isset($headers['content_type']) && substr_count($headers['content_type'], 'text/plain') > 0) ||
-				($headers['http_code'] == '404'))
-				$message = $response;
-			else
-				$message = 'Invalid response.';
-
-			throw new Exception($message, $headers['http_code']);
-		}
-
-		// if we don't expect XML we can return the content here
-		if (!$expect_xml)
-			return $response;
-
-		// convert into XML
-		$xml = simplexml_load_string($response);
-
-		// return the response
-		return $xml;
-	}
-
-	/**
-	 * Generate the secret string for the Authorization header
-	 *
-	 * @return string
-	 */
-	private function getAuthorizationHeader()
-	{
-		return base64_encode($this->bpost->getAccountId().':'.$this->bpost->getPassPhrase());
-	}
-
-	public static function isPrestashopFresherThan14()
-	{
-		return version_compare(_PS_VERSION_, '1.5', '>=');
-	}
-
 	public static function isPrestashop16()
 	{
 		return version_compare(_PS_VERSION_, '1.6', '>');
-	}
-
-	public function getProductConfig()
-	{
-		$product_config = array();
-
-		if ($response = $this->doCall(
-				TijsVerkoyenBpostBpost::API_URL.'/'.$this->bpost->getAccountId().'/productconfig',
-				null,
-				array(
-					'Accept: application/vnd.bpost.shm-productConfiguration-v3+XML',
-				)
-			))
-		{
-			$product_config = Tools::jsonEncode($response);
-			$product_config = Tools::jsonDecode($product_config, true);
-		}
-
-		return $product_config;
 	}
 
 	/**
@@ -281,32 +161,6 @@ class Service
 		}
 
 		return $service_point_hours;
-	}
-
-	/**
-	 * @param int $service_point_id
-	 * @param int $type
-	 * @return array
-	 */
-	public function getServicePointDetails($service_point_id = 0, $type = 3)
-	{
-		$service_point_details = array();
-
-		try {
-			if ($poi = $this->geo6->getServicePointDetails($service_point_id, $this->context->language->id, $type))
-			{
-				$service_point_details['id'] 		= $poi->getId();
-				$service_point_details['office'] 	= $poi->getOffice();
-				$service_point_details['street'] 	= $poi->getStreet();
-				$service_point_details['nr'] 		= $poi->getNr();
-				$service_point_details['zip'] 		= $poi->getZip();
-				$service_point_details['city'] 		= $poi->getCity();
-			}
-		} catch (TijsVerkoyenBpostException $e) {
-			$service_point_details = array();
-		}
-
-		return $service_point_details;
 	}
 
 	/**
@@ -401,428 +255,12 @@ class Service
 			}
 			else
 				$response = $response && $this->createPSLabel($reference);
+
 		} catch (TijsVerkoyenBpostException $e) {
 			$response = false;
 		}
 
 		return $response;
-	}
-
-	/**
-	 * @param TijsVerkoyenBpostBpostOrder $order
-	 * @param int $type
-	 * @param TijsVerkoyenBpostBpostOrderSender $sender
-	 * @param TijsVerkoyenBpostBpostOrderReceiver $receiver
-	 * @param int $weight @todo Find a cleaner way to manage weight
-	 * @param null $service_point_id
-	 * @param TijsVerkoyenBpostBpostOrderBox $box
-	 * @return bool
-	 */
-	public function addBox(TijsVerkoyenBpostBpostOrder $order = null, $type = 0, TijsVerkoyenBpostBpostOrderSender $sender,
-		TijsVerkoyenBpostBpostOrderReceiver $receiver, $weight = 1000, $service_point_id = null, $box = null)
-	{
-		$response = true;
-
-		if (empty($order) || empty($type)
-				|| ((int)$type == (int)BpostShm::SHIPPING_METHOD_AT_SHOP && is_null($service_point_id)))
-			return !$response;
-
-		$is_retour = false;
-		if (!is_null($box))
-			$is_retour = true;
-		else
-		{
-			$box = new TijsVerkoyenBpostBpostOrderBox();
-			$box->setStatus('OPEN');
-		}
-		$box->setSender($sender);
-
-		switch ((int)$type)
-		{
-			case (int)BpostShm::SHIPPING_METHOD_AT_HOME:
-				if (empty($weight))
-					$weight = 1000;
-
-				$is_international = false;
-				$id_zone_be = Configuration::get('BPOST_ID_COUNTRY_BELGIUM_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id));
-				$receiver_id_country = Country::getByIso($receiver->getAddress()->getCountryCode());
-
-				if ($id_zone_be != Country::getIdZone((int)$receiver_id_country))
-					$is_international = true;
-
-				if ($this->isPrestashopFresherThan14())
-					$ps_order = Order::getByReference(Tools::substr($order->getReference(), 7))->getFirst();
-				else
-					$ps_order = new Order((int)Tools::substr($order->getReference(), 7));
-
-				if ($is_international)
-				{
-					// @International
-					$customsInfo = new TijsVerkoyenBpostBpostOrderBoxCustomsinfoCustomsInfo();
-					$customsInfo->setParcelValue((float)$ps_order->total_paid * 100);
-					$customsInfo->setContentDescription('ORDER '.Configuration::get('PS_SHOP_NAME'));
-					$customsInfo->setShipmentType('DOCUMENTS');
-					$customsInfo->setParcelReturnInstructions('RTS');
-					$customsInfo->setPrivateAddress(false);
-
-					$international = new TijsVerkoyenBpostBpostOrderBoxInternational();
-					/*if ($is_retour)
-						$international->setProduct('bpack World Easy Return');
-					else*/
-						$international->setProduct('bpack World Express Pro');
-					$international->setReceiver($receiver);
-					$international->setParcelWeight($weight);
-					$international->setCustomsInfo($customsInfo);
-
-					$box->setInternationalBox($international);
-				}
-				else
-				{
-					// @Home
-					$at_home = new TijsVerkoyenBpostBpostOrderBoxAtHome();
-					$at_home->setWeight($weight);
-					$at_home->setReceiver($receiver);
-					if ($is_retour)
-						$at_home->setProduct('bpack Easy Retour');
-					else
-					{
-						$at_home->setProduct('bpack 24h Pro');
-
-						$option = new TijsVerkoyenBpostBpostOrderBoxOptionMessaging(
-							'infoDistributed',
-							$this->context->language->iso_code,
-							$sender->getEmailAddress()
-						);
-						$at_home->addOption($option);
-					}
-
-					$box->setNationalBox($at_home);
-				}
-				break;
-
-			case (int)BpostShm::SHIPPING_METHOD_AT_SHOP:
-				// @Bpost
-				$service_point = $this->getServicePointDetails($service_point_id, BpostShm::SHIPPING_METHOD_AT_SHOP);
-				$pugo_address = new TijsVerkoyenBpostBpostOrderPugoAddress(
-					$service_point['street'],
-					$service_point['nr'],
-					null,
-					$service_point['zip'],
-					$service_point['city'],
-					'BE'
-				);
-
-				$at_bpost = new TijsVerkoyenBpostBpostOrderBoxAtBpost();
-				$at_bpost->setPugoId($service_point_id);
-				$at_bpost->setPugoName(Tools::substr($service_point['office'], 0, 40));
-				$at_bpost->setPugoAddress($pugo_address);
-				$at_bpost->setReceiverName(Tools::substr($receiver->getName(), 0, 40));
-				$at_bpost->setReceiverCompany(Tools::substr($receiver->getCompany(), 0, 40));
-
-				$option = new TijsVerkoyenBpostBpostOrderBoxOptionMessaging(
-					'keepMeInformed',
-					$this->context->language->iso_code,
-					$sender->getEmailAddress()
-				);
-				$at_bpost->addOption($option);
-
-				$box->setNationalBox($at_bpost);
-				break;
-
-			case (int)BpostShm::SHIPPING_METHOD_AT_24_7:
-				// @24/7
-				if ($this->isPrestashopFresherThan14())
-					$ps_order = Order::getByReference(Tools::substr($order->getReference(), 7))->getFirst();
-				else
-					$ps_order = new Order((int)Tools::substr($order->getReference(), 7));
-
-				$service_point = $this->getServicePointDetails($service_point_id, BpostShm::SHIPPING_METHOD_AT_24_7);
-				$cart = new Cart((int)$ps_order->id_cart);
-				$bpack247_customer = Tools::jsonDecode($cart->bpack247_customer);
-
-				$parcels_depot_address = new TijsVerkoyenBpostBpostOrderParcelsDepotAddress(
-					$service_point['street'],
-					$service_point['nr'],
-					'A',
-					$service_point['zip'],
-					$service_point['city'],
-					'BE'
-				);
-
-				for ($i = Tools::strlen($service_point['id']); $i < 6; $i++)
-					$service_point['id'] = '0'.$service_point['id'];
-
-				$at247 = new TijsVerkoyenBpostBpostOrderBoxAt247();
-				$at247->setParcelsDepotId($service_point['id']);
-				$at247->setParcelsDepotName($service_point['office']);
-				$at247->setParcelsDepotAddress($parcels_depot_address);
-				$at247->setMemberId($bpack247_customer->DeliveryCode);
-				$at247->setReceiverName(Tools::substr($receiver->getName(), 0, 40));
-				$at247->setReceiverCompany(Tools::substr($receiver->getCompany(), 0, 40));
-
-				$box->setNationalBox($at247);
-				break;
-		}
-
-		$order->addBox($box);
-
-		return $response;
-	}
-
-	/**
-	 * @param string|null $reference
-	 * @return string
-	 */
-	public function getOrderRecipient($reference = null)
-	{
-		$recipient = '-';
-
-		if (!is_null($reference))
-		{
-			$reference = Tools::substr($reference, 0, 50);
-
-			try {
-				if (empty(self::$cache[$reference]) || !$order = self::$cache[$reference])
-					$order = $this->bpost->fetchOrder($reference);
-
-				if ($order_boxes = $order->getBoxes())
-					foreach ($order_boxes as $box)
-						if ($national_box = $box->getNationalBox())
-						{
-							if (in_array($national_box->getProduct(), array('bpack Easy Retour',)))
-								continue;
-
-							// @home
-							if (method_exists($national_box, 'getReceiver'))
-							{
-								$receiver = $national_box->getReceiver();
-								$address = $receiver->getAddress();
-								$recipient = $receiver->getName().' '.$address->getStreetName().' '.$address->getNumber().' '
-									.$address->getPostalCode().' '.$address->getLocality();
-							}
-							// @bpost
-							elseif (method_exists($national_box, 'getPugoAddress'))
-							{
-								$address = $national_box->getPugoAddress();
-								$recipient = $national_box->getReceiverName().' '.$national_box->getPugoName().' '.$address->getPostalCode().' '
-									.$address->getLocality();
-							}
-							// @24/7
-							elseif (method_exists($national_box, 'getParcelsDepotaddress'))
-							{
-								$address = $national_box->getParcelsDepotaddress();
-								$recipient = $national_box->getReceiverName().' '.$national_box->getParcelsDepotname().' '
-									.$address->getPostalCode().' '.$address->getLocality();
-							}
-						}
-						elseif ($international_box = $box->getInternationalBox())
-						{
-							if (in_array($international_box->getProduct(), array('bpack World Easy Return',)))
-								continue;
-
-							$receiver = $international_box->getReceiver();
-							$address = $receiver->getAddress();
-							$recipient = $receiver->getName().' '.$address->getStreetName().' '.$address->getNumber().' '
-								.$address->getPostalCode().' '.$address->getLocality();
-						}
-			} catch (TijsVerkoyenBpostException $e) {
-				$recipient = '-';
-			}
-		}
-
-		return $recipient;
-	}
-
-	/**
-	 * @param string|null $reference
-	 * @return string
-	 */
-	public function getOrderStatus($reference = null)
-	{
-		$status = '-';
-
-		if (!is_null($reference))
-		{
-			$reference = Tools::substr($reference, 0, 50);
-
-			try {
-				if (empty(self::$cache[$reference]) || !$order = self::$cache[$reference])
-					$order = $this->bpost->fetchOrder($reference);
-				if ($boxes = $order->getBoxes())
-					$status = $boxes[0]->getStatus();
-			} catch (TijsVerkoyenBpostException $e) {
-				$status = '-';
-			}
-		}
-
-		return $status;
-	}
-
-	/**
-	 * @param null|string $reference
-	 * @param string $status
-	 * @return bool
-	 */
-	public function updateOrderStatus($reference = null, $status = 'PENDING')
-	{
-		$response = false;
-
-		if (!is_null($reference))
-		{
-			$reference = Tools::substr($reference, 0, 50);
-
-			try {
-				$response = $this->bpost->modifyOrderStatus($reference, $status);
-			} catch (TijsVerkoyenBpostException $e) {
-				$response = false;
-			}
-		}
-
-		return $response;
-	}
-
-	/**
-	 * @param null|string $reference
-	 * @return bool
-	 */
-	public function createLabelForOrder($reference = null, $format = 'A4', $with_return_labels = false)
-	{
-		$response = false;
-
-		if (!is_null($reference))
-		{
-			$reference = Tools::substr($reference, 0, 50);
-
-			try {
-				$response = $this->bpost->createLabelForOrder($reference, $format, $with_return_labels, true);
-			} catch (TijsVerkoyenBpostException $e) {
-				$response = false;
-			}
-		}
-
-		return $response;
-	}
-
-	/**
-	 * @param string $reference
-	 * @param string $status
-	 * @return bool
-	 */
-	public function createPSLabel($reference = '', $status = 'PENDING')
-	{
-		$response = true;
-
-		if (empty($reference) || empty($status))
-			return !$response;
-
-		$reference = Tools::substr($reference, 0, 50);
-		$recipient = $this->getOrderRecipient($reference);
-		$ps_order = Order::getByReference(Tools::substr($reference, 7))->getFirst();
-		$delivery_method = $this->getOrderShippingMethod((int)$ps_order->id_carrier, true);
-
-		if ($address = Address::getCountryAndState((int)$ps_order->id_address_delivery))
-		{
-			$country = new Country((int)$address ['id_country']);
-
-			if ($delivery_method == $this->module->shipping_methods[BpostShm::SHIPPING_METHOD_AT_HOME]['slug'] && 'BE' != $country->iso_code)
-				$delivery_method ==  '@international';
-		}
-
-		$response &= Db::getInstance()->execute('
-INSERT INTO
-	'._DB_PREFIX_.'order_label
-(
-	`reference`,
-	`status`,
-	`delivery_method`,
-	`recipient`,
-	`date_add`
-)
-VALUES(
-	"'.pSQL($reference).'",
-	"'.pSQL($status).'",
-	"'.pSQL($delivery_method).'",
-	"'.pSQL($recipient).'",
-	NOW()
-)');
-
-		return $response;
-	}
-
-	/**
-	 * @param string $reference
-	 * @param string $status
-	 * @return bool
-	 */
-	public function updatePSLabelStatus($reference = '', $status = 'PENDING')
-	{
-		if (empty($reference) || empty($status))
-			return false;
-
-		$reference = Tools::substr($reference, 0, 50);
-
-		return Db::getInstance()->execute('
-UPDATE
-	'._DB_PREFIX_.'order_label
-SET
-	`status` = "'.pSQL($status).'"
-WHERE
-	`reference` = "'.pSQL($reference).'"');
-	}
-
-	/**
-	 * @param string $reference
-	 * @param string $barcode
-	 * @return bool
-	 */
-	public function updatePSLabelBarcode($reference = '', $barcode = '')
-	{
-		if (empty($reference) || empty($barcode))
-			return false;
-
-		$reference = Tools::substr($reference, 0, 50);
-
-		return Db::getInstance()->execute('
-UPDATE
-	'._DB_PREFIX_.'order_label
-SET
-	`barcode` = "'.pSQL($barcode).'"
-WHERE
-	`reference` = "'.pSQL($reference).'"
-AND
-	`barcode` IS NULL'
-/*LIMIT
-	1'*/);
-	}
-
-	/**
-	 * @param string $reference
-	 * @return array
-	 */
-	public function getPSLabels($reference = '')
-	{
-		$order = array(
-			'reference' => $reference,
-			'labels'	=> array(),
-		);
-
-		if (empty($reference))
-			return $order;
-
-		$reference = Tools::substr($reference, 0, 50);
-		$query = '
-SELECT
-	ol.`barcode`, ol.`status`
-FROM
-	'._DB_PREFIX_.'order_label ol
-WHERE
-	ol.`reference` = "'.pSQL($reference).'"';
-
-		if ($result = Db::getInstance()->executeS($query))
-			foreach ($result as $row)
-				$order['labels'][] = $row;
-
-		return $order;
 	}
 
 	/**
@@ -928,6 +366,307 @@ WHERE
 	}
 
 	/**
+	 * @param TijsVerkoyenBpostBpostOrder $order
+	 * @param int $type
+	 * @param TijsVerkoyenBpostBpostOrderSender $sender
+	 * @param TijsVerkoyenBpostBpostOrderReceiver $receiver
+	 * @param int $weight @todo Find a cleaner way to manage weight
+	 * @param null $service_point_id
+	 * @param TijsVerkoyenBpostBpostOrderBox $box
+	 * @return bool
+	 */
+	public function addBox(TijsVerkoyenBpostBpostOrder $order = null, $type = 0, TijsVerkoyenBpostBpostOrderSender $sender,
+		TijsVerkoyenBpostBpostOrderReceiver $receiver, $weight = 1000, $service_point_id = null, $box = null)
+	{
+		$response = true;
+
+		if (empty($order) || empty($type)
+				|| ((int)$type == (int)BpostShm::SHIPPING_METHOD_AT_SHOP && is_null($service_point_id)))
+			return !$response;
+
+		$is_retour = false;
+		if (!is_null($box))
+			$is_retour = true;
+		else
+		{
+			$box = new TijsVerkoyenBpostBpostOrderBox();
+			$box->setStatus('OPEN');
+		}
+		$box->setSender($sender);
+
+		switch ((int)$type)
+		{
+			case (int)BpostShm::SHIPPING_METHOD_AT_HOME:
+				if (empty($weight))
+					$weight = 1000;
+
+				$is_international = false;
+				$id_zone_be = Configuration::get('BPOST_ID_COUNTRY_BELGIUM_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id));
+				$receiver_id_country = Country::getByIso($receiver->getAddress()->getCountryCode());
+
+				if ($id_zone_be != Country::getIdZone((int)$receiver_id_country))
+					$is_international = true;
+
+				if ($this->isPrestashopFresherThan14())
+					$ps_order = Order::getByReference(Tools::substr($order->getReference(), 7))->getFirst();
+				else
+					$ps_order = new Order((int)Tools::substr($order->getReference(), 7));
+
+				if ($is_international)
+				{
+					// @International
+					$customs_info = new TijsVerkoyenBpostBpostOrderBoxCustomsinfoCustomsInfo();
+					$customs_info->setParcelValue((float)$ps_order->total_paid * 100);
+					$customs_info->setContentDescription('ORDER '.Configuration::get('PS_SHOP_NAME'));
+					$customs_info->setShipmentType('DOCUMENTS');
+					$customs_info->setParcelReturnInstructions('RTS');
+					$customs_info->setPrivateAddress(false);
+
+					$international = new TijsVerkoyenBpostBpostOrderBoxInternational();
+					/*if ($is_retour)
+						$international->setProduct('bpack World Easy Return');
+					else*/
+						$international->setProduct('bpack World Express Pro');
+					$international->setReceiver($receiver);
+					$international->setParcelWeight($weight);
+					$international->setCustomsInfo($customs_info);
+
+					$box->setInternationalBox($international);
+				}
+				else
+				{
+					// @Home
+					$at_home = new TijsVerkoyenBpostBpostOrderBoxAtHome();
+					$at_home->setWeight($weight);
+					$at_home->setReceiver($receiver);
+					if ($is_retour)
+						$at_home->setProduct('bpack Easy Retour');
+					else
+					{
+						$at_home->setProduct('bpack 24h Pro');
+
+						$option = new TijsVerkoyenBpostBpostOrderBoxOptionMessaging(
+							'infoDistributed',
+							$this->context->language->iso_code,
+							$sender->getEmailAddress()
+						);
+						$at_home->addOption($option);
+					}
+
+					$box->setNationalBox($at_home);
+				}
+				break;
+
+			case (int)BpostShm::SHIPPING_METHOD_AT_SHOP:
+				// @Bpost
+				$service_point = $this->getServicePointDetails($service_point_id, BpostShm::SHIPPING_METHOD_AT_SHOP);
+				$pugo_address = new TijsVerkoyenBpostBpostOrderPugoAddress(
+					$service_point['street'],
+					$service_point['nr'],
+					null,
+					$service_point['zip'],
+					$service_point['city'],
+					'BE'
+				);
+
+				$at_bpost = new TijsVerkoyenBpostBpostOrderBoxAtBpost();
+				$at_bpost->setPugoId($service_point_id);
+				$at_bpost->setPugoName(Tools::substr($service_point['office'], 0, 40));
+				$at_bpost->setPugoAddress($pugo_address);
+				$at_bpost->setReceiverName(Tools::substr($receiver->getName(), 0, 40));
+				$at_bpost->setReceiverCompany(Tools::substr($receiver->getCompany(), 0, 40));
+
+				$option = new TijsVerkoyenBpostBpostOrderBoxOptionMessaging(
+					'keepMeInformed',
+					$this->context->language->iso_code,
+					$sender->getEmailAddress()
+				);
+				$at_bpost->addOption($option);
+
+				$box->setNationalBox($at_bpost);
+				break;
+
+			case (int)BpostShm::SHIPPING_METHOD_AT_24_7:
+				// @24/7
+				if ($this->isPrestashopFresherThan14())
+					$ps_order = Order::getByReference(Tools::substr($order->getReference(), 7))->getFirst();
+				else
+					$ps_order = new Order((int)Tools::substr($order->getReference(), 7));
+
+				$service_point = $this->getServicePointDetails($service_point_id, BpostShm::SHIPPING_METHOD_AT_24_7);
+				$cart = new Cart((int)$ps_order->id_cart);
+				$bpack247_customer = Tools::jsonDecode($cart->bpack247_customer);
+
+				$parcels_depot_address = new TijsVerkoyenBpostBpostOrderParcelsDepotAddress(
+					$service_point['street'],
+					$service_point['nr'],
+					'A',
+					$service_point['zip'],
+					$service_point['city'],
+					'BE'
+				);
+
+				for ($i = Tools::strlen($service_point['id']); $i < 6; $i++)
+					$service_point['id'] = '0'.$service_point['id'];
+
+				$at247 = new TijsVerkoyenBpostBpostOrderBoxAt247();
+				$at247->setParcelsDepotId($service_point['id']);
+				$at247->setParcelsDepotName($service_point['office']);
+				$at247->setParcelsDepotAddress($parcels_depot_address);
+				$at247->setMemberId($bpack247_customer->DeliveryCode);
+				$at247->setReceiverName(Tools::substr($receiver->getName(), 0, 40));
+				$at247->setReceiverCompany(Tools::substr($receiver->getCompany(), 0, 40));
+
+				$box->setNationalBox($at247);
+				break;
+		}
+
+		$order->addBox($box);
+
+		return $response;
+	}
+
+	/**
+	 * @param int $service_point_id
+	 * @param int $type
+	 * @return array
+	 */
+	public function getServicePointDetails($service_point_id = 0, $type = 3)
+	{
+		$service_point_details = array();
+
+		try {
+			if ($poi = $this->geo6->getServicePointDetails($service_point_id, $this->context->language->id, $type))
+			{
+				$service_point_details['id'] 		= $poi->getId();
+				$service_point_details['office'] 	= $poi->getOffice();
+				$service_point_details['street'] 	= $poi->getStreet();
+				$service_point_details['nr'] 		= $poi->getNr();
+				$service_point_details['zip'] 		= $poi->getZip();
+				$service_point_details['city'] 		= $poi->getCity();
+			}
+		} catch (TijsVerkoyenBpostException $e) {
+			$service_point_details = array();
+		}
+
+		return $service_point_details;
+	}
+
+	/**
+	 * @param string $reference
+	 * @param string $status
+	 * @return bool
+	 */
+	public function createPSLabel($reference = '', $status = 'PENDING')
+	{
+		$response = true;
+
+		if (empty($reference) || empty($status))
+			return !$response;
+
+		$reference = Tools::substr($reference, 0, 50);
+		$recipient = $this->getOrderRecipient($reference);
+		if ($this->isPrestashopFresherThan14())
+			$ps_order = Order::getByReference(Tools::substr($reference, 7))->getFirst();
+		else
+			$ps_order = new Order((int)Tools::substr($reference, 7));
+		$delivery_method = $this->getOrderShippingMethod((int)$ps_order->id_carrier, true);
+
+		if ($address = Address::getCountryAndState((int)$ps_order->id_address_delivery))
+		{
+			$country = new Country((int)$address['id_country']);
+
+			if ($delivery_method == $this->module->shipping_methods[BpostShm::SHIPPING_METHOD_AT_HOME]['slug'] && 'BE' != $country->iso_code)
+				$delivery_method == '@international';
+		}
+
+		$query = '
+INSERT INTO
+	'._DB_PREFIX_.'order_label
+(
+	`reference`,
+	`status`,
+	`delivery_method`,
+	`recipient`,
+	`date_add`
+)
+VALUES(
+	"'.pSQL($reference).'",
+	"'.pSQL($status).'",
+	"'.pSQL($delivery_method).'",
+	"'.pSQL($recipient).'",
+	NOW()
+)';
+		$response &= Db::getInstance()->execute($query);
+
+		return $response;
+	}
+
+	/**
+	 * @param string|null $reference
+	 * @return string
+	 */
+	public function getOrderRecipient($reference = null)
+	{
+		$recipient = '-';
+
+		if (!is_null($reference))
+		{
+			$reference = Tools::substr($reference, 0, 50);
+
+			try {
+				if (empty(self::$cache[$reference]) || !$order = self::$cache[$reference])
+					$order = $this->bpost->fetchOrder($reference);
+
+				if ($order_boxes = $order->getBoxes())
+					foreach ($order_boxes as $box)
+						if ($national_box = $box->getNationalBox())
+						{
+							if (in_array($national_box->getProduct(), array('bpack Easy Retour',)))
+								continue;
+
+							// @home
+							if (method_exists($national_box, 'getReceiver'))
+							{
+								$receiver = $national_box->getReceiver();
+								$address = $receiver->getAddress();
+								$recipient = $receiver->getName().' '.$address->getStreetName().' '.$address->getNumber().' '
+									.$address->getPostalCode().' '.$address->getLocality();
+							}
+							// @bpost
+							elseif (method_exists($national_box, 'getPugoAddress'))
+							{
+								$address = $national_box->getPugoAddress();
+								$recipient = $national_box->getReceiverName().' '.$national_box->getPugoName().' '.$address->getPostalCode().' '
+									.$address->getLocality();
+							}
+							// @24/7
+							elseif (method_exists($national_box, 'getParcelsDepotaddress'))
+							{
+								$address = $national_box->getParcelsDepotaddress();
+								$recipient = $national_box->getReceiverName().' '.$national_box->getParcelsDepotname().' '
+									.$address->getPostalCode().' '.$address->getLocality();
+							}
+						}
+						elseif ($international_box = $box->getInternationalBox())
+						{
+							if (in_array($international_box->getProduct(), array('bpack World Easy Return',)))
+								continue;
+
+							$receiver = $international_box->getReceiver();
+							$address = $receiver->getAddress();
+							$recipient = $receiver->getName().' '.$address->getStreetName().' '.$address->getNumber().' '
+								.$address->getPostalCode().' '.$address->getLocality();
+						}
+			} catch (TijsVerkoyenBpostException $e) {
+				$recipient = '-';
+			}
+		}
+
+		return $recipient;
+	}
+
+	/**
 	 * @param int $id_carrier
 	 * @param bool $slug
 	 * @return mixed|string
@@ -969,6 +708,152 @@ WHERE
 		}
 
 		return $shipping_method;
+	}
+
+	/**
+	 * @param string|null $reference
+	 * @return string
+	 */
+	public function getOrderStatus($reference = null)
+	{
+		$status = '-';
+
+		if (!is_null($reference))
+		{
+			$reference = Tools::substr($reference, 0, 50);
+
+			try {
+				if (empty(self::$cache[$reference]) || !$order = self::$cache[$reference])
+					$order = $this->bpost->fetchOrder($reference);
+				if ($boxes = $order->getBoxes())
+					$status = $boxes[0]->getStatus();
+			} catch (TijsVerkoyenBpostException $e) {
+				$status = '-';
+			}
+		}
+
+		return $status;
+	}
+
+	/**
+	 * @param null|string $reference
+	 * @param string $status
+	 * @return bool
+	 */
+	public function updateOrderStatus($reference = null, $status = 'PENDING')
+	{
+		$response = false;
+
+		if (!is_null($reference))
+		{
+			$reference = Tools::substr($reference, 0, 50);
+
+			try {
+				$response = $this->bpost->modifyOrderStatus($reference, $status);
+			} catch (TijsVerkoyenBpostException $e) {
+				$response = false;
+			}
+		}
+
+		return $response;
+	}
+
+	/**
+	 * @param null|string $reference
+	 * @return bool
+	 */
+	public function createLabelForOrder($reference = null, $format = 'A4', $with_return_labels = false)
+	{
+		$response = false;
+
+		if (!is_null($reference))
+		{
+			$reference = Tools::substr($reference, 0, 50);
+
+			try {
+				$response = $this->bpost->createLabelForOrder($reference, $format, $with_return_labels, true);
+			} catch (TijsVerkoyenBpostException $e) {
+				$response = false;
+			}
+		}
+
+		return $response;
+	}
+
+	/**
+	 * @param string $reference
+	 * @param string $status
+	 * @return bool
+	 */
+	public function updatePSLabelStatus($reference = '', $status = 'PENDING')
+	{
+		if (empty($reference) || empty($status))
+			return false;
+
+		$reference = Tools::substr($reference, 0, 50);
+
+		return Db::getInstance()->execute('
+UPDATE
+	'._DB_PREFIX_.'order_label
+SET
+	`status` = "'.pSQL($status).'"
+WHERE
+	`reference` = "'.pSQL($reference).'"');
+	}
+
+	/**
+	 * @param string $reference
+	 * @param string $barcode
+	 * @return bool
+	 */
+	public function updatePSLabelBarcode($reference = '', $barcode = '')
+	{
+		if (empty($reference) || empty($barcode))
+			return false;
+
+		$reference = Tools::substr($reference, 0, 50);
+
+		return Db::getInstance()->execute('
+UPDATE
+	'._DB_PREFIX_.'order_label
+SET
+	`barcode` = "'.pSQL($barcode).'"
+WHERE
+	`reference` = "'.pSQL($reference).'"
+AND
+	`barcode` IS NULL'
+/*LIMIT
+	1'*/);
+	}
+
+	/**
+	 * @param string $reference
+	 * @return array
+	 */
+	public function getPSLabels($reference = '')
+	{
+		$order = array(
+			'reference' => $reference,
+			'labels'	=> array(),
+		);
+
+		if (empty($reference))
+			return $order;
+
+		$reference = Tools::substr($reference, 0, 50);
+		$query = '
+SELECT
+	ol.`barcode`, ol.`status`
+FROM
+	'._DB_PREFIX_.'order_label ol
+WHERE
+	ol.`reference` = "'.pSQL($reference).'"';
+
+		if ($result = Db::getInstance()->executeS($query))
+			foreach ($result as $row)
+				$order['labels'][] = $row;
+
+		return $order;
 	}
 
 	/**
@@ -1027,17 +912,11 @@ WHERE
 		return $response && $this->bpost->createOrReplaceOrder($order);
 	}
 
-////////////////////
-///
-///  SRG section
-///
-////////////////////
-
 	/**
-	 * getBpack247Member 
+	 * getBpack247Member
 	 * @param  array 	$customer 	customer's new member details (validated)
 	 * @param  string 	$attribs 	required list of attributes (coma delimited)
-	 * @return array 	array of requested attributes | Error 
+	 * @return array 	array of requested attributes | Error
 	 */
 	public function createBpack247Member($customer, $attribs)
 	{
@@ -1097,102 +976,6 @@ WHERE
 		return $this->bpack247MemberFrom('createMember', array($new_member), $attribs);
 	}
 
-
-	/**
-	 * getBpack247Member 
-	 * @param  int 		$rcn 		customer delivery code RC#
-	 * @param  string 	$attribs 	required list of attributes (coma delimited)
-	 * @return array 	array of requested attributes | Error 
-	 */
-	public function getBpack247Member($rcn, $attribs)
-	{
-		return $this->bpack247MemberFrom('getMember', array($rcn, true), $attribs);
-	}
-
-	/**
-	 * [getModuleLink description]
-	 * @param  string $module     name
-	 * @param  string $controller name
-	 * @param  array $params     request params
-	 * @return string             Module front controller link
-	 */
-	public function getModuleLink($module, $controller, $params)
-	{
-		if (self::isPrestashopFresherThan14())
-			return $this->context->link->getModuleLink($module, $controller, $params);
-		else
-			return  _MODULE_DIR_.$module.'/controllers/front/'.$controller.'.php?'.http_build_query($params);
-	}
-
-	public function getControllerLink($module, $controller, $params)
-	{
-		$params['ps14'] = !self::isPrestashopFresherThan14();
-		$params['root_dir'] = _PS_ROOT_DIR_;
-		return  _MODULE_DIR_.$module.'/controllers/front/'.$controller.'.php?'.http_build_query($params);
-	}
-
-	/**
-	 * get full list bpost enabled countries
-	 * @return assoc array
-	 */
-	public function getProductCountries()
-	{
-		$product_countries = array();
-		
-		try {
-			$product_config = $this->getProductConfig();
-			$prices = $product_config['deliveryMethod'][0]['product'][0]['price'];
-			
-			foreach ($prices as $price) 
-				$product_countries[] = $price['@attributes']['countryIso2Code'];
-			
-		} catch (Exception $e) {
-			
-		}
-
-		$product_countries = empty($product_countries) ? 'BE' : implode('|', $product_countries);
-
-		return $this->explodeCountryList($product_countries);
-	}
-
-	/**
-	 * [explodeCountryList]
-	 * @param  string $iso_list delimited list of iso country codes
-	 * @param  string $glue     delimiter
-	 * @return array            assoc array of ps_countries [iso => name]
-	 */
-	public function explodeCountryList($iso_list, $glue = '|')
-	{
-		$iso_list = str_replace($glue, "','", $iso_list);
-		$query = "
-SELECT 
-	c.id_country as id, c.iso_code as iso, cl.name  
-FROM 
-	`"._DB_PREFIX_."country` c, `"._DB_PREFIX_."country_lang` cl 
-WHERE
-	cl.id_lang = ".$this->context->language->id." 
-AND
-	c.id_country = cl.id_country
-AND 
-	c.iso_code in ('".$iso_list."')
-ORDER BY 
-	name
-		";
-
-		$countries = array();
-		try {
-			$db = Db::getInstance(_PS_USE_SQL_SLAVE_);
-			if ($results = $db->ExecuteS($query))
-				foreach ($results as $row)
-					$countries[$row['iso']] = $row['name'];
-	
-		} catch (Exception $e) {
-			$countries = array();
-		}
-		
-		return array_filter($countries);
-	}
-
 	private function bpack247MemberFrom($method, $args, $with_attribs)
 	{
 		$member = array();
@@ -1220,21 +1003,239 @@ ORDER BY
 			$attrib = trim($attrib);
 			$node = self::xmlSearch($attrib, $xml);
 			if (isset($node))
-				$member[$attrib] = (string) $node;	
+				$member[$attrib] = (string)$node;
 		}
 
 		return $member;
 	}
 
 	private static function xmlSearch($what, $nodes)
-	{	
-		foreach ($nodes as $key => $value)	
+	{
+		foreach ($nodes as $key => $value)
 			if ($what == $key)
 				return $value;
 			elseif ($value->count())
 				return self::xmlSearch($what, $value->children());
-		
+
 		return null;
+	}
+
+/*//////////////////
+
+  SRG section
+
+//////////////////*/
+
+	/**
+	 * getBpack247Member
+	 * @param  int 		$rcn 		customer delivery code RC#
+	 * @param  string 	$attribs 	required list of attributes (coma delimited)
+	 * @return array 	array of requested attributes | Error
+	 */
+	public function getBpack247Member($rcn, $attribs)
+	{
+		return $this->bpack247MemberFrom('getMember', array($rcn, true), $attribs);
+	}
+
+	/**
+	 * [getModuleLink description]
+	 * @param  string $module     name
+	 * @param  string $controller name
+	 * @param  array $params     request params
+	 * @return string             Module front controller link
+	 */
+	public function getModuleLink($module, $controller, $params)
+	{
+		if (self::isPrestashopFresherThan14())
+			return $this->context->link->getModuleLink($module, $controller, $params);
+		else
+			return _MODULE_DIR_.$module.'/controllers/front/'.$controller.'.php?'.http_build_query($params);
+	}
+
+	public function getControllerLink($module, $controller, $params)
+	{
+		$params['ps14'] = !self::isPrestashopFresherThan14();
+		$params['root_dir'] = _PS_ROOT_DIR_;
+		return _MODULE_DIR_.$module.'/controllers/front/'.$controller.'.php?'.http_build_query($params);
+	}
+
+	/**
+	 * get full list bpost enabled countries
+	 * @return assoc array
+	 */
+	public function getProductCountries()
+	{
+		$product_countries = array();
+
+		try {
+			$product_config = $this->getProductConfig();
+			$prices = $product_config['deliveryMethod'][0]['product'][0]['price'];
+
+			foreach ($prices as $price)
+				$product_countries[] = $price['@attributes']['countryIso2Code'];
+
+		} catch (Exception $e) {
+			$product_countries = array('BE');
+		}
+
+		$product_countries = implode('|', $product_countries);
+
+		return $this->explodeCountryList($product_countries);
+	}
+
+	public function getProductConfig()
+	{
+		$product_config = array();
+
+		if ($response = $this->doCall(
+				TijsVerkoyenBpostBpost::API_URL.'/'.$this->bpost->getAccountId().'/productconfig',
+				null,
+				array(
+					'Accept: application/vnd.bpost.shm-productConfiguration-v3+XML',
+				)
+			))
+		{
+			$product_config = Tools::jsonEncode($response);
+			$product_config = Tools::jsonDecode($product_config, true);
+		}
+
+		return $product_config;
+	}
+
+	/**
+	 * Make the call
+	 *
+	 * @param  string $url       The URL to call.
+	 * @param  string $body      The data to pass.
+	 * @param  array  $headers   The headers to pass.
+	 * @param  string $method    The HTTP-method to use.
+	 * @param  bool   $expect_xml Do we expect XML?
+	 * @return mixed
+	 */
+	private function doCall($url, $body = null, $headers = array(), $method = 'GET', $expect_xml = true)
+	{
+		// build Authorization header
+		$headers[] = 'Authorization: Basic '.$this->getAuthorizationHeader();
+
+		// set options
+		$options = array();
+		$options[CURLOPT_URL] = $url;
+		if ($this->bpost->getPort() != 0)
+			$options[CURLOPT_PORT] = $this->bpost->getPort();
+		$options[CURLOPT_USERAGENT] = $this->bpost->getUserAgent();
+		$options[CURLOPT_RETURNTRANSFER] = true;
+		$options[CURLOPT_TIMEOUT] = (int)$this->bpost->getTimeOut();
+		$options[CURLOPT_HTTP_VERSION] = CURL_HTTP_VERSION_1_1;
+		$options[CURLOPT_HTTPHEADER] = $headers;
+		$options[CURLOPT_SSL_VERIFYPEER] = false;
+
+		if ($method == 'POST')
+		{
+			$options[CURLOPT_POST] = true;
+			$options[CURLOPT_POSTFIELDS] = $body;
+		}
+
+		// init
+		$curl = curl_init();
+
+		// set options
+		curl_setopt_array($curl, $options);
+
+		// execute
+		$response = curl_exec($curl);
+		$headers = curl_getinfo($curl);
+
+		// fetch errors
+		$error_number = curl_errno($curl);
+		$error_message = curl_error($curl);
+
+		// error?
+		if ($error_number != '')
+			throw new Exception($error_message, $error_number);
+
+		// valid HTTP-code
+		if (!in_array($headers['http_code'], array(0, 200, 201)))
+		{
+			// convert into XML
+			$xml = simplexml_load_string($response);
+
+			// validate
+			if ($xml !== false && (Tools::substr($xml->getName(), 0, 7) == 'invalid'))
+			{
+				// message
+				$message = (string)$xml->error;
+				$code = isset($xml->code) ? (int)$xml->code : null;
+
+				// throw exception
+				throw new Exception($message, $code);
+			}
+
+			if ((isset($headers['content_type']) && substr_count($headers['content_type'], 'text/plain') > 0) ||
+				($headers['http_code'] == '404'))
+				$message = $response;
+			else
+				$message = 'Invalid response.';
+
+			throw new Exception($message, $headers['http_code']);
+		}
+
+		// if we don't expect XML we can return the content here
+		if (!$expect_xml)
+			return $response;
+
+		// convert into XML
+		$xml = simplexml_load_string($response);
+
+		// return the response
+		return $xml;
+	}
+
+	/**
+	 * Generate the secret string for the Authorization header
+	 *
+	 * @return string
+	 */
+	private function getAuthorizationHeader()
+	{
+		return base64_encode($this->bpost->getAccountId().':'.$this->bpost->getPassPhrase());
+	}
+
+	/**
+	 * [explodeCountryList]
+	 * @param  string $iso_list delimited list of iso country codes
+	 * @param  string $glue     delimiter
+	 * @return array            assoc array of ps_countries [iso => name]
+	 */
+	public function explodeCountryList($iso_list, $glue = '|')
+	{
+		$iso_list = str_replace($glue, "','", $iso_list);
+		$query = '
+SELECT
+	c.id_country as id, c.iso_code as iso, cl.name
+FROM
+	`'._DB_PREFIX_.'country` c, `'._DB_PREFIX_.'country_lang` cl
+WHERE
+	cl.id_lang = '.(int)$this->context->language->id.'
+AND
+	c.id_country = cl.id_country
+AND
+	c.iso_code in ("'.pSQL($iso_list).'")
+ORDER BY
+	name
+		';
+
+		$countries = array();
+		try {
+			$db = Db::getInstance(_PS_USE_SQL_SLAVE_);
+			if ($results = $db->ExecuteS($query))
+				foreach ($results as $row)
+					$countries[$row['iso']] = $row['name'];
+
+		} catch (Exception $e) {
+			$countries = array();
+		}
+
+		return array_filter($countries);
 	}
 
 }

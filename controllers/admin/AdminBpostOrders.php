@@ -15,8 +15,6 @@ require_once(_PS_MODULE_DIR_.'bpostshm/classes/Service.php');
 
 class AdminBpostOrders extends ModuleAdminController
 {
-	protected $identifier = 'reference';
-
 	public $statuses = array(
 		'OPEN',
 		'PENDING',
@@ -25,8 +23,9 @@ class AdminBpostOrders extends ModuleAdminController
 		'ON-HOLD',
 		'PRINTED',
 	);
+	protected $identifier = 'reference';
 
-	// bpost orders are displayed into Orders > bpost depending on their PS order state
+	/* bpost orders are displayed into Orders > bpost depending on their PS order state */
 	private $ps_order_states = array(2, 3, 4, 5, 9, 12);
 
 	private $tracking_url = 'http://track.bpost.be/etr/light/performSearch.do';
@@ -149,7 +148,6 @@ class AdminBpostOrders extends ModuleAdminController
 		'count' => array(
 			'title' => $this->l('Labels'),
 			'align' => 'center',
-			'callback' => 'getLabelsCount',
 			'search' => false,
 			'orderby' => false,
 		),
@@ -164,14 +162,6 @@ class AdminBpostOrders extends ModuleAdminController
 		$this->shopShareDatas = Shop::SHARE_ORDER;
 
 		parent::__construct();
-	}
-
-	public function getList($id_lang, $order_by = null, $order_way = null, $start = 0, $limit = null, $id_lang_shop = false)
-	{
-		parent::getList($id_lang, $order_by, $order_way, $start, $limit, $id_lang_shop);
-
-		if (!Tools::getValue($this->list_id.'_pagination'))
-			$this->context->cookie->{$this->list_id.'_pagination'} = 50;
 	}
 
 	public function initContent()
@@ -349,6 +339,239 @@ class AdminBpostOrders extends ModuleAdminController
 	}
 
 	/**
+	 * @param mixed $content
+	 */
+	private function jsonEncode($content)
+	{
+		header('Content-Type: application/json');
+		die(Tools::jsonEncode($content));
+	}
+
+	/**
+	 * @param string $reference
+	 * @return array
+	 */
+	private function printLabels($reference = '')
+	{
+		$links = array();
+
+		if (empty($reference))
+			return $links;
+
+		$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
+		$do_not_open = array('.', '..', 'labels');
+		$i = 1;
+
+		$pdf_dir = _PS_MODULE_DIR_.'bpostshm/pdf';
+		if (!is_dir($pdf_dir))
+			mkdir($pdf_dir, 0755);
+
+		$pdf_dir .= '/'.$reference;
+		if (!is_dir($pdf_dir))
+			mkdir($pdf_dir, 0755);
+
+		$files = scandir($pdf_dir);
+		if (!empty($files) && is_array($files))
+			foreach ($files as $file)
+				if (!in_array($file, $do_not_open) && !is_dir($pdf_dir.'/'.$file))
+				{
+					$links[] = _PS_BASE_URL_._MODULE_DIR_.'bpostshm/pdf/'.$reference.'/'.$i.'.pdf';
+					$i++;
+				}
+
+		if ($labels = $this->service->createLabelForOrder(
+			$reference,
+			Configuration::get('BPOST_LABEL_PDF_FORMAT_'.$context_shop_id),
+			(bool)Configuration::get('BPOST_LABEL_RETOUR_LABEL_'.$context_shop_id)))
+		{
+			foreach ($labels as $label)
+			{
+				$this->service->updatePSLabelBarcode($reference, $label->getBarcode());
+
+				$file = $pdf_dir.'/'.$i.'.pdf';
+				$fp = fopen($file, 'w');
+				fwrite($fp, $label->getBytes());
+				fclose($fp);
+
+				$links[] = _MODULE_DIR_.'bpostshm/pdf/'.$reference.'/'.$i.'.pdf';
+				$i++;
+			}
+
+			$this->service->updatePSLabelStatus($reference, 'PRINTED');
+		}
+
+		$pdf_dir .= '/retours';
+		if (is_dir($pdf_dir))
+		{
+			$i = 1;
+			$files = scandir($pdf_dir);
+			if (!empty($files) && is_array($files))
+				foreach ($files as $file)
+					if (!in_array($file, $do_not_open) && !is_dir($pdf_dir.'/'.$file))
+					{
+						$links[] = _PS_BASE_URL_._MODULE_DIR_.'bpostshm/pdf/'.$reference.'/retours/'.$i.'.pdf';
+						$i++;
+					}
+		}
+
+		return $links;
+	}
+
+	/**
+	 * @param string $reference
+	 * @return bool
+	 */
+	private function sendTTEmail($reference = '')
+	{
+		if (empty($reference))
+			return false;
+
+		$pdf_dir = _PS_MODULE_DIR_.'bpostshm/pdf/'.$reference;
+		// disable if labels are not PRINTED
+		if (!is_dir($pdf_dir) || !opendir($pdf_dir))
+		{
+			$this->errors[] = str_replace(
+				'%reference%',
+				$reference,
+				$this->l('Order ref. %reference% was not treated : action is only available for orders that are printed.')
+			);
+			return false;
+		}
+
+		$response = true;
+		$ps_order = Order::getByReference(Tools::substr($reference, 7))->getFirst();
+		$tracking_url = $this->tracking_url;
+
+		foreach ($this->tracking_params as $param => $value)
+			if (empty($value) && false !== $value)
+				switch ($param)
+				{
+					case 'searchByCustomerReference':
+						$this->tracking_params[$param] = true;
+						break;
+					case 'oss_language':
+						if (in_array($this->context->language->iso_code, array('de', 'fr', 'nl', 'en')))
+							$this->tracking_params[$param] = $this->context->language->iso_code;
+						else
+							$this->tracking_params[$param] = 'en';
+						break;
+					case 'customerReference':
+						$this->tracking_params[$param] = $reference;
+						break;
+					default:
+						break;
+				}
+
+		$tracking_url .= '?'.http_build_query($this->tracking_params);
+		$message = $this->l('Your order').' '.$ps_order->reference.' '.$this->l('can now be tracked here :')
+			.' <a href="'.$tracking_url.'">'.$tracking_url.'</a>';
+
+		$customer = new Customer($ps_order->id_customer);
+		if (!Validate::isLoadedObject($customer))
+			$this->errors[] = Tools::displayError('The customer is invalid.');
+		else
+		{
+			//check if a thread already exist
+			$id_customer_thread = CustomerThread::getIdCustomerThreadByEmailAndIdOrder($customer->email, $ps_order->id);
+			if (!$id_customer_thread)
+			{
+				$customer_thread = new CustomerThread();
+				$customer_thread->id_contact = 0;
+				$customer_thread->id_customer = (int)$ps_order->id_customer;
+				$customer_thread->id_shop = (int)$this->context->shop->id;
+				$customer_thread->id_order = (int)$ps_order->id;
+				$customer_thread->id_lang = (int)$this->context->language->id;
+				$customer_thread->email = $customer->email;
+				$customer_thread->status = 'open';
+				$customer_thread->token = Tools::passwdGen(12);
+				$customer_thread->add();
+			}
+			else
+				$customer_thread = new CustomerThread((int)$id_customer_thread);
+
+			$customer_message = new CustomerMessage();
+			$customer_message->id_customer_thread = $customer_thread->id;
+			$customer_message->id_employee = (int)$this->context->employee->id;
+			$customer_message->message = $message;
+			$customer_message->private = false;
+
+			if (!$customer_message->add())
+				$this->errors[] = Tools::displayError('An error occurred while saving the message.');
+			else
+			{
+				$message = $customer_message->message;
+				if (Configuration::get('PS_MAIL_TYPE', null, null, $ps_order->id_shop) != Mail::TYPE_TEXT)
+					$message = Tools::nl2br($customer_message->message);
+
+				$vars_tpl = array(
+					'{lastname}' => $customer->lastname,
+					'{firstname}' => $customer->firstname,
+					'{id_order}' => $ps_order->id,
+					'{order_name}' => $ps_order->getUniqReference(),
+					'{message}' => $message,
+				);
+
+				Mail::Send((int)$ps_order->id_lang, 'order_merchant_comment',
+					Mail::l('New message regarding your order', (int)$ps_order->id_lang), $vars_tpl, $customer->email,
+					$customer->firstname.' '.$customer->lastname, null, null, null, null, _PS_MAIL_DIR_, true, (int)$ps_order->id_shop
+				);
+			}
+		}
+
+		if (!empty($this->errors))
+			$response = false;
+
+		return $response;
+	}
+
+	/**
+	 * @param string $reference
+	 * @return bool
+	 */
+	private function markOrderTreated($reference = '')
+	{
+		if (empty($reference))
+			return false;
+
+		$pdf_dir = _PS_MODULE_DIR_.'bpostshm/pdf/'.$reference;
+		// disable if labels are not PRINTED
+		if (!is_dir($pdf_dir) || !opendir($pdf_dir))
+		{
+			$this->errors[] = str_replace(
+				'%reference%',
+				$reference,
+				$this->l('Order ref. %reference% was not treated : action is only available for orders that are printed.')
+			);
+			return false;
+		}
+
+		$response = true;
+		$treated_status = Configuration::get('BPOST_ORDER_STATE_TREATED_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id));
+		$ps_order = Order::getByReference(Tools::substr($reference, 7))->getFirst();
+		$ps_order->current_state = (int)$treated_status;
+		$response = $response && $ps_order->save();
+
+		// Create new OrderHistory
+		$history = new OrderHistory();
+		$history->id_order = $ps_order->id;
+		$history->id_employee = (int)$this->context->employee->id;
+
+		$use_existings_payment = false;
+		if (!$ps_order->hasInvoice())
+			$use_existings_payment = true;
+		$history->changeIdOrderState((int)$treated_status, $ps_order, $use_existings_payment);
+
+		$carrier = new Carrier($ps_order->id_carrier, $ps_order->id_lang);
+		$template_vars = array();
+		if ($history->id_order_state == Configuration::get('PS_OS_SHIPPING') && $ps_order->shipping_number)
+			$template_vars = array('{followup}' => str_replace('@', $ps_order->shipping_number, $carrier->url));
+		// Save all changes
+		$response = $response && $history->addWithemail(true, $template_vars);
+
+		return $response;
+	}
+
+	/**
 	 * Function used to render the list to display for this controller
 	 */
 	public function renderList()
@@ -391,6 +614,14 @@ class AdminBpostOrders extends ModuleAdminController
 		return $list;
 	}
 
+	public function getList($id_lang, $order_by = null, $order_way = null, $start = 0, $limit = null, $id_lang_shop = false)
+	{
+		parent::getList($id_lang, $order_by, $order_way, $start, $limit, $id_lang_shop);
+
+		if (!Tools::getValue($this->list_id.'_pagination'))
+			$this->context->cookie->{$this->list_id.'_pagination'} = 50;
+	}
+
 	public function processbulkmarktreated()
 	{
 		$response = true;
@@ -431,15 +662,6 @@ class AdminBpostOrders extends ModuleAdminController
 				$response &= $response && $this->sendTTEmail($reference);
 
 		return $response;
-	}
-
-	/**
-	 * @param int $count
-	 * @return int
-	 */
-	public function getLabelsCount($count = 1)
-	{
-		return $count;
 	}
 
 	/**
@@ -713,238 +935,5 @@ class AdminBpostOrders extends ModuleAdminController
 		$tpl = $this->createTemplate('helpers/list/list_action_option.tpl');
 		$tpl->assign($tpl_vars);
 		return $tpl->fetch();
-	}
-
-	/**
-	 * @param string $reference
-	 * @return bool
-	 */
-	private function markOrderTreated($reference = '')
-	{
-		if (empty($reference))
-			return false;
-
-		$pdf_dir = _PS_MODULE_DIR_.'bpostshm/pdf/'.$reference;
-		// disable if labels are not PRINTED
-		if (!is_dir($pdf_dir) || !opendir($pdf_dir))
-		{
-			$this->errors[] = str_replace(
-				'%reference%',
-				$reference,
-				$this->l('Order ref. %reference% was not treated : action is only available for orders that are printed.')
-			);
-			return false;
-		}
-
-		$response = true;
-		$treated_status = Configuration::get('BPOST_ORDER_STATE_TREATED_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id));
-		$ps_order = Order::getByReference(Tools::substr($reference, 7))->getFirst();
-		$ps_order->current_state = (int)$treated_status;
-		$response = $response && $ps_order->save();
-
-		// Create new OrderHistory
-		$history = new OrderHistory();
-		$history->id_order = $ps_order->id;
-		$history->id_employee = (int)$this->context->employee->id;
-
-		$use_existings_payment = false;
-		if (!$ps_order->hasInvoice())
-			$use_existings_payment = true;
-		$history->changeIdOrderState((int)$treated_status, $ps_order, $use_existings_payment);
-
-		$carrier = new Carrier($ps_order->id_carrier, $ps_order->id_lang);
-		$template_vars = array();
-		if ($history->id_order_state == Configuration::get('PS_OS_SHIPPING') && $ps_order->shipping_number)
-			$template_vars = array('{followup}' => str_replace('@', $ps_order->shipping_number, $carrier->url));
-		// Save all changes
-		$response = $response && $history->addWithemail(true, $template_vars);
-
-		return $response;
-	}
-
-	/**
-	 * @param string $reference
-	 * @return bool
-	 */
-	private function sendTTEmail($reference = '')
-	{
-		if (empty($reference))
-			return false;
-
-		$pdf_dir = _PS_MODULE_DIR_.'bpostshm/pdf/'.$reference;
-		// disable if labels are not PRINTED
-		if (!is_dir($pdf_dir) || !opendir($pdf_dir))
-		{
-			$this->errors[] = str_replace(
-				'%reference%',
-				$reference,
-				$this->l('Order ref. %reference% was not treated : action is only available for orders that are printed.')
-			);
-			return false;
-		}
-
-		$response = true;
-		$ps_order = Order::getByReference(Tools::substr($reference, 7))->getFirst();
-		$tracking_url = $this->tracking_url;
-
-		foreach ($this->tracking_params as $param => $value)
-			if (empty($value) && false !== $value)
-				switch ($param)
-				{
-					case 'searchByCustomerReference':
-						$this->tracking_params[$param] = true;
-						break;
-					case 'oss_language':
-						if (in_array($this->context->language->iso_code, array('de', 'fr', 'nl', 'en')))
-							$this->tracking_params[$param] = $this->context->language->iso_code;
-						else
-							$this->tracking_params[$param] = 'en';
-						break;
-					case 'customerReference':
-						$this->tracking_params[$param] = $reference;
-						break;
-					default:
-						break;
-				}
-
-		$tracking_url .= '?'.http_build_query($this->tracking_params);
-		$message = $this->l('Your order').' '.$ps_order->reference.' '.$this->l('can now be tracked here :')
-			.' <a href="'.$tracking_url.'">'.$tracking_url.'</a>';
-
-		$customer = new Customer($ps_order->id_customer);
-		if (!Validate::isLoadedObject($customer))
-			$this->errors[] = Tools::displayError('The customer is invalid.');
-		else
-		{
-			//check if a thread already exist
-			$id_customer_thread = CustomerThread::getIdCustomerThreadByEmailAndIdOrder($customer->email, $ps_order->id);
-			if (!$id_customer_thread)
-			{
-				$customer_thread = new CustomerThread();
-				$customer_thread->id_contact = 0;
-				$customer_thread->id_customer = (int)$ps_order->id_customer;
-				$customer_thread->id_shop = (int)$this->context->shop->id;
-				$customer_thread->id_order = (int)$ps_order->id;
-				$customer_thread->id_lang = (int)$this->context->language->id;
-				$customer_thread->email = $customer->email;
-				$customer_thread->status = 'open';
-				$customer_thread->token = Tools::passwdGen(12);
-				$customer_thread->add();
-			}
-			else
-				$customer_thread = new CustomerThread((int)$id_customer_thread);
-
-			$customer_message = new CustomerMessage();
-			$customer_message->id_customer_thread = $customer_thread->id;
-			$customer_message->id_employee = (int)$this->context->employee->id;
-			$customer_message->message = $message;
-			$customer_message->private = false;
-
-			if (!$customer_message->add())
-				$this->errors[] = Tools::displayError('An error occurred while saving the message.');
-			else
-			{
-				$message = $customer_message->message;
-				if (Configuration::get('PS_MAIL_TYPE', null, null, $ps_order->id_shop) != Mail::TYPE_TEXT)
-					$message = Tools::nl2br($customer_message->message);
-
-				$vars_tpl = array(
-					'{lastname}' => $customer->lastname,
-					'{firstname}' => $customer->firstname,
-					'{id_order}' => $ps_order->id,
-					'{order_name}' => $ps_order->getUniqReference(),
-					'{message}' => $message,
-				);
-
-				Mail::Send((int)$ps_order->id_lang, 'order_merchant_comment',
-					Mail::l('New message regarding your order', (int)$ps_order->id_lang), $vars_tpl, $customer->email,
-					$customer->firstname.' '.$customer->lastname, null, null, null, null, _PS_MAIL_DIR_, true, (int)$ps_order->id_shop
-				);
-			}
-		}
-
-		if (!empty($this->errors))
-			$response = false;
-
-		return $response;
-	}
-
-	/**
-	 * @param string $reference
-	 * @return array
-	 */
-	private function printLabels($reference = '')
-	{
-		$links = array();
-
-		if (empty($reference))
-			return $links;
-
-		$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
-		$do_not_open = array('.', '..', 'labels');
-		$i = 1;
-
-		$pdf_dir = _PS_MODULE_DIR_.'bpostshm/pdf';
-		if (!is_dir($pdf_dir))
-			mkdir($pdf_dir, 0755);
-
-		$pdf_dir .= '/'.$reference;
-		if (!is_dir($pdf_dir))
-			mkdir($pdf_dir, 0755);
-
-		$files = scandir($pdf_dir);
-		if (!empty($files) && is_array($files))
-			foreach ($files as $file)
-				if (!in_array($file, $do_not_open) && !is_dir($pdf_dir.'/'.$file))
-				{
-					$links[] = _PS_BASE_URL_._MODULE_DIR_.'bpostshm/pdf/'.$reference.'/'.$i.'.pdf';
-					$i++;
-				}
-
-		if ($labels = $this->service->createLabelForOrder(
-			$reference,
-			Configuration::get('BPOST_LABEL_PDF_FORMAT_'.$context_shop_id),
-			(bool)Configuration::get('BPOST_LABEL_RETOUR_LABEL_'.$context_shop_id)))
-		{
-			foreach ($labels as $label)
-			{
-				$this->service->updatePSLabelBarcode($reference, $label->getBarcode());
-
-				$file = $pdf_dir.'/'.$i.'.pdf';
-				$fp = fopen($file, 'w');
-				fwrite($fp, $label->getBytes());
-				fclose($fp);
-
-				$links[] = _MODULE_DIR_.'bpostshm/pdf/'.$reference.'/'.$i.'.pdf';
-				$i++;
-			}
-
-			$this->service->updatePSLabelStatus($reference, 'PRINTED');
-		}
-
-		$pdf_dir .= '/retours';
-		if (is_dir($pdf_dir))
-		{
-			$i = 1;
-			$files = scandir($pdf_dir);
-			if (!empty($files) && is_array($files))
-				foreach ($files as $file)
-					if (!in_array($file, $do_not_open) && !is_dir($pdf_dir.'/'.$file))
-					{
-						$links[] = _PS_BASE_URL_._MODULE_DIR_.'bpostshm/pdf/'.$reference.'/retours/'.$i.'.pdf';
-						$i++;
-					}
-		}
-
-		return $links;
-	}
-
-	/**
-	 * @param mixed $content
-	 */
-	private function jsonEncode($content)
-	{
-		header('Content-Type: application/json');
-		die(Tools::jsonEncode($content));
 	}
 }

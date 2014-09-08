@@ -247,19 +247,19 @@
 		{/if}
 		<script type="text/javascript">
 			$(function() {
-				$('table.{$list_id} .filter').keypress(function(e){
+				$('table.{$list_id|escape} .filter').keypress(function(e){
 					var key = (e.keyCode ? e.keyCode : e.which);
 					if (key == 13)
 					{
 						e.preventDefault();
-						formSubmit(e, 'submitFilterButton{$list_id}');
+						formSubmit(e, 'submitFilterButton{$list_id|escape}');
 					}
 				})
-				$('#submitFilterButton{$list_id}').click(function() {
-					$('#submitFilter{$list_id}').val(1);
+				$('#submitFilterButton{$list_id|escape}').click(function() {
+					$('#submitFilter{$list_id|escape}').val(1);
 				});
-				if ($("table.{$list_id} .datepicker").length > 0) {
-					$("table.{$list_id} .datepicker").datepicker({
+				if ($("table.{$list_id|escape} .datepicker").length > 0) {
+					$("table.{$list_id|escape} .datepicker").datepicker({
 						prevText: '',
 						nextText: '',
 						altFormat: 'yy-mm-dd'
@@ -287,32 +287,32 @@
 		{hook h=$hookName}
 	{/if}
 
-	<div class="alert alert-warning" id="{$list_id}-empty-filters-alert" style="display:none;">{l s='Please fill at least one field to perform a search in this list.'}</div>
+	<div class="alert alert-warning" id="{$list_id}-empty-filters-alert" style="display:none;">{l s='Please fill at least one field to perform a search in this list.' mod='bpostshm'}</div>
 
 	{block name="startForm"}
 		<form method="post" action="{$action|escape:'html':'UTF-8'}" class="form-horizontal clearfix" id="form-{$list_id}">
 	{/block}
 
 	{if !$simple_header}
-		<input type="hidden" id="submitFilter{$list_id}" name="submitFilter{$list_id}" value="0"/>
+		<input type="hidden" id="submitFilter{$list_id|escape}" name="submitFilter{$list_id|escape}" value="0"/>
 		{block name="override_form_extra"}{/block}
 		<div class="panel col-lg-12">
 			<div class="panel-heading">
 				{if isset($icon)}<i class="{$icon}"></i> {/if}{if is_array($title)}{$title|end}{else}{$title}{/if}
 				{if isset($toolbar_btn) && count($toolbar_btn) >0}
-					<span class="badge">{$list_total}</span>
+					<span class="badge">{$list_total|int}</span>
 					<span class="panel-heading-action">
 					{foreach from=$toolbar_btn item=btn key=k}
 						{if $k != 'modules-list' && $k != 'back'}
 							<a id="desc-{$table}-{if isset($btn.imgclass)}{$btn.imgclass}{else}{$k}{/if}" class="list-toolbar-btn"{if isset($btn.href)} href="{$btn.href|escape:'html':'UTF-8'}"{/if}{if isset($btn.target) && $btn.target} target="_blank"{/if}{if isset($btn.js) && $btn.js} onclick="{$btn.js}"{/if}>
-								<span title="" data-toggle="tooltip" class="label-tooltip" data-original-title="{l s=$btn.desc}" data-html="true" data-placement="left">
+								<span title="" data-toggle="tooltip" class="label-tooltip" data-original-title="{l s=$btn.desc mod='bpostshm'}" data-html="true" data-placement="left">
 									<i class="process-icon-{if isset($btn.imgclass)}{$btn.imgclass}{else}{$k}{/if}{if isset($btn.class)} {$btn.class}{/if}"></i>
 								</span>
 							</a>
 						{/if}
 					{/foreach}
 						<a class="list-toolbar-btn" href="javascript:location.reload();">
-							<span title="" data-toggle="tooltip" class="label-tooltip" data-original-title="{l s='Refresh list'}" data-html="true" data-placement="left">
+							<span title="" data-toggle="tooltip" class="label-tooltip" data-original-title="{l s='Refresh list' mod='bpostshm'}" data-html="true" data-placement="left">
 								<i class="process-icon-refresh" ></i>
 							</span>
 						</a>
@@ -327,30 +327,30 @@
 						//get reference on save link
 						btn_save = $('i[class~="process-icon-save"]').parent();
 						//get reference on form submit button
-						btn_submit = $('#{$table}_form_submit_btn');
+						btn_submit = $('#{$table|escape}_form_submit_btn');
 						if (btn_save.length > 0 && btn_submit.length > 0) {
 							//get reference on save and stay link
 							btn_save_and_stay = $('i[class~="process-icon-save-and-stay"]').parent();
 							//get reference on current save link label
-							lbl_save = $('#desc-{$table}-save div');
+							lbl_save = $('#desc-{$table|escape}-save div');
 							//override save link label with submit button value
 							if (btn_submit.val().length > 0) {
 								lbl_save.html(btn_submit.attr("value"));
 							}
 							if (btn_save_and_stay.length > 0) {
 								//get reference on current save link label
-								lbl_save_and_stay = $('#desc-{$table}-save-and-stay div');
+								lbl_save_and_stay = $('#desc-{$table|escape}-save-and-stay div');
 								//override save and stay link label with submit button value
 								if (btn_submit.val().length > 0 && lbl_save_and_stay && !lbl_save_and_stay.hasClass('locked')) {
-									lbl_save_and_stay.html(btn_submit.val() + " {l s='and stay'} ");
+									lbl_save_and_stay.html(btn_submit.val() + " {l s='and stay' mod='bpostshm'} ");
 								}
 							}
 							//hide standard submit button
 							btn_submit.hide();
 							//bind enter key press to validate form
-							$('#{$table}_form').keypress(function (e) {
+							$('#{$table|escape}_form').keypress(function (e) {
 								if (e.which == 13 && e.target.localName != 'textarea') {
-									$('#desc-{$table}-save').click();
+									$('#desc-{$table|escape}-save').click();
 								}
 							});
 							//submit the form
@@ -363,14 +363,14 @@
 									submited = true;
 									//add hidden input to emulate submit button click when posting the form -> field name posted
 									btn_submit.before('<input type="hidden" name="'+btn_submit.attr("name")+'" value="1" />');
-									$('#{$table}_form').submit();
+									$('#{$table|escape}_form').submit();
 									return false;
 								});
 								if (btn_save_and_stay) {
 									btn_save_and_stay.click(function() {
 										//add hidden input to emulate submit button click when posting the form -> field name posted
 										btn_submit.before('<input type="hidden" name="'+btn_submit.attr("name")+'AndStay" value="1" />');
-										$('#{$table}_form').submit();
+										$('#{$table|escape}_form').submit();
 										return false;
 									});
 								}
@@ -401,19 +401,19 @@
 											{if is_array($params.hint)}
 												{foreach $params.hint as $hint}
 													{if is_array($hint)}
-														{$hint.text}
+														{$hint.text|escape}
 													{else}
-														{$hint}
+														{$hint|escape}
 													{/if}
 												{/foreach}
 											{else}
-												{$params.hint}
+												{$params.hint|escape}
 											{/if}
 										">
-										{$params.title}
+										{$params.title|escape}
 									</span>
 								{else}
-									{$params.title}
+									{$params.title|escape}
 								{/if}
 
 								{if (!isset($params.orderby) || $params.orderby) && !$simple_header && $show_filters}
@@ -431,9 +431,9 @@
 							<th>
 								<span class="title_box">
 								{if $shop_link_type == 'shop'}
-									{l s='Shop'}
+									{l s='Shop' mod='bpostshm'}
 								{else}
-									{l s='Shop group'}
+									{l s='Shop group' mod='bpostshm'}
 								{/if}
 								</span>
 							</th>
@@ -456,22 +456,22 @@
 									--
 								{else}
 									{if $params.type == 'bool'}
-										<select class="filter fixed-width-sm" name="{$list_id}Filter_{$key}">
+										<select class="filter fixed-width-sm" name="{$list_id|escape}Filter_{$key|escape}">
 											<option value="">-</option>
-											<option value="1" {if $params.value == 1} selected="selected" {/if}>{l s='Yes'}</option>
-											<option value="0" {if $params.value == 0 && $params.value != ''} selected="selected" {/if}>{l s='No'}</option>
+											<option value="1" {if $params.value == 1} selected="selected" {/if}>{l s='Yes' mod='bpostshm'}</option>
+											<option value="0" {if $params.value == 0 && $params.value != ''} selected="selected" {/if}>{l s='No' mod='bpostshm'}</option>
 										</select>
 									{elseif $params.type == 'date' || $params.type == 'datetime'}
 										<div class="date_range row">
 											<div class="input-group fixed-width-md">
-												<input type="text" class="filter datepicker date-input form-control" id="local_{$params.id_date}_0" name="local_{$params.name_date}[0]"  placeholder="{l s='From'}" />
+												<input type="text" class="filter datepicker date-input form-control" id="local_{$params.id_date|escape}_0" name="local_{$params.name_date|escape}[0]"  placeholder="{l s='From' mod='bpostshm'}" />
 												<input type="hidden" id="{$params.id_date}_0" name="{$params.name_date}[0]" value="{if isset($params.value.0)}{$params.value.0}{/if}">
 												<span class="input-group-addon">
 													<i class="icon-calendar"></i>
 												</span>
 											</div>
 											<div class="input-group fixed-width-md">
-												<input type="text" class="filter datepicker date-input form-control" id="local_{$params.id_date}_1" name="local_{$params.name_date}[1]"  placeholder="{l s='To'}" />
+												<input type="text" class="filter datepicker date-input form-control" id="local_{$params.id_date|escape}_1" name="local_{$params.name_date|escape}[1]"  placeholder="{l s='To' mod='bpostshm'}" />
 												<input type="hidden" id="{$params.id_date}_1" name="{$params.name_date}[1]" value="{if isset($params.value.1)}{$params.value.1}{/if}">
 												<span class="input-group-addon">
 													<i class="icon-calendar"></i>
@@ -479,19 +479,19 @@
 											</div>
 											<script>
 												$(function() {
-													var dateStart = parseDate($("#{$params.id_date}_0").val());
-													var dateEnd = parseDate($("#{$params.id_date}_1").val());
-													$("#local_{$params.id_date}_0").datepicker({
-														altField: "#{$params.id_date}_0"
+													var dateStart = parseDate($("#{$params.id_date|escape}_0").val());
+													var dateEnd = parseDate($("#{$params.id_date|escape}_1").val());
+													$("#local_{$params.id_date|escape}_0").datepicker({
+														altField: "#{$params.id_date|escape}_0"
 													});
-													$("#local_{$params.id_date}_1").datepicker({
-														altField: "#{$params.id_date}_1"
+													$("#local_{$params.id_date|escape}_1").datepicker({
+														altField: "#{$params.id_date|escape}_1"
 													});
 													if (dateStart !== null){
-														$("#local_{$params.id_date}_0").datepicker("setDate", dateStart);
+														$("#local_{$params.id_date|escape}_0").datepicker("setDate", dateStart);
 													}
 													if (dateEnd !== null){
-														$("#local_{$params.id_date}_1").datepicker("setDate", dateEnd);
+														$("#local_{$params.id_date|escape}_1").datepicker("setDate", dateEnd);
 													}
 												});
 											</script>
@@ -522,12 +522,12 @@
 								{if $show_filters}
 								<span class="pull-right">
 									{*Search must be before reset for default form submit*}
-									<button type="submit" id="submitFilterButton{$list_id}" name="submitFilter" class="btn btn-default" data-list-id="{$list_id}">
-										<i class="icon-search"></i> {l s='Search'}
+									<button type="submit" id="submitFilterButton{$list_id|escape}" name="submitFilter" class="btn btn-default" data-list-id="{$list_id|escape}">
+										<i class="icon-search"></i> {l s='Search' mod='bpostshm'}
 									</button>
 									{if $filters_has_value}
-										<button type="submit" name="submitReset{$list_id}" class="btn btn-warning">
-											<i class="icon-eraser"></i> {l s='Reset'}
+										<button type="submit" name="submitReset{$list_id|escape}" class="btn btn-warning">
+											<i class="icon-eraser"></i> {l s='Reset' mod='bpostshm'}
 										</button>
 									{/if}
 								</span>

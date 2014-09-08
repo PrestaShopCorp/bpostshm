@@ -1,4 +1,4 @@
-<?php 
+<?php
 /**
  * 2014 Stigmi
  *
@@ -11,17 +11,15 @@
  * @license   http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
-require_once($_GET['root_dir'].'/config/config.inc.php');
+require_once(_PS_ROOT_DIR_.'/config/config.inc.php');
 require_once(_PS_MODULE_DIR_.'bpostshm/classes/Service.php');
-				
+
 class ServicePointController extends FrontController
 {
-
-	//private $context;
 	public function __construct()
 	{
 		$this->is_ps14 = Tools::getValue('ps14');
-		if ( !isset($this->context) && !$this->is_ps14 )		
+		if (!isset($this->context) && !$this->is_ps14)
 			$this->context = \Context::getContext();
 
 	}
@@ -37,13 +35,11 @@ class ServicePointController extends FrontController
 	}
 
 	public function init()
-	{		
+	{
 		parent::init();
-		if ( !isset($this->context) )
-		{
-			$bpostshm = new BpostShm();
-			$this->context = Context::getContext();	
-		}	
+
+		if (!isset($this->context))
+			$this->context = Context::getContext();
 	}
 
 	public function process()
@@ -61,13 +57,11 @@ class ServicePointController extends FrontController
 			$available_countries = $service->getProductCountries();
 			$this->terminate($available_countries);
 		}
-
-	
 	}
 
 
 	private function checkToken($admin = false)
-	{	
+	{
 		$token_key = 'bpostshm';
 		$token = Tools::getValue('token');
 		$gen_token = $admin ? Tools::getAdminToken($token_key) : Tools::getToken($token_key);
@@ -84,7 +78,8 @@ class ServicePointController extends FrontController
 	 * @param mixed $content
 	 */
 	private function terminate($content)
-	{	if (is_array($content))
+	{
+		if (is_array($content))
 			$content = Tools::jsonEncode($content);
 		header('Content-Type: application/json');
 		die($content);

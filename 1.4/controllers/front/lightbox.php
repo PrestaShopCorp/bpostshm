@@ -11,8 +11,7 @@
  * @license   http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
-require_once('../../../../../config/config.inc.php');
-// require_once('../../../../../sites/bpost/ps14/config/config.inc.php');
+require_once(_PS_ROOT_DIR_.'config/config.inc.php');
 require_once(_PS_MODULE_DIR_.'bpostshm/bpostshm.php');
 require_once(_PS_MODULE_DIR_.'bpostshm/classes/Service.php');
 
@@ -89,7 +88,7 @@ class Lightbox extends FrontController
 						$customer['Title'] = 'Ms.';
 						break;
 				}
-			
+
 			if ($firstname = (string)Tools::getValue('firstname'))
 				$customer['FirstName'] = $firstname;
 			if ($lastname = (string)Tools::getValue('lastname'))
@@ -107,7 +106,7 @@ class Lightbox extends FrontController
 			if ($email = (string)Tools::getValue('email'))
 				$customer['Email'] = Tools::strtoupper($email);
 			if ($mobile_number = (string)Tools::getValue('mobile_number'))
-				// int cast removes leading zero 
+				// int cast removes leading zero
 				// * Srg: int is the least of the problems. proper RE validation already done
 				$customer['MobileNumber'] = (int)$mobile_number;
 			if ($preferred_language = (string)Tools::getValue('preferred_language'))
@@ -269,7 +268,7 @@ class Lightbox extends FrontController
 							$zone .= ' '.$customer['Town'];
 						}
 						if (!empty($customer['PackstationID']))
-							self::$smarty->assign('defaultStation', sprintf("%06s", $customer['PackstationID']), true);
+							self::$smarty->assign('defaultStation', sprintf('%06s', $customer['PackstationID']), true);
 
 						$search_params = array(
 							'street' 	=> $customer['street'],
@@ -353,33 +352,33 @@ class Lightbox extends FrontController
 	{
 		parent::setMedia();
 
-		Tools::addCSS(_PS_SSL_ENABLED_ ? 'https://' : 'http://'.'//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.css', 'screen');
+		Tools::addCSS((_PS_SSL_ENABLED_ ? 'https://' : 'http://').'//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.css', 'screen');
 		Tools::addCSS(__PS_BASE_URI__.'/modules/bpostshm/views/css/lightbox.css');
 
-		Tools::addJS(_PS_SSL_ENABLED_ ? 'https://' : 'http://'.'//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js');
+		Tools::addJS((_PS_SSL_ENABLED_ ? 'https://' : 'http://').'//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js');
 		Tools::addJS(__PS_BASE_URI__.'/modules/bpostshm/views/js/bpostshm.js');
 		Tools::addJS(__PS_BASE_URI__.'/modules/bpostshm/views/js/srgdebug.js');
-		Tools::addJS(_PS_SSL_ENABLED_ ? 'https://' : 'http://'.'//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.pack.js');
+		Tools::addJS((_PS_SSL_ENABLED_ ? 'https://' : 'http://').'//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.pack.js');
 		Tools::addJS('https://maps.googleapis.com/maps/api/js?v=3.16&key=AIzaSyAa4S8Br_5of6Jb_Gjv1WLldkobgExB2KY&sensor=false&language=fr');
 	}
 
 	private function validateStore($member)
 	{
 		$json_member = (string)Tools::jsonEncode($member);
-		
+
 		// Better to store the JSON string. serializing fails everytime
-		// Special NOTE: Cart.php override has changed to reflect this ('isSerializedArray' => 'isString')	
+		// Special NOTE: Cart.php override has changed to reflect this ('isSerializedArray' => 'isString')
 		if (!isset($member['Error']))
 			try {
 				$context = Context::getContext();
-		
+
 				$context->cart->bpack247_customer = $json_member;
-				$context->cart->update();	
-			
+				$context->cart->update();
+
 			} catch (\Exception $e) {
-				$json_member = Tools::jsonEncode(array('Error' => $e->getMessage()));	
+				$json_member = Tools::jsonEncode(array('Error' => $e->getMessage()));
 			}
-		
+
 		$this->terminateWith($json_member);
 	}
 

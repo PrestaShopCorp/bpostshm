@@ -96,7 +96,7 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 			if ($email = (string)Tools::getValue('email'))
 				$customer['Email'] = Tools::strtoupper($email);
 			if ($mobile_number = (string)Tools::getValue('mobile_number'))
-				// int cast removes leading zero 
+				// int cast removes leading zero
 				// * Srg: int is the least of the problems. proper RE validation already done
 				$customer['MobileNumber'] = (int)$mobile_number;
 			if ($preferred_language = (string)Tools::getValue('preferred_language'))
@@ -108,7 +108,6 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 			$member = $service->createBpack247Member($customer, 'Number, Street, Postalcode, DeliveryCode');
 			$this->validateStore($member);
 		}
-		
 
 		// Building display page
 		self::$smarty->assign('version', (Service::isPrestashop16() ? 1.6 : (Service::isPrestashopFresherThan14() ? 1.5 : 1.4)), true);
@@ -241,7 +240,6 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 						self::$smarty->assign('module_dir', _MODULE_DIR_.$this->module->name.'/');
 						self::$smarty->assign('shipping_method', $shipping_method, true);
 
-						
 						if (!$customer = $this->context->cart->bpack247_customer)
 							return false;
 
@@ -255,7 +253,7 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 							$zone .= ' '.$customer['Town'];
 						}
 						if (!empty($customer['PackstationID']))
-							self::$smarty->assign('defaultStation', sprintf("%06s", $customer['PackstationID']), true);
+							self::$smarty->assign('defaultStation', sprintf('%06s', $customer['PackstationID']), true);
 
 						$search_params = array(
 							'street' 	=> $customer['Street'],
@@ -269,7 +267,6 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 							$service_points = $service->getNearestServicePoint($search_params, $shipping_method);
 						}
 						self::$smarty->assign('servicePoints', $service_points, true);
-						
 						self::$smarty->assign('url_get_nearest_service_points', $this->context->link->getModuleLink('bpostshm', 'lightbox', array(
 							'ajax'							=> true,
 							'get_nearest_service_points' 	=> true,
@@ -297,6 +294,36 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 		}
 	}
 
+	private function jsonEncode($content)
+	{
+		header('Content-Type: application/json');
+		die(Tools::jsonEncode($content));
+	}
+
+	private function validateStore($member)
+	{
+		$json_member = Tools::jsonEncode($member);
+
+		// Better to store the JSON string. serializing fails everytime
+		// Special NOTE: Cart.php override has changed to reflect this ('isSerializedArray' => 'isString')
+		if (!isset($member['Error']))
+			try {
+				$this->context->cart->bpack247_customer = $json_member;
+				$this->context->cart->update();
+
+			} catch (Exception $e) {
+				$json_member = Tools::jsonEncode(array('Error' => $e->getMessage()));
+			}
+
+		$this->terminateWith($json_member);
+	}
+
+	private function terminateWith($json)
+	{
+		header('Content-Type: application/json');
+		die($json);
+	}
+
 	public function setMedia()
 	{
 		parent::setMedia();
@@ -307,35 +334,4 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 		$this->addJS('https://maps.googleapis.com/maps/api/js?v=3.16&key=AIzaSyAa4S8Br_5of6Jb_Gjv1WLldkobgExB2KY&sensor=false&language='
 			.$this->context->language->iso_code);
 	}
-
-	private function validateStore($member)
-	{
-		$json_member = Tools::jsonEncode($member);
-		
-		// Better to store the JSON string. serializing fails everytime
-		// Special NOTE: Cart.php override has changed to reflect this ('isSerializedArray' => 'isString')	
-		if (!isset($member['Error']))
-			try {
-				$this->context->cart->bpack247_customer = $json_member;
-				$this->context->cart->update();
-			
-			} catch (Exception $e) {
-				$json_member = Tools::jsonEncode(array('Error' => $e->getMessage()));	
-			}
-		
-		$this->terminateWith($json_member);
-	}
-
-	private function terminateWith($json)
-	{
-		header('Content-Type: application/json');
-		die($json);
-	}
-
-	private function jsonEncode($content)
-	{
-		header('Content-Type: application/json');
-		die(Tools::jsonEncode($content));
-	}
-
 }

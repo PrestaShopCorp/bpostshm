@@ -1,3 +1,11 @@
+{*
+* 2014 Stigmi
+*
+* @author Stigmi.eu <www.stigmi.eu>
+* @copyright 2014 Stigmi
+* @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+*}
+
 <fieldset>
 	<legend>{l s='Reference' mod='bpostshm'} {$reference|escape}</legend>
 	<ul id="order_actions">{strip}

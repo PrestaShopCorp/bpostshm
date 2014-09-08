@@ -41,17 +41,17 @@
 			{if $bulk_actions && $has_bulk_actions}
 			<div class="btn-group bulk-actions">
 				<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-					{l s='Bulk actions'} <span class="caret"></span>
+					{l s='Bulk actions' mod='bpostshm'} <span class="caret"></span>
 				</button>
 				<ul class="dropdown-menu">
 					<li>
-						<a href="#" onclick="javascript:checkDelBoxes($(this).closest('form').get(0), '{$list_id}Box[]', true);return false;">
-							<i class="icon-check-sign"></i>&nbsp;{l s='Select all'}
+						<a href="#" onclick="javascript:checkDelBoxes($(this).closest('form').get(0), '{$list_id|escape}Box[]', true);return false;">
+							<i class="icon-check-sign"></i>&nbsp;{l s='Select all' mod='bpostshm'}
 						</a>
 					</li>
 					<li>
-						<a href="#" onclick="javascript:checkDelBoxes($(this).closest('form').get(0), '{$list_id}Box[]', false);return false;">
-							<i class="icon-check-empty"></i>&nbsp;{l s='Unselect all'}
+						<a href="#" onclick="javascript:checkDelBoxes($(this).closest('form').get(0), '{$list_id|escape}Box[]', false);return false;">
+							<i class="icon-check-empty"></i>&nbsp;{l s='Unselect all' mod='bpostshm'}
 						</a>
 					</li>
 					<li class="divider"></li>
@@ -72,9 +72,9 @@
 		<div class="col-lg-6">
 			{* Choose number of results per page *}
 			<div class="pagination">
-				{l s='Display'}
+				{l s='Display' mod='bpostshm'}
 				<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-					{$selected_pagination}
+					{$selected_pagination|escape}
 					<i class="icon-caret-down"></i>
 				</button>
 				<ul class="dropdown-menu">
@@ -84,7 +84,7 @@
 					</li>
 				{/foreach}
 				</ul>
-				/ {$list_total} {l s='result(s)'}
+				/ {$list_total|intval} {l s='result(s)' mod='bpostshm'}
 				<input type="hidden" id="{$list_id}-pagination-items-page" name="{$list_id}_pagination" value="{$selected_pagination|intval}" />
 			</div>
 			<script type="text/javascript">
@@ -95,12 +95,12 @@
 			</script>
 			<ul class="pagination pull-right">
 				<li {if $page <= 1}class="disabled"{/if}>
-					<a href="javascript:void(0);" class="pagination-link" data-page="1" data-list-id="{$list_id}">
+					<a href="javascript:void(0);" class="pagination-link" data-page="1" data-list-id="{$list_id|escape}">
 						<i class="icon-double-angle-left"></i>
 					</a>
 				</li>
 				<li {if $page <= 1}class="disabled"{/if}>
-					<a href="javascript:void(0);" class="pagination-link" data-page="{$page - 1}" data-list-id="{$list_id}">
+					<a href="javascript:void(0);" class="pagination-link" data-page="{$page|intval - 1}" data-list-id="{$list_id|escape}">
 						<i class="icon-angle-left"></i>
 					</a>
 				</li>
@@ -118,17 +118,17 @@
 						{assign p $total_pages}
 					{else}
 						<li {if $p == $page}class="active"{/if}>
-							<a href="javascript:void(0);" class="pagination-link" data-page="{$p}" data-list-id="{$list_id}">{$p}</a>
+							<a href="javascript:void(0);" class="pagination-link" data-page="{$p|intval}" data-list-id="{$list_id|escape}">{$p|intval}</a>
 						</li>
 					{/if}
 				{/while}
 				<li {if $page >= $total_pages}class="disabled"{/if}>
-					<a href="javascript:void(0);" class="pagination-link" data-page="{$page + 1}" data-list-id="{$list_id}">
+					<a href="javascript:void(0);" class="pagination-link" data-page="{$page|intval + 1}" data-list-id="{$list_id|escape}">
 						<i class="icon-angle-right"></i>
 					</a>
 				</li>
 				<li {if $page >= $total_pages}class="disabled"{/if}>
-					<a href="javascript:void(0);" class="pagination-link" data-page="{$total_pages}" data-list-id="{$list_id}">
+					<a href="javascript:void(0);" class="pagination-link" data-page="{$total_pages|intval}" data-list-id="{$list_id|escape}">
 						<i class="icon-double-angle-right"></i>
 					</a>
 				</li>

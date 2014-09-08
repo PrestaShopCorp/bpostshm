@@ -73,27 +73,6 @@ option:disabled {
   #bpost-settings form.v1-4 .control-label-bw {
     width: 200px; }
 
-#adminbpostorders-view .metadata-command a, #adminbpostorders-view .metadata-command a:visited {
-  color: #268ccd; }
-#adminbpostorders-view .metadata-command a img {
-  margin-right: 6px; }
-#adminbpostorders-view .metadata-command a span {
-  text-decoration: underline; }
-#adminbpostorders-view .metadata-command .actions {
-  float: right;
-  margin: 12px 10px;
-  width: 25%; }
-  #adminbpostorders-view .metadata-command .actions a + a {
-    display: inline-block;
-    padding-left: 10px; }
-#adminbpostorders-view .box {
-  background-color: #ececec;
-  border: 1px solid #ccc;
-  border-radius: 3px;
-  margin-bottom: 12px; }
-  #adminbpostorders-view .box .box-title {
-    color: #333; }
-
 #adminbpostorders #idTabs li {
   display: inline-block; }
 #adminbpostorders #idTabs a {
@@ -112,3 +91,7 @@ option:disabled {
     color: #fff; }
 #adminbpostorders .block_hidden_only_for_screen {
   display: none; }
+
+#order_actions a {
+  cursor: pointer;
+  text-decoration: underline; }
