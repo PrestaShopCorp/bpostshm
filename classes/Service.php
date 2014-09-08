@@ -717,18 +717,31 @@ class Service
 
 		$reference = Tools::substr($reference, 0, 50);
 		$recipient = $this->getOrderRecipient($reference);
+		$ps_order = Order::getByReference(Tools::substr($reference, 7))->getFirst();
+		$delivery_method = $this->getOrderShippingMethod((int)$ps_order->id_carrier, true);
+
+		if ($address = Address::getCountryAndState((int)$ps_order->id_address_delivery))
+		{
+			$country = new Country((int)$address ['id_country']);
+
+			if ($delivery_method == $this->module->shipping_methods[BpostShm::SHIPPING_METHOD_AT_HOME]['slug'] && 'BE' != $country->iso_code)
+				$delivery_method ==  '@international';
+		}
+
 		$response &= Db::getInstance()->execute('
 INSERT INTO
 	'._DB_PREFIX_.'order_label
 (
 	`reference`,
 	`status`,
+	`delivery_method`,
 	`recipient`,
 	`date_add`
 )
 VALUES(
 	"'.pSQL($reference).'",
 	"'.pSQL($status).'",
+	"'.pSQL($delivery_method).'",
 	"'.pSQL($recipient).'",
 	NOW()
 )');

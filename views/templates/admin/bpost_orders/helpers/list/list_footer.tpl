@@ -110,8 +110,8 @@
 						<li class="disabled">
 							<a href="javascript:void(0);">&hellip;</a>
 						</li>
-						{assign p $page-3}
-					{else if $p > $page+2}
+						{assign var='p' value=$page-3}
+					{elseif $p > $page+2}
 						<li class="disabled">
 							<a href="javascript:void(0);">&hellip;</a>
 						</li>
@@ -203,6 +203,7 @@
 						$parent;
 
 					$table_treated
+						.find('thead').remove().end()
 						.find('tbody').empty();
 
 					$.each(tr_list, function(i, tr) {
@@ -222,7 +223,7 @@
 
 						$('#idTabs').idTabs()
 							.find('a').on('click', function() {
-								$thead.appendTo('.order_label:visible');
+								$thead.prependTo('.order_label:visible');
 							});
 					}
 					else
@@ -246,7 +247,6 @@
 							$($link.attr('href')).show();
 						});
 					}
-
 
 					if ('undefined' !== typeof location.hash && '#tab2' === location.hash)
 						$('#idTabs').find('li:eq(1) a').trigger('click');

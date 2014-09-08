@@ -42,7 +42,7 @@ class BpostShm extends CarrierModule
 		$this->name = 'bpostshm';
 		$this->need_instance = 0;
 		$this->tab = 'shipping_logistics';
-		$this->version = '0.1';
+		$this->version = '0.9';
 
 		parent::__construct();
 
@@ -53,7 +53,7 @@ class BpostShm extends CarrierModule
 		$this->shipping_methods = array(
 			self::SHIPPING_METHOD_AT_HOME => array(
 				'name' 	=> $this->l('Delivery at home or at the office'),
-				'delay' => 'Receive your parcel at home or at the office.',
+				'delay' => $this->l('Receive your parcel at home or at the office.'),
 				'slug' 	=> '@home',
 			),
 			self::SHIPPING_METHOD_AT_SHOP => array(
@@ -88,6 +88,10 @@ class BpostShm extends CarrierModule
 		{
 			$return = $return && copy(_PS_MODULE_DIR_.$this->name.'/1.4/override/classes/Carrier.php', _PS_ROOT_DIR_.'/override/classes/Carrier.php');
 			$return = $return && copy(_PS_MODULE_DIR_.$this->name.'/1.4/override/classes/Cart.php', _PS_ROOT_DIR_.'/override/classes/Cart.php');
+			$return = $return && copy(
+				_PS_MODULE_DIR_.$this->name.'/1.4/override/controllers/ParentOrderController.php',
+				_PS_ROOT_DIR_.'/override/controllers/ParentOrderController.php'
+			);
 		}
 
 		$cache_dir = defined('_PS_CACHE_DIR_') ? _PS_CACHE_DIR_ : _PS_ROOT_DIR_.'/cache/';
@@ -353,6 +357,7 @@ CREATE TABLE IF NOT EXISTS
 	`id_order_label` int(11) NOT NULL AUTO_INCREMENT,
 	`reference` varchar(50) NOT NULL,
 	`status` varchar(20) NOT NULL,
+	`delivery_method` varchar(25) NOT NULL,
 	`recipient` varchar(255) NOT NULL,
 	`barcode` varchar(25) NOT NULL,
 	`date_add` datetime NOT NULL,

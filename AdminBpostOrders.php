@@ -34,6 +34,9 @@ class AdminBpostOrders extends AdminTab
 		'PRINTED',
 	);
 
+	// bpost orders are displayed into Orders > bpost depending on their PS order state
+	private $ps_order_states = array(2, 3, 4, 5, 9, 12);
+
 	private $tracking_url = 'http://track.bpost.be/etr/light/performSearch.do';
 	private $tracking_params = array(
 		'searchByCustomerReference' => true,
@@ -74,7 +77,7 @@ class AdminBpostOrders extends AdminTab
 		$this->_where = '
 		AND a.status IN("'.implode('", "', $this->statuses).'")
 		AND DATEDIFF(NOW(), a.date_add) <= 14
-		AND oh.id_order_state IN(2, 12, 22, '
+		AND oh.id_order_state IN('.implode(', ', $this->ps_order_states).', '
 			.(int)Configuration::get('BPOST_ORDER_STATE_TREATED_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id)).')';
 
 		$id_bpost_carriers = array_keys($this->service->delivery_methods_list);
@@ -87,7 +90,6 @@ class AdminBpostOrders extends AdminTab
 
 		$this->_where .= '
 		AND o.id_carrier IN ('.implode(', ', $id_bpost_carriers).')';
-
 
 		$this->_group = 'GROUP BY(a.`reference`)';
 		$this->_orderBy = 'o.id_order';
@@ -116,11 +118,11 @@ class AdminBpostOrders extends AdminTab
 				'width' => 25,
 				'filter_key' => 'a!reference',
 			),
-			'shipping_method' => array(
+			'delivery_method' => array(
 				'title' => $this->l('Delivery method'),
 				'width' => 135,
-				'callback' => 'getOrderShippingMethod',
 				'search' => false,
+				'filter_key' => 'a!delivery_method',
 			),
 			'recipient' => array(
 				'title' => $this->l('Recipient'),
@@ -418,26 +420,6 @@ class AdminBpostOrders extends AdminTab
 				$response &= $response && $this->sendTTEmail($reference);
 
 		return $response;
-	}
-
-	/**
-	 * @param int $id_order
-	 * @return mixed
-	 */
-	public function getOrderShippingMethod($id_order = 0)
-	{
-		if (empty($id_order))
-			return;
-
-		$ps_order = new Order((int)$id_order);
-		$delivery_slug = $this->service->getOrderShippingMethod((int)$ps_order->id_carrier, true);
-		$id_address_delivery = $ps_order->id_address_delivery;
-		$delivery_address = new Address((int)$id_address_delivery);
-		$country = new Country((int)$delivery_address->id_country);
-
-		if ($delivery_slug == $this->module->shipping_methods[BpostShm::SHIPPING_METHOD_AT_HOME]['slug'] && 'BE' != $country->iso_code)
-			return '@international';
-		return $delivery_slug;
 	}
 
 	/**

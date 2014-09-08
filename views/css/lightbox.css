@@ -148,13 +148,13 @@
     width: 98%;
     height: 100%; }
   #lightbox.at-247 {
-    min-height: 350px; }
+    min-height: 400px; }
     #lightbox.at-247 h1 {
       background: transparent none;
       color: #c90200;
       font-size: 16px;
       height: auto;
-      margin-top: 0;
+      padding-top: 5px;
       text-transform: none; }
       #lightbox.at-247 h1 .step {
         background-color: #c90200;
@@ -162,9 +162,11 @@
         border-radius: 5px;
         color: #fff;
         display: inline-block;
+        float: left;
         font-size: 20px;
         line-height: 55px;
         margin-right: 20px;
+        margin-top: -5px;
         padding: 0 22px; }
     #lightbox.at-247 h2 {
       background: transparent none;
@@ -235,6 +237,16 @@
   .at-shop .col-xs-4,
   .at-shop .col-xs-8 {
     height: 520px; } }
+@media screen and (max-width: 480px) {
+  #lightbox form input#rc,
+  #lightbox #rc-info {
+    margin-bottom: 8px;
+    margin-top: 5px; }
+  #lightbox #lightbox form input#rc {
+    margin-left: 25px; }
+  #lightbox #rc-info {
+    display: inline;
+    margin-left: 0; } }
 @media screen and (max-width: 780px) {
   .col-xs-4,
   .col-xs-6,
@@ -244,8 +256,12 @@
     height: auto;
     width: 100%; }
 
-  #lightbox.at-shop #poi {
+  .at-shop #poi {
     padding-right: 15px; }
+  .at-shop .col-xs-4 {
+    overflow: visible; }
+  .at-shop .col-xs-8 {
+    display: none; }
 
   #search-form input {
     max-width: 24%; }

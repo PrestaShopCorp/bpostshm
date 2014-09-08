@@ -24,7 +24,7 @@
 	fancyboxParams = {
 		autoWidth:		true,
 		centerOnScroll: true,
-		minHeight: 		350,
+		minHeight: 		400,
 		helpers : {
 			title : null
 		},

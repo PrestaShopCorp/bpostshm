@@ -26,6 +26,9 @@ class AdminBpostOrders extends ModuleAdminController
 		'PRINTED',
 	);
 
+	// bpost orders are displayed into Orders > bpost depending on their PS order state
+	private $ps_order_states = array(2, 3, 4, 5, 9, 12);
+
 	private $tracking_url = 'http://track.bpost.be/etr/light/performSearch.do';
 	private $tracking_params = array(
 		'searchByCustomerReference' => true,
@@ -66,7 +69,6 @@ class AdminBpostOrders extends ModuleAdminController
 		$this->_select = '
 		a.`reference` as print,
 		a.`reference` as t_t,
-		o.`id_order` as shipping_method,
 		COUNT(a.`reference`) as count
 		';
 
@@ -78,7 +80,7 @@ class AdminBpostOrders extends ModuleAdminController
 
 		$this->_where = '
 		AND a.status IN("'.implode('", "', $this->statuses).'")
-		AND o.current_state IN(2, 12, 22, '
+		AND oh.id_order_state IN('.implode(', ', $this->ps_order_states).', '
 			.(int)Configuration::get('BPOST_ORDER_STATE_TREATED_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id)).')
 		AND DATEDIFF(NOW(), a.date_add) <= 14
 		';
@@ -104,7 +106,6 @@ class AdminBpostOrders extends ModuleAdminController
 		'print' => array(
 			'title' => '',
 			'align' => 'center',
-			'width'	=> 30,
 			'callback' => 'getPrintIcon',
 			'search' => false,
 			'orderby' => false,
@@ -112,7 +113,6 @@ class AdminBpostOrders extends ModuleAdminController
 		't_t' => array(
 			'title' => '',
 			'align' => 'center',
-			'width'	=> 30,
 			'callback' => 'getTTIcon',
 			'search' => false,
 			'orderby' => false,
@@ -126,34 +126,28 @@ class AdminBpostOrders extends ModuleAdminController
 		'reference' => array(
 			'title' => $this->l('Reference'),
 			'align' => 'left',
-			'width' => 25,
 			'filter_key' => 'a!reference',
 		),
-		'shipping_method' => array(
+		'delivery_method' => array(
 			'title' => $this->l('Delivery method'),
-			'width' => 150,
-			'callback' => 'getOrderShippingMethod',
 			'search' => false,
+			'filter_key' => 'a!delivery_method',
 		),
 		'recipient' => array(
 			'title' => $this->l('Recipient'),
-			'width' => 450,
 			'filter_key' => 'a!recipient',
 		),
 		'status' => array(
 			'title' => $this->l('Status'),
-			'width' => 100,
 		),
 		'date_add' => array(
 			'title' => $this->l('Creation date'),
-			'width' => 130,
 			'align' => 'right',
 			'type' => 'datetime',
 			'filter_key' => 'a!date_add'
 		),
 		'count' => array(
 			'title' => $this->l('Labels'),
-			'width' => 100,
 			'align' => 'center',
 			'callback' => 'getLabelsCount',
 			'search' => false,
@@ -161,7 +155,6 @@ class AdminBpostOrders extends ModuleAdminController
 		),
 		'current_state' => array(
 			'title' => $this->l('Order state'),
-			'width' => 100,
 			'align' => 'center',
 			'class' => 'order_state',
 		)
@@ -438,28 +431,6 @@ class AdminBpostOrders extends ModuleAdminController
 				$response &= $response && $this->sendTTEmail($reference);
 
 		return $response;
-	}
-
-	/**
-	 * @param int $id_order
-	 * @return mixed
-	 */
-	public function getOrderShippingMethod($id_order = 0)
-	{
-		if (empty($id_order))
-			return;
-
-		$ps_order = new Order((int)$id_order);
-		$delivery_slug = $this->service->getOrderShippingMethod((int)$ps_order->id_carrier, true);
-
-		if ($address = Address::getCountryAndState((int)$ps_order->id_address_delivery))
-		{
-			$country = new Country((int)$address ['id_country']);
-
-			if ($delivery_slug == $this->module->shipping_methods[BpostShm::SHIPPING_METHOD_AT_HOME]['slug'] && 'BE' != $country->iso_code)
-				return '@international';
-		}
-		return $delivery_slug;
 	}
 
 	/**

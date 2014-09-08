@@ -103,7 +103,6 @@ BpostShm = {
 						if (parent.$('#form').length)
 						{
 							parent.$.fancybox.close();
-
 							parent.$('[name="processCarrier"]').remove();
 							parent.$('#form').append('<input name="processCarrier" type="hidden" value="1" />').submit();
 						}

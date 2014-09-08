@@ -238,14 +238,14 @@
     }
 
     &.at-247 {
-        min-height: 350px;
+        min-height: 400px;
 
         h1 {
             background: transparent none;
             color: #c90200;
             font-size: 16px;
             height: auto;
-            margin-top: 0;
+            padding-top: 5px;
             text-transform: none;
 
             .step {
@@ -254,9 +254,11 @@
                 border-radius: 5px;
                 color: #fff;
                 display: inline-block;
+                float: left;
                 font-size: 20px;
                 line-height: 55px;
                 margin-right: 20px;
+                margin-top: -5px;
                 padding: 0 22px;
             }
         }
@@ -389,6 +391,27 @@
     }
 }
 
+@media screen and (max-width: 480px) {
+    #lightbox
+    {
+        form input#rc,
+        #rc-info {
+            margin-bottom: 8px;
+            margin-top: 5px;
+        }
+
+        #lightbox form input#rc {
+            margin-left: 25px;
+        }
+
+        #rc-info {
+            display: inline;
+            margin-left: 0;
+        }
+    }
+}
+
+
 @media screen and (max-width: 780px) {
     .col-xs-4,
     .col-xs-6,
@@ -399,11 +422,17 @@
         width: 100%;
     }
 
-    #lightbox {
-        &.at-shop {
-            #poi {
-                padding-right: 15px;
-            }
+    .at-shop {
+        #poi {
+            padding-right: 15px;
+        }
+
+        .col-xs-4 {
+            overflow: visible;
+        }
+
+        .col-xs-8 {
+            display: none;
         }
     }
 
