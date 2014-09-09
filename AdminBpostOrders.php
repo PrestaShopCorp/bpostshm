@@ -737,10 +737,15 @@ class AdminBpostOrders extends AdminTab
 		$history->id_order = $ps_order->id;
 		$history->id_employee = (int)$this->context->employee->id;
 
-		$use_existings_payment = false;
-		if (!$ps_order->hasInvoice())
-			$use_existings_payment = true;
-		$history->changeIdOrderState((int)$treated_status, $ps_order, $use_existings_payment);
+		if (Service::isPrestashopFresherThan14())
+		{
+			$use_existings_payment = false;
+			if (!$ps_order->hasInvoice())
+				$use_existings_payment = true;
+			$history->changeIdOrderState((int)$treated_status, $ps_order, $use_existings_payment);
+		}
+		else
+			$history->changeIdOrderState((int)$treated_status, $ps_order);
 
 		$carrier = new Carrier($ps_order->id_carrier, $ps_order->id_lang);
 		$template_vars = array();

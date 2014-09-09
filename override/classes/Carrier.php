@@ -11,12 +11,15 @@ class Carrier extends CarrierCore
 {
 	public function __construct($id = null, $id_lang = null)
 	{
-		self::$definition['fields']['delay'] = array(
-			'type' => self::TYPE_HTML,
-			'lang' => true,
-			'validate' => 'isCleanHtml',
-			'required' => true, 'size' => 255,
-		);
+		if (Service::isPrestashopFresherThan14())
+			self::$definition['fields']['delay'] = array(
+				'type' => self::TYPE_HTML,
+				'lang' => true,
+				'validate' => 'isCleanHtml',
+				'required' => true, 'size' => 255,
+			);
+		else
+			$this->fieldsValidate['delay'] = 'isCleanHtml';
 
 		parent::__construct($id, $id_lang);
 	}

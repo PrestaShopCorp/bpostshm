@@ -79,7 +79,7 @@ class AdminBpostOrders extends ModuleAdminController
 
 		$this->_where = '
 		AND a.status IN("'.implode('", "', $this->statuses).'")
-		AND oh.id_order_state IN('.implode(', ', $this->ps_order_states).', '
+		AND o.current_state IN('.implode(', ', $this->ps_order_states).', '
 			.(int)Configuration::get('BPOST_ORDER_STATE_TREATED_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id)).')
 		AND DATEDIFF(NOW(), a.date_add) <= 14
 		';

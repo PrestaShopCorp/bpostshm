@@ -689,42 +689,6 @@ ADD COLUMN
 	}
 
 	/**
-	 * @param array $params
-	 */
-	public function hookActionOrderStatusUpdate($params)
-	{
-		$order = new Order((int)$params['id_order']);
-
-		switch ((int)$params['newOrderStatus']->id)
-		{
-			case 1:
-			case 2:
-			case 3:
-			case 4:
-			case 5:
-			case 10:
-			case 11:
-			case 12:
-			default:
-				$status = 'OPEN';
-				break;
-
-			case 6:
-			case 7:
-				$status = 'CANCELLED';
-				break;
-
-			case 8:
-			case 9:
-				$status = 'ON-HOLD';
-				break;
-		}
-
-		$service = Service::getInstance($this->context);
-		$service->updateOrderStatus($order->reference, $status);
-	}
-
-	/**
 	 * OPC
 	 *
 	 * @param array $params
