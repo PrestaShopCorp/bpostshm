@@ -187,7 +187,7 @@ class Service
 				.Tools::substr($ps_order->reference, 0, 53);
 		else
 			$reference = Configuration::get('BPOST_ACCOUNT_ID_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id)).'_'
-				.Tools::substr($ps_order->id, 0, 53);
+				.Tools::substr($ps_order->id, 0, 42).'_'.time();
 
 		$order = new TijsVerkoyenBpostBpostOrder($reference);
 		$order->setCostCenter('PrestaShop_'._PS_VERSION_);
@@ -577,7 +577,7 @@ class Service
 			$country = new Country((int)$address['id_country']);
 
 			if ($delivery_method == $this->module->shipping_methods[BpostShm::SHIPPING_METHOD_AT_HOME]['slug'] && 'BE' != $country->iso_code)
-				$delivery_method == '@international';
+				$delivery_method = '@international';
 		}
 
 		$query = '
@@ -632,6 +632,7 @@ VALUES(
 								$address = $receiver->getAddress();
 								$recipient = $receiver->getName().' '.$address->getStreetName().' '.$address->getNumber().' '
 									.$address->getPostalCode().' '.$address->getLocality();
+								break;
 							}
 							// @bpost
 							elseif (method_exists($national_box, 'getPugoAddress'))
@@ -639,6 +640,7 @@ VALUES(
 								$address = $national_box->getPugoAddress();
 								$recipient = $national_box->getReceiverName().' '.$national_box->getPugoName().' '.$address->getPostalCode().' '
 									.$address->getLocality();
+								break;
 							}
 							// @24/7
 							elseif (method_exists($national_box, 'getParcelsDepotaddress'))
@@ -646,6 +648,7 @@ VALUES(
 								$address = $national_box->getParcelsDepotaddress();
 								$recipient = $national_box->getReceiverName().' '.$national_box->getParcelsDepotname().' '
 									.$address->getPostalCode().' '.$address->getLocality();
+								break;
 							}
 						}
 						elseif ($international_box = $box->getInternationalBox())
@@ -657,6 +660,7 @@ VALUES(
 							$address = $receiver->getAddress();
 							$recipient = $receiver->getName().' '.$address->getStreetName().' '.$address->getNumber().' '
 								.$address->getPostalCode().' '.$address->getLocality();
+							break;
 						}
 			} catch (TijsVerkoyenBpostException $e) {
 				$recipient = '-';

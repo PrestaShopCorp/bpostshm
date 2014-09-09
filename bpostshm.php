@@ -769,8 +769,11 @@ ADD COLUMN
 				// Generate retour if auto-generation is enabled
 				if ((bool)Configuration::get('BPOST_LABEL_RETOUR_LABEL_'.$context_shop_id))
 				{
-					$reference = Configuration::get('BPOST_ACCOUNT_ID_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id)).'_'
-						.Tools::substr($params['order']->reference, 0, 53);
+					$reference = Configuration::get('BPOST_ACCOUNT_ID_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id)).'_';
+					if (Service::isPrestashopFresherThan14())
+						$reference .= Tools::substr($params['order']->reference, 0, 53);
+					else
+						$reference .= Tools::substr($params['order']->reference, 0, 42).'_'.time();
 					$service->addLabel($reference, true);
 				}
 
