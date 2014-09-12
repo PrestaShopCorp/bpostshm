@@ -102,7 +102,6 @@ class AdminBpostOrders extends AdminTab
 			'print' => array(
 				'title' => '',
 				'align' => 'center',
-				'width'	=> 30,
 				'callback' => 'getPrintIcon',
 				'search' => false,
 				'orderby' => false,
@@ -110,7 +109,6 @@ class AdminBpostOrders extends AdminTab
 			't_t' => array(
 				'title' => '',
 				'align' => 'center',
-				'width'	=> 30,
 				'callback' => 'getTTIcon',
 				'search' => false,
 				'orderby' => false,
@@ -118,23 +116,19 @@ class AdminBpostOrders extends AdminTab
 			'reference' => array(
 				'title' => $this->l('Reference'),
 				'align' => 'left',
-				'width' => 25,
 				'filter_key' => 'a!reference',
 			),
 			'delivery_method' => array(
 				'title' => $this->l('Delivery method'),
-				'width' => 135,
 				'search' => false,
 				'filter_key' => 'a!delivery_method',
 			),
 			'recipient' => array(
 				'title' => $this->l('Recipient'),
-				'width' => 350,
 				'filter_key' => 'a!recipient',
 			),
 			'status' => array(
 				'title' => $this->l('Status'),
-				'width' => 80,
 			),
 			'date_add' => array(
 				'title' => $this->l('Creation date'),
@@ -176,8 +170,9 @@ class AdminBpostOrders extends AdminTab
 
 		$this->context->smarty->assign(
 			array(
-				'reference' => $reference,
 				'actions' => $actions,
+				'reference' => $reference,
+				'url_list' => Tools::safeOutput(self::$current_index.'&token='.($token != null ? $token : $this->token)),
 			)
 		);
 		$this->context->smarty->display(_PS_MODULE_DIR_.'bpostshm/1.4/views/templates/admin/view.tpl');
@@ -448,7 +443,7 @@ class AdminBpostOrders extends AdminTab
 									$i++;
 								}
 
-						if ($this->service->makeOrder($ps_order->id, $shipping_method, true))
+						if ($this->service->makeOrder($ps_order->id, $shipping_method, true, $reference))
 						{
 							$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
 

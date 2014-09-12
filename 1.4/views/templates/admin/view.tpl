@@ -6,8 +6,11 @@
 * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
 *}
 
+<h2>
+	<a href="{$url_list|urldecode}" title="{l s='Back to list' mod='bpostshm'}"><img style="width:24px;height:24px" src="../img/admin/arrow-left.png" /></a>
+	{l s='Reference' mod='bpostshm'} {$reference|escape}
+</h2>
 <fieldset>
-	<legend>{l s='Reference' mod='bpostshm'} {$reference|escape}</legend>
 	<ul id="order_actions">{strip}
 		{foreach $actions as $action}
 			{if empty($action.disabled)}
@@ -24,7 +27,6 @@
 <script type="text/javascript">
 	(function($) {
 		$(function() {
-
 			$('#order_actions a')
 				.on('click', function(e) {
 					var $link = $(this),
@@ -58,6 +60,8 @@
 							return;
 						}
 
+						alert('Action has been successfully completed.');
+						location.reload();
 					}, 'JSON');
 				})
 				.children(':disabled').on('click', function() {

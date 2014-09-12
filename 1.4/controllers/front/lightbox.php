@@ -325,24 +325,14 @@ class Lightbox extends FrontController
 	public function displayHeader()
 	{
 		if (!Tools::getValue('ajax', false))
-			/*echo '
-				<script src="'._MODULE_DIR_.'bpostshm/views/js/bpostshm.js" type="text/javascript"></script>
-				<script src="'._MODULE_DIR_.'bpostshm/views/js/srgdebug.js" type="text/javascript"></script>
-				<script src="'._PS_JS_DIR_.'jquery/jquery-1.4.4.min.js" type="text/javascript"></script>
-				<script src="'._PS_JS_DIR_.'jquery/jquery.fancybox-1.3.4.js" type="text/javascript"></script>
-				<script src="https://maps.googleapis.com/maps/api/js?v=3.16&key=AIzaSyAa4S8Br_5of6Jb_Gjv1WLldkobgExB2KY&sensor=false&language=fr"'
-					.'type="text/javascript"></script>
-				<link href="'._THEME_CSS_DIR_.'global.css" type="text/css" rel="stylesheet" />
-				<link href="'.Tools::getShopDomainSsl(true, true).'/'._MODULE_DIR_.'bpostshm/views/css/lightbox.css" type="text/css" rel="stylesheet" />
-				<link href="'._PS_CSS_DIR_.'jquery.fancybox-1.3.4.css" type="text/css" rel="stylesheet" />';*/
 			echo '
 				<script src="'._MODULE_DIR_.'bpostshm/views/js/bpostshm.js" type="text/javascript"></script>
 				<script src="'._MODULE_DIR_.'bpostshm/views/js/srgdebug.js" type="text/javascript"></script>
 				<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript"></script>
 				<script src="//cdnjs.cloudflare.com/ajax/libs/jquery-scrollTo/1.4.11/jquery.scrollTo.min.js" type="text/javascript"></script>
 				<script src="//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.pack.js" type="text/javascript"></script>
-				<script src="https://maps.googleapis.com/maps/api/js?v=3.16&key=AIzaSyAa4S8Br_5of6Jb_Gjv1WLldkobgExB2KY&sensor=false&language=fr"'
-					.'type="text/javascript"></script>
+				<script src="https://maps.googleapis.com/maps/api/js?v=3.16&key='.Service::GMAPS_API_KEY.'&sensor=false&language=fr"
+					type="text/javascript"></script>
 				<link href="'._THEME_CSS_DIR_.'global.css" type="text/css" rel="stylesheet" />
 				<link href="'._MODULE_DIR_.'bpostshm/views/css/lightbox.css" type="text/css" rel="stylesheet" />
 				<link href="//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.css" type="text/css" rel="stylesheet" />';
@@ -359,7 +349,7 @@ class Lightbox extends FrontController
 		Tools::addJS(__PS_BASE_URI__.'/modules/bpostshm/views/js/bpostshm.js');
 		Tools::addJS(__PS_BASE_URI__.'/modules/bpostshm/views/js/srgdebug.js');
 		Tools::addJS((_PS_SSL_ENABLED_ ? 'https://' : 'http://').'//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.pack.js');
-		Tools::addJS('https://maps.googleapis.com/maps/api/js?v=3.16&key=AIzaSyAa4S8Br_5of6Jb_Gjv1WLldkobgExB2KY&sensor=false&language=fr');
+		Tools::addJS('https://maps.googleapis.com/maps/api/js?v=3.16&key='.Service::GMAPS_API_KEY.'&sensor=false&language=fr');
 	}
 
 	private function validateStore($member)

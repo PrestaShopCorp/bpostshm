@@ -18,12 +18,13 @@ require_once(_PS_MODULE_DIR_.'bpostshm/bpostshm.php');
 class Service
 {
 	const GEO6_PARTNER = 999999;
-
-	/* Cache fetched orders */
 	const GEO6_APP_ID = '';
 	const BPACK247_ID = 'test@bpost.be';
 	const BPACK247_PASS = 'test';
+	const GMAPS_API_KEY = 'AIzaSyAa4S8Br_5of6Jb_Gjv1WLldkobgExB2KY';
+
 	public static $cache = array();
+
 	/**
 	 * @var Service
 	 */
@@ -67,6 +68,13 @@ class Service
 					.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id))
 				=> $this->module->shipping_methods[BpostShm::SHIPPING_METHOD_AT_24_7]['slug'],
 		);
+
+		/*
+		 * Retrieve tracking status from a barcode
+		 *
+		 * Tools::d($this->doCall(
+			'https://api.bpost.be/services/trackedmail/item/323210744759901842800050/trackingInfo'
+		));*/
 	}
 
 	public static function isPrestashopFresherThan14()
@@ -167,9 +175,10 @@ class Service
 	 * @param array $params
 	 * @param int $type
 	 * @param bool $is_retour
+	 * @param string|null $reference
 	 * @return TijsVerkoyenBpostBpostOrder
 	 */
-	public function makeOrder($id_order = 0, $type = 3, $is_retour = false)
+	public function makeOrder($id_order = 0, $type = 3, $is_retour = false, $reference = null)
 	{
 		$response = true;
 
@@ -185,7 +194,7 @@ class Service
 		if ($this->isPrestashopFresherThan14())
 			$reference = Configuration::get('BPOST_ACCOUNT_ID_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id)).'_'
 				.Tools::substr($ps_order->reference, 0, 53);
-		else
+		elseif (is_null($reference))
 			$reference = Configuration::get('BPOST_ACCOUNT_ID_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id)).'_'
 				.Tools::substr($ps_order->id, 0, 42).'_'.time();
 
@@ -418,7 +427,7 @@ class Service
 					$customs_info = new TijsVerkoyenBpostBpostOrderBoxCustomsinfoCustomsInfo();
 					$customs_info->setParcelValue((float)$ps_order->total_paid * 100);
 					$customs_info->setContentDescription('ORDER '.Configuration::get('PS_SHOP_NAME'));
-					$customs_info->setShipmentType('DOCUMENTS');
+					$customs_info->setShipmentType('OTHER');
 					$customs_info->setParcelReturnInstructions('RTS');
 					$customs_info->setPrivateAddress(false);
 
