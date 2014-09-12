@@ -1070,17 +1070,17 @@ WHERE
 	public function getProductCountries()
 	{
 		$product_countries = array();
+		$product_config = $this->getProductConfig();
 
-		try {
-			$product_config = $this->getProductConfig();
+		if (isset($product_config['deliveryMethod'][0]['product'][0]['price']))
+		{
 			$prices = $product_config['deliveryMethod'][0]['product'][0]['price'];
 
 			foreach ($prices as $price)
 				$product_countries[] = $price['@attributes']['countryIso2Code'];
-
-		} catch (Exception $e) {
-			$product_countries = array('BE');
 		}
+		else
+			$product_countries = array('BE');
 
 		$product_countries = implode('|', $product_countries);
 

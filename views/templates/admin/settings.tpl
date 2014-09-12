@@ -10,13 +10,34 @@
 	<h2><img src="{$module_dir|escape}views/img/logo-carrier.jpg" alt="bpost" /> {l s='bpost Shipping manager' mod='bpostshm'}</h2>
 	<br />
 	{if !empty($errors)}
-		<div class="error">
-			<ul>{strip}
-				{foreach $errors as $error}
-					<li>{$error|escape}</li>
-				{/foreach}
-			{/strip}</ul>
-		</div>
+		{if $version >= 1.6}
+			{if (!isset($disableDefaultErrorOutPut) || $disableDefaultErrorOutPut == false)}
+				<div class="bootstrap">
+					<div class="alert alert-danger">
+						<button type="button" class="close" data-dismiss="alert">&times;</button>
+						{if count($errors) == 1}
+							{reset($errors)}
+						{else}
+							{l s='%d errors' sprintf=$errors|count}
+							<br/>
+							<ol>
+								{foreach $errors as $error}
+									<li>{$error}</li>
+								{/foreach}
+							</ol>
+						{/if}
+					</div>
+				</div>
+			{/if}
+		{else}
+			<div class="error">
+				<ul>{strip}
+						{foreach $errors as $error}
+							<li>{$error|escape}</li>
+						{/foreach}
+					{/strip}</ul>
+			</div>
+		{/if}
 		<br />
 	{/if}
 
