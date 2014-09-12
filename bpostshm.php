@@ -1002,7 +1002,6 @@ ADD COLUMN
 	public function getOrderShippingCost($params, $shipping_cost)
 	{
 		return $shipping_cost;
-
 	}
 
 	/**

@@ -43,6 +43,8 @@ class AdminBpostOrders extends AdminTab
 		'customerReference' => '',
 	);
 
+	public static $current_index;
+
 	public function __construct()
 	{
 		$this->table = 'order_label';
@@ -53,6 +55,7 @@ class AdminBpostOrders extends AdminTab
 		$this->list_no_link = true;
 		$this->view = true;
 		$this->context = Context::getContext();
+		self::$current_index = $_SERVER['SCRIPT_NAME'].(($tab = Tools::getValue('tab')) ? '?tab='.$tab : '');
 
 		$this->module = new BpostShm();
 		$this->service = Service::getInstance($this->context);
@@ -90,8 +93,10 @@ class AdminBpostOrders extends AdminTab
 		AND o.id_carrier IN ('.implode(', ', $id_bpost_carriers).')';
 
 		$this->_group = 'GROUP BY(a.`reference`)';
-		$this->_orderBy = 'o.id_order';
-		$this->_orderWay = 'DESC';
+		if (!Tools::getValue($this->table.'Orderby'))
+			$this->_orderBy = 'o.id_order';
+		if (!Tools::getValue($this->table.'Orderwayy'))
+			$this->_orderWay = 'DESC';
 
 		$this->fieldsDisplay = array(
 			'print' => array(
@@ -188,12 +193,10 @@ class AdminBpostOrders extends AdminTab
 		if (empty($reference))
 			return;
 
-		global $currentIndex;
-
 		$tpl_vars = array(
 			'action' => $this->l('Add label'),
-			'href' => Tools::safeOutput($currentIndex.'&reference='.$reference.'&addLabel'.$this->table
-				.'&token='.($token != null ? $token : $this->token)),
+			'href' => Tools::safeOutput(self::$current_index.'&reference='.$reference.'&addLabel'.$this->table
+					.'&token='.($token != null ? $token : $this->token)),
 		);
 
 		/*$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
@@ -220,12 +223,10 @@ class AdminBpostOrders extends AdminTab
 		if (empty($reference))
 			return;
 
-		global $currentIndex;
-
 		$tpl_vars = array(
 			'action' => $this->l('Print labels'),
-			'href' => Tools::safeOutput($currentIndex.'&reference='.$reference.'&printLabels'.$this->table
-				.'&token='.($token != null ? $token : $this->token))
+			'href' => Tools::safeOutput(self::$current_index.'&reference='.$reference.'&printLabels'.$this->table
+					.'&token='.($token != null ? $token : $this->token))
 		);
 
 		return $tpl_vars;
@@ -241,12 +242,10 @@ class AdminBpostOrders extends AdminTab
 		if (empty($reference))
 			return;
 
-		global $currentIndex;
-
 		$tpl_vars = array(
 			'action' => $this->l('Mark treated'),
-			'href' => Tools::safeOutput($currentIndex.'&reference='.$reference.'&markTreated'.$this->table
-				.'&token='.($token != null ? $token : $this->token)),
+			'href' => Tools::safeOutput(self::$current_index.'&reference='.$reference.'&markTreated'.$this->table
+					.'&token='.($token != null ? $token : $this->token)),
 		);
 
 		$pdf_dir = _PS_MODULE_DIR_.'bpostshm/pdf/'.$reference;
@@ -279,17 +278,15 @@ class AdminBpostOrders extends AdminTab
 		if ((bool)Configuration::get('BPOST_LABEL_TT_INTEGRATION_'.$context_shop_id))
 			return;
 
-		global $currentIndex;
-
 		$tpl_vars = array(
 			'action' => $this->l('Send T&T e-mail'),
-			'href' => Tools::safeOutput($currentIndex.'&reference='.$reference.'&sendTTEmail'.$this->table
-				.'&token='.($token != null ? $token : $this->token)),
+			'href' => Tools::safeOutput(self::$current_index.'&reference='.$reference.'&sendTTEmail'.$this->table
+					.'&token='.($token != null ? $token : $this->token)),
 		);
 
 		$pdf_dir = _PS_MODULE_DIR_.'bpostshm/pdf/'.$reference;
 		if (!is_dir($pdf_dir) || !opendir($pdf_dir))
-		// disable if labels are not PRINTED
+			// disable if labels are not PRINTED
 			$tpl_vars['disabled'] = $this->l('Actions are only available for orders that are printed.');
 
 		return $tpl_vars;
@@ -311,12 +308,10 @@ class AdminBpostOrders extends AdminTab
 		if ((bool)Configuration::get('BPOST_LABEL_RETOUR_LABEL_'.$context_shop_id))
 			return;
 
-		global $currentIndex;
-
 		$tpl_vars = array(
 			'action' => $this->l('Create retour'),
-			'href' => Tools::safeOutput($currentIndex.'&reference='.$reference.'&createRetour'.$this->table
-				.'&token='.($token != null ? $token : $this->token)),
+			'href' => Tools::safeOutput(self::$current_index.'&reference='.$reference.'&createRetour'.$this->table
+					.'&token='.($token != null ? $token : $this->token)),
 		);
 
 		/*$pdf_dir = _PS_MODULE_DIR_.'bpostshm/pdf/'.$reference;
@@ -374,12 +369,10 @@ class AdminBpostOrders extends AdminTab
 		if (empty($reference))
 			return;
 
-		global $currentIndex;
-
 		$tpl_vars = array(
 			'action' => $this->l('Cancel order'),
-			'href' => Tools::safeOutput($currentIndex.'&reference='.$reference.'&cancel'.$this->table
-				.'&token='.($token != null ? $token : $this->token)),
+			'href' => Tools::safeOutput(self::$current_index.'&reference='.$reference.'&cancel'.$this->table
+					.'&token='.($token != null ? $token : $this->token)),
 		);
 
 		$pdf_dir = _PS_MODULE_DIR_.'bpostshm/pdf/'.$reference;
@@ -802,8 +795,9 @@ class AdminBpostOrders extends AdminTab
 
 	public function getList($id_lang, $order_by = null, $order_way = null, $start = 0, $limit = null, $id_lang_shop = false)
 	{
-		global $cookie;
-		$cookie->{$this->table.'_pagination'} = 50;
+		$context = Context::getContext();
+		$context->cookie->{$this->table.'_pagination'} = 50;
+		$context->cookie->update();
 
 		parent::getList($id_lang, $order_by, $order_way, $start, $limit, $id_lang_shop);
 	}
@@ -859,12 +853,10 @@ class AdminBpostOrders extends AdminTab
 		if (empty($reference))
 			return;
 
-		global $currentIndex;
-
 		$controller = new AdminBpostOrders();
 
-		return '<img class="print" src="'._MODULE_DIR_.'bpostshm/views/img/icons/print.png"
-			 data-labels="'.Tools::safeOutput($currentIndex.'&reference='.$reference.'&printLabels'.$controller->table.'&token='.$controller->token).'"/>';
+		return '<img class="print" src="'._MODULE_DIR_.'bpostshm/views/img/icons/print.png" data-labels="'
+			.Tools::safeOutput(self::$current_index.'&reference='.$reference.'&printLabels'.$controller->table.'&token='.$controller->token).'"/>';
 	}
 
 	/**

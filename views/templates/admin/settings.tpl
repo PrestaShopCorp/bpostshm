@@ -15,17 +15,15 @@
 				<div class="bootstrap">
 					<div class="alert alert-danger">
 						<button type="button" class="close" data-dismiss="alert">&times;</button>
-						{if count($errors) == 1}
-							{reset($errors)}
-						{else}
-							{l s='%d errors' sprintf=$errors|count}
+						{if count($errors) > 1}
+							{l s='%d errors' sprintf=$errors|count mod='bpostshm'}
 							<br/>
-							<ol>
-								{foreach $errors as $error}
-									<li>{$error}</li>
-								{/foreach}
-							</ol>
 						{/if}
+						<ol>
+							{foreach $errors as $error}
+								<li>{$error|strval}</li>
+							{/foreach}
+						</ol>
 					</div>
 				</div>
 			{/if}

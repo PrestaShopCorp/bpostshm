@@ -1024,11 +1024,11 @@ WHERE
 		return null;
 	}
 
-/*//////////////////
+/*
 
   SRG section
 
-//////////////////*/
+*/
 
 	/**
 	 * getBpack247Member
