@@ -126,11 +126,55 @@ class BpostShm extends CarrierModule
 		$return = $return && $this->addOrderState();
 
 		// Db::execute ALTER TABLE will return nor TRUE nor FALSE
+		// WRONG: no point pretending if required table/columns don't actually exist
+		/*
 		$this->alterCartTable();
 		$this->addOrderLabelTable();
 
 		if (!Service::isPrestashopFresherThan14())
 			$this->alterOrderTable();
+		*/
+
+		// alterCartTable
+		$table_cart_alter = array(
+			'name' => _DB_PREFIX_.'cart',
+			'fields' => [
+				'bpack247_customer' => 'TEXT',
+				'service_point_id' => 'INT(10) unsigned'
+			]
+		);
+		$return = $return && $this->dbAlterTable($table_cart_alter);
+
+		// addOrderLabelTable
+		$table_order_label_create = array(
+			'name' => _DB_PREFIX_.'order_label',
+			'primary_key' => 'id_order_label',
+			'fields' => [
+				'id_order_label' => 'int(11) NOT NULL AUTO_INCREMENT',
+				'reference' => 'varchar(50) NOT NULL',
+				'status' => 'varchar(20) NOT NULL',
+				'delivery_method' => 'varchar(25) NOT NULL',
+				'recipient' => 'varchar(255) NOT NULL',
+				//'barcode' => 'varchar(25) NOT NULL',
+				'barcode' => 'varchar(25) DEFAULT NULL',
+				'date_add' => 'datetime NOT NULL',
+				'date_upd' => 'timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP',
+			]
+		);
+		$return = $return && $this->dbCreateTable($table_order_label_create);
+
+		if (!Service::isPrestashopFresherThan14())
+		{
+			// alterOrdersTable
+			$table_orders_alter = array(
+				'name' => _DB_PREFIX_.'orders',
+				'after' => 'id_order',
+				'fields' => [
+					'reference' => 'VARCHAR(9)'
+				]
+			);
+			$return = $return && $this->dbAlterTable($table_orders_alter);
+		}
 
 		return $return;
 	}
@@ -348,6 +392,82 @@ class BpostShm extends CarrierModule
 		return $return;
 	}
 
+	private function dbCreateTable($table)
+	{
+		if (!isset($table['name']) || empty($table['fields']))
+			return false;
+
+		$sql = 'CREATE TABLE IF NOT EXISTS `'.$table['name'].'` ('.PHP_EOL;
+		foreach ($table['fields'] as $key => $value)
+			$sql .= '`'.$key.'` '.$value.','.PHP_EOL;
+
+		if (isset($table['primary_key']))
+			$sql .= 'PRIMARY KEY (`'.$table['primary_key'].'`)';
+		else
+			// remove final ',' -1 if no EOL char added
+			$sql = substr($sql, 0, -2);
+
+		$sql .= ' );';
+
+		$db = Db::getInstance(_PS_USE_SQL_SLAVE_);
+		$db->execute($sql);
+		$return = (0 === $db->getNumberError());
+
+		// Check all fields are present
+		$table['after'] = 'FIRST';
+		return $return && $this->dbAlterTable($table);
+	}
+
+	private function dbAlterTable($table)
+	{
+		if (!isset($table['name']) || empty($table['fields']))
+			return false;
+
+		// check if number of columns match
+		$columns = array_keys($table['fields']);
+		$columns_list = implode('\',\'', $columns);
+		$sql = '
+SELECT
+	column_name
+FROM
+	information_schema.columns
+WHERE
+	table_schema = "'._DB_NAME_.'"
+AND
+	table_name = "'.$table['name'].'"
+AND
+	column_name in (\''.$columns_list.'\')';
+
+		$db = Db::getInstance(_PS_USE_SQL_SLAVE_);
+		// query columns already present
+		$columns_present = $db->ExecuteS($sql);
+		$return = (0 === $db->getNumberError());
+
+		if ($return && count($columns_present) !== count($columns))
+		{
+			// required columns are Not all present
+			// create missing columns
+			$columns_present = array_map('current', $columns_present);
+			$after = !isset($table['after']) ? '' : ('FIRST' === $table['after'] ? 'FIRST' : 'AFTER '.$table['after']);
+			$sql = 'ALTER TABLE `'.$table['name'].'`'.PHP_EOL;
+			foreach ($table['fields'] as $key => $value)
+			{
+				if (!in_array($key, $columns_present))
+					$sql .= 'ADD COLUMN `'.$key.'` '.$value.' '.$after.','.PHP_EOL;
+
+				$after = 'AFTER `'.$key.'`';
+			}
+			// remove final ',' -1 if no EOL char added
+			$sql = substr($sql, 0, -2);
+
+			// add missing columns
+			$db->execute($sql);
+			$return = (0 === $db->getNumberError());
+		}
+
+		return $return;
+	}
+/*
 	private function addOrderLabelTable()
 	{
 		Db::getInstance(_PS_USE_SQL_SLAVE_)->execute('
@@ -411,7 +531,7 @@ ALTER TABLE
 ADD COLUMN
 	`reference` VARCHAR(9)');
 	}
-
+*/
 	/**
 	 * @param string $tab_class
 	 * @param string $tab_name

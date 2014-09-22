@@ -100,7 +100,7 @@ class AdminBpostOrders extends ModuleAdminController
 		$this->_group = 'GROUP BY(a.`reference`)';
 		if (!Tools::getValue($this->table.'Orderby'))
 			$this->_orderBy = 'o.id_order';
-		if (!Tools::getValue($this->table.'Orderwayy'))
+		if (!Tools::getValue($this->table.'Orderway'))
 			$this->_orderWay = 'DESC';
 
 		$this->fields_list = array(

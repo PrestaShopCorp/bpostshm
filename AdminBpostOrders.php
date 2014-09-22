@@ -95,7 +95,7 @@ class AdminBpostOrders extends AdminTab
 		$this->_group = 'GROUP BY(a.`reference`)';
 		if (!Tools::getValue($this->table.'Orderby'))
 			$this->_orderBy = 'o.id_order';
-		if (!Tools::getValue($this->table.'Orderwayy'))
+		if (!Tools::getValue($this->table.'Orderway'))
 			$this->_orderWay = 'DESC';
 
 		$this->fieldsDisplay = array(
@@ -508,8 +508,12 @@ class AdminBpostOrders extends AdminTab
 				$history->id_employee = (int)$this->context->employee->id;
 
 				$use_existings_payment = false;
-				if (!$ps_order->hasInvoice())
-					$use_existings_payment = true;
+// SRG 22/09/14: This silently fails, as there is no such method in version 1.4
+				//if (!$ps_order->hasInvoice())
+// SRG End
+				$order_has_invoice = isset($ps_order->invoice_number) && $ps_order->invoice_number > 0;
+				if (!$order_has_invoice)
+						$use_existings_payment = true;
 				$history->changeIdOrderState((int)$id_order_state, $ps_order, $use_existings_payment);
 
 				$carrier = new Carrier($ps_order->id_carrier, $ps_order->id_lang);
@@ -793,6 +797,12 @@ class AdminBpostOrders extends AdminTab
 		$context = Context::getContext();
 		$context->cookie->{$this->table.'_pagination'} = 50;
 		$context->cookie->update();
+
+		// SRG 22-09-2014: Temporary sorting fix
+		if (Tools::getValue($this->table.'Orderby'))
+			$order_by = Tools::getValue($this->table.'Orderby');
+		if (Tools::getValue($this->table.'Orderway'))
+			$order_way = Tools::getValue($this->table.'Orderway');
 
 		parent::getList($id_lang, $order_by, $order_way, $start, $limit, $id_lang_shop);
 	}
