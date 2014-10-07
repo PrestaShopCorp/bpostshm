@@ -781,18 +781,18 @@ ADD COLUMN
 		$this->smarty->assign('account_api_url', $api_url, true);
 		$this->smarty->assign('display_home_delivery_only', $display_home_delivery_only, true);
 		$this->smarty->assign('country_international_orders', $country_international_orders, true);
-		$product_countries = array();
-		$enabled_countries = array();
-		// getProductCountries already catches all exception
-		//if (Configuration::get('BPOST_ACCOUNT_ID_'.$context_shop_id) && Configuration::get('BPOST_ACCOUNT_PASSPHRASE_'.$context_shop_id))
-		//{
-			$service = Service::getInstance($this->context);
-			$product_countries = $service->getProductCountries();
+		$service = Service::getInstance($this->context);
+		$product_countries = $service->getProductCountries();
+		if (isset($product_countries['Error']))
+			$errors[] = $this->l($product_countries['Error']);
+		else
+		{
 			$enabled_countries = $service->explodeCountryList($enabled_country_list);
-		//}
 
-		$this->smarty->assign('product_countries', $product_countries, true);
-		$this->smarty->assign('enabled_countries', $enabled_countries, true);
+			$this->smarty->assign('product_countries', $product_countries, true);
+			$this->smarty->assign('enabled_countries', $enabled_countries, true);
+		}
+
 		$this->smarty->assign('label_use_ps_labels', $label_use_ps_labels, true);
 		$this->smarty->assign('label_pdf_format', $label_pdf_format, true);
 		$this->smarty->assign('label_retour_label', $label_retour_label, true);

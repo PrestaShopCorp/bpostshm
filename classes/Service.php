@@ -925,25 +925,6 @@ WHERE
 		return $response && $this->bpost->createOrReplaceOrder($order);
 	}
 
-	public function getProductConfig()
-	{
-		$product_config = array();
-
-		if ($response = $this->doCall(
-				TijsVerkoyenBpostBpost::API_URL.'/'.$this->bpost->getAccountId().'/productconfig',
-				null,
-				array(
-					'Accept: application/vnd.bpost.shm-productConfiguration-v3+XML',
-				)
-			))
-		{
-			$product_config = Tools::jsonEncode($response);
-			$product_config = Tools::jsonDecode($product_config, true);
-		}
-
-		return $product_config;
-	}
-
 	/**
 	 * Make the call
 	 *
@@ -1188,6 +1169,39 @@ WHERE
 		return _MODULE_DIR_.$module.'/controllers/front/'.$controller.'.php?'.http_build_query($params);
 	}
 
+	public function getProductConfig()
+	{
+		$product_config = array();
+		/*
+		if ($response = $this->doCall(
+				TijsVerkoyenBpostBpost::API_URL.'/'.$this->bpost->getAccountId().'/productconfig',
+				null,
+				array(
+					'Accept: application/vnd.bpost.shm-productConfiguration-v3+XML',
+				)
+			))
+		{
+			$product_config = Tools::jsonEncode($response);
+			$product_config = Tools::jsonDecode($product_config, true);
+		}
+		*/
+		try {
+			$response = $this->doCall(
+				TijsVerkoyenBpostBpost::API_URL.'/'.$this->bpost->getAccountId().'/productconfig',
+				null,
+				array('Accept: application/vnd.bpost.shm-productConfiguration-v3+XML')
+			);
+			$product_config = Tools::jsonEncode($response);
+			$product_config = Tools::jsonDecode($product_config, true);
+
+		} catch (Exception $e) {
+			$product_config['Error'] = 401 === (int)$e->getCode() ? 'Invalid Account ID / Passphrase' : $e->getMessage();
+
+		}
+
+		return $product_config;
+	}
+
 	/**
 	 * get full list bpost enabled countries
 	 * @return assoc array
@@ -1196,6 +1210,8 @@ WHERE
 	{
 		$product_countries_list = 'BE';
 		$product_config = $this->getProductConfig();
+		if (isset($product_config['Error']))
+			return $product_config;
 
 		if (isset($product_config['deliveryMethod']))
 			foreach ($product_config['deliveryMethod'] as $dm)
@@ -1203,11 +1219,17 @@ WHERE
 					&& 'bpack World' == substr((string)$dm['product'][0]['@attributes']['name'], 0, 11))
 				{
 					$product_countries = array();
-					foreach ($dm['product'][0]['price'] as $price)
-						$product_countries[] = $price['@attributes']['countryIso2Code'];
+					if (isset($dm['product'][0]['price']))
+					{
+						foreach ($dm['product'][0]['price'] as $price)
+							$product_countries[] = $price['@attributes']['countryIso2Code'];
 
-					$product_countries_list = implode('|', $product_countries);
-					break;
+						$product_countries_list = implode('|', $product_countries);
+						break;
+					}
+					else
+						$product_countries_list = $dm['product'][0][0]['@attributes']['countryIso2Code'];
+
 				}
 
 		return $this->explodeCountryList($product_countries_list);

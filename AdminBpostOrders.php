@@ -66,6 +66,29 @@ class AdminBpostOrders extends AdminTab
 		COUNT(a.`reference`) as count
 		';
 
+		// SRG 23-09-14: Changed SQL to correctly simulate ^ps1.5 orders.current_state
+		$this->_join = '
+		LEFT JOIN `'._DB_PREFIX_.'orders` o ON (o.`id_order` = SUBSTRING(a.`reference`, 8))
+		LEFT JOIN `'._DB_PREFIX_.'carrier` c ON (c.`id_carrier` = o.`id_carrier`)
+		LEFT JOIN (
+			SELECT oh.`id_order`, oh.`id_order_state` as current_state
+			FROM `'._DB_PREFIX_.'order_history` oh
+			INNER JOIN (
+				SELECT max(`id_order_history`) as max_id, `id_order`
+				FROM `'._DB_PREFIX_.'order_history`
+				GROUP BY (`id_order`)
+			) oh2
+				ON 	oh.`id_order` = oh2.`id_order`
+				AND oh2.max_id = oh.`id_order_history`
+		) ocs ON ocs.`id_order` = o.`id_order`';
+
+		$this->_where = '
+		AND a.status IN("'.implode('", "', $this->statuses).'")
+		AND DATEDIFF(NOW(), a.date_add) <= 14
+		AND ocs.current_state IN('.implode(', ', $this->ps_order_states).', '
+			.(int)Configuration::get('BPOST_ORDER_STATE_TREATED_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id)).')';
+
+		/*
 		$this->_join = '
 		LEFT JOIN `'._DB_PREFIX_.'orders` o ON (o.`id_order` = SUBSTRING(a.`reference`, 8))
 		LEFT JOIN `'._DB_PREFIX_.'carrier` c ON (c.`id_carrier` = o.`id_carrier`)
@@ -80,6 +103,7 @@ class AdminBpostOrders extends AdminTab
 		AND DATEDIFF(NOW(), a.date_add) <= 14
 		AND oh.id_order_state IN('.implode(', ', $this->ps_order_states).', '
 			.(int)Configuration::get('BPOST_ORDER_STATE_TREATED_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id)).')';
+		*/
 
 		$id_bpost_carriers = array_keys($this->service->delivery_methods_list);
 		if ($references = Db::getInstance()->executeS('
