@@ -138,10 +138,10 @@ class BpostShm extends CarrierModule
 		// alterCartTable
 		$table_cart_alter = array(
 			'name' => _DB_PREFIX_.'cart',
-			'fields' => [
+			'fields' => array(
 				'bpack247_customer' => 'TEXT',
 				'service_point_id' => 'INT(10) unsigned'
-			]
+			)
 		);
 		$return = $return && $this->dbAlterTable($table_cart_alter);
 
@@ -149,17 +149,16 @@ class BpostShm extends CarrierModule
 		$table_order_label_create = array(
 			'name' => _DB_PREFIX_.'order_label',
 			'primary_key' => 'id_order_label',
-			'fields' => [
+			'fields' => array(
 				'id_order_label' => 'int(11) NOT NULL AUTO_INCREMENT',
 				'reference' => 'varchar(50) NOT NULL',
 				'status' => 'varchar(20) NOT NULL',
 				'delivery_method' => 'varchar(25) NOT NULL',
 				'recipient' => 'varchar(255) NOT NULL',
-				//'barcode' => 'varchar(25) NOT NULL',
 				'barcode' => 'varchar(25) DEFAULT NULL',
 				'date_add' => 'datetime NOT NULL',
 				'date_upd' => 'timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP',
-			]
+			)
 		);
 		$return = $return && $this->dbCreateTable($table_order_label_create);
 
@@ -169,9 +168,9 @@ class BpostShm extends CarrierModule
 			$table_orders_alter = array(
 				'name' => _DB_PREFIX_.'orders',
 				'after' => 'id_order',
-				'fields' => [
+				'fields' => array(
 					'reference' => 'VARCHAR(9)'
-				]
+				)
 			);
 			$return = $return && $this->dbAlterTable($table_orders_alter);
 		}

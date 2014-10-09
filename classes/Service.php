@@ -266,6 +266,7 @@ class Service
 				$response = $response && $this->createPSLabel($reference);
 
 		} catch (TijsVerkoyenBpostException $e) {
+			Logger::addLog('BpostSHM::Service makeOrder - '.$e->getMessage(), 3, $e->getCode(), 'Order', (int)$id_order, true);
 			$response = false;
 		}
 
