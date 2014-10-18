@@ -609,6 +609,10 @@ ADD COLUMN
 			'display_home_delivery_only',
 			Configuration::get('BPOST_HOME_DELIVERY_ONLY_'.$context_shop_id)
 		);
+		$display_international_delivery = Tools::getValue(
+			'display_international_delivery',
+			Configuration::get('BPOST_INTERNATIONAL_DELIVERY_'.$context_shop_id)
+		);
 		$country_international_orders = Tools::getValue(
 			'country_international_orders',
 			Configuration::get('BPOST_INTERNATIONAL_ORDERS_'.$context_shop_id)
@@ -679,6 +683,11 @@ ADD COLUMN
 					}
 				}
 			}
+			// Display international delivery
+			if (Configuration::get('BPOST_INTERNATIONAL_DELIVERY_'.$context_shop_id) !== $display_international_delivery
+					&& is_numeric($display_international_delivery))
+				Configuration::updateValue('BPOST_INTERNATIONAL_DELIVERY_'.$context_shop_id, (int)$display_international_delivery);
+
 		}
 		elseif (Tools::isSubmit('submitCountrySettings'))
 		{
@@ -779,6 +788,7 @@ ADD COLUMN
 		$this->smarty->assign('account_passphrase', $passphrase, true);
 		$this->smarty->assign('account_api_url', $api_url, true);
 		$this->smarty->assign('display_home_delivery_only', $display_home_delivery_only, true);
+		$this->smarty->assign('display_international_delivery', $display_international_delivery, true);
 		$this->smarty->assign('country_international_orders', $country_international_orders, true);
 		$service = Service::getInstance($this->context);
 		$product_countries = $service->getProductCountries();

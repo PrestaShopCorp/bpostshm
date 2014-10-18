@@ -184,6 +184,27 @@
 
 {if $version >= 1.5}
 	<script type="text/javascript">
+		srgBox = {
+			display: function (content) {
+				$.fancybox.open({
+					type: 'html',
+					href: content,
+					closeBtn: false,
+				});
+			},
+			open: function (url, fnClosed) {
+				if ('undefined' === typeof(url)) return;
+				if ('undefined' === typeof(fnClosed)) fnClosed = '';
+				$.fancybox.open({
+					type: 'iframe',
+					href: url,
+					minWidth: '75%',
+					minHeight: '75%',
+					afterClose: fnClosed
+				});
+			},
+		};
+		// SRG end
 		(function($) {
 			$(function() {
 				/* Tabs */
@@ -267,8 +288,12 @@
 					.on('change', function(e) {
 						if (this.value)
 						{
-							if ('undefined' !== typeof $(this).children(':selected').data('target'))
-								return window.open(this.value);
+							if ('undefined' !== typeof $(this).children(':selected').data('target')) {
+								// used for 'Open order'
+								srgBox.open(this.value);
+								return; 
+								//return window.open(this.value);
+							}
 
 							$.get(this.value, { }, function(response) {
 								if ('undefined' !== typeof response.errors && response.errors.length)
@@ -279,15 +304,20 @@
 											errors += "\n";
 										errors += error;
 									});
-									return alert(errors);
+									srgBox.display(errors);
+									return;
+									//return alert(errors);
 								}
 
 								if ('undefined' !== typeof response.links)
 								{
 									$.each(response.links, function(i, link) {
-										window.open(link);
+										srgBox.open(link, function () {
+											window.location.reload();
+										});
+										//window.open(link);
 									});
-									window.location.reload();
+									//window.location.reload();
 									return;
 								}
 
@@ -314,7 +344,8 @@
 					.children(':disabled').on('click', function() {
 						var $option = $(this);
 						if ($option.data('disabled'))
-							alert($option.data('disabled'));
+							srgBox.display($option.data('disabled'));
+							//alert($option.data('disabled'));
 					});
 
 				$('img.print').on('click', function(e) {
@@ -327,7 +358,8 @@
 						$.get($img.data('labels'), { }, function(response) {
 							if ('undefined' !== typeof response.links)
 								$.each(response.links, function(i, link) {
-									window.open(link);
+									srgBox.open(link);
+									//window.open(link);
 								});
 						});
 				});
@@ -338,7 +370,8 @@
 
 					$.each(labels, function(i, label) {
 						$.each(label, function(j, link) {
-							window.open(link);
+							srgBox.open(link);
+							//window.open(link);
 						});
 					});
 				{/if}

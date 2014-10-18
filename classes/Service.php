@@ -266,7 +266,8 @@ class Service
 				$response = $response && $this->createPSLabel($reference);
 
 		} catch (TijsVerkoyenBpostException $e) {
-			Logger::addLog('BpostSHM::Service makeOrder - '.$e->getMessage(), 3, $e->getCode(), 'Order', (int)$id_order, true);
+			self::logError('makeOrder Ref: '.$reference, $e->getMessage(), $e->getCode(), 'Order', $id_order);
+			//Logger::addLog('BpostSHM::Service makeOrder - '.$e->getMessage(), 3, $e->getCode(), 'Order', (int)$id_order, true);
 			$response = false;
 		}
 
@@ -436,7 +437,13 @@ class Service
 					/*if ($is_retour)
 						$international->setProduct('bpack World Easy Return');
 					else*/
-						$international->setProduct('bpack World Express Pro');
+						//$international->setProduct('bpack World Express Pro');
+					$international_options = array(
+						'bpack World Express Pro',
+						'bpack World Business',
+						);
+					$international_delivery = Configuration::get('BPOST_INTERNATIONAL_DELIVERY_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id));
+					$international->setProduct($international_options[$international_delivery]);
 					$international->setReceiver($receiver);
 					$international->setParcelWeight($weight);
 					$international->setCustomsInfo($customs_info);
@@ -673,6 +680,7 @@ VALUES(
 							break;
 						}
 			} catch (TijsVerkoyenBpostException $e) {
+				self::logError('getOrderRecipient Ref: '.$reference, $e->getMessage(), $e->getCode(), 'Order', -1);
 				$recipient = '-';
 			}
 		}
@@ -742,6 +750,7 @@ WHERE
 				if ($boxes = $order->getBoxes())
 					$status = $boxes[0]->getStatus();
 			} catch (TijsVerkoyenBpostException $e) {
+				self::logError('getOrderStatus Ref: '.$reference, $e->getMessage(), $e->getCode(), 'Order', -1);
 				$status = '-';
 			}
 		}
@@ -765,6 +774,7 @@ WHERE
 			try {
 				$response = $this->bpost->modifyOrderStatus($reference, $status);
 			} catch (TijsVerkoyenBpostException $e) {
+				self::logError('updateOrderStatus Ref: '.$reference.', Status '.$status , $e->getMessage(), $e->getCode(), 'Order', -1);
 				$response = false;
 			}
 		}
@@ -806,13 +816,17 @@ WHERE
 
 		$reference = Tools::substr($reference, 0, 50);
 
-		return Db::getInstance()->execute('
+		$response = Db::getInstance()->execute('
 UPDATE
 	'._DB_PREFIX_.'order_label
 SET
 	`status` = "'.pSQL($status).'"
 WHERE
 	`reference` = "'.pSQL($reference).'"');
+	
+		// $response = $response && $this->updateOrderStatus($reference, $status)
+
+		return $response;
 	}
 
 	/**
@@ -1148,6 +1162,18 @@ WHERE
 		return null;
 	}
 
+	private static function logError($func, $msg, $err_code, $obj, $obj_id)
+	{
+		Logger::addLog(
+			'BpostSHM::Service->'.$func.' - '.$msg,
+			3,
+			$err_code,
+			$obj,
+			(int)$obj_id,
+			true
+		);	
+	}
+
 	/**
 	 * [getModuleLink description]
 	 * @param  string $module     name
@@ -1170,22 +1196,10 @@ WHERE
 		return _MODULE_DIR_.$module.'/controllers/front/'.$controller.'.php?'.http_build_query($params);
 	}
 
+	/*
 	public function getProductConfig()
 	{
 		$product_config = array();
-		/*
-		if ($response = $this->doCall(
-				TijsVerkoyenBpostBpost::API_URL.'/'.$this->bpost->getAccountId().'/productconfig',
-				null,
-				array(
-					'Accept: application/vnd.bpost.shm-productConfiguration-v3+XML',
-				)
-			))
-		{
-			$product_config = Tools::jsonEncode($response);
-			$product_config = Tools::jsonDecode($product_config, true);
-		}
-		*/
 		try {
 			$response = $this->doCall(
 				TijsVerkoyenBpostBpost::API_URL.'/'.$this->bpost->getAccountId().'/productconfig',
@@ -1202,6 +1216,7 @@ WHERE
 
 		return $product_config;
 	}
+	*/
 
 	/**
 	 * get full list bpost enabled countries
@@ -1210,28 +1225,36 @@ WHERE
 	public function getProductCountries()
 	{
 		$product_countries_list = 'BE';
-		$product_config = $this->getProductConfig();
-		if (isset($product_config['Error']))
-			return $product_config;
+	
+		try {
+			$xml = $this->doCall(
+				TijsVerkoyenBpostBpost::API_URL.'/'.$this->bpost->getAccountId().'/productconfig',
+				null,
+				array('Accept: application/vnd.bpost.shm-productConfiguration-v3+XML')
+			);
 
-		if (isset($product_config['deliveryMethod']))
-			foreach ($product_config['deliveryMethod'] as $dm)
-				if (isset($dm['product'][0]['@attributes']['name'])
-					&& 'bpack World' == substr((string)$dm['product'][0]['@attributes']['name'], 0, 11))
-				{
-					$product_countries = array();
-					if (isset($dm['product'][0]['price']))
-					{
-						foreach ($dm['product'][0]['price'] as $price)
-							$product_countries[] = $price['@attributes']['countryIso2Code'];
+			if (!isset($xml->deliveryMethod))
+				throw new Exception('No suitable delivery method');
+			else
+				foreach ($xml->deliveryMethod as $dm)
+					foreach ($dm->product as $product)
+						if ('bpack World' === mb_substr((string)$product->attributes()->name, 0, 11)
+							&& isset($product->price))
+						{
+							$product_countries = array();
+							foreach ($product->price as $price)
+								$product_countries[] = (string)$price->attributes()->countryIso2Code;
+							
+							if (count($product_countries))
+								$product_countries_list = implode('|', $product_countries);
+							
+							break;
+						}
 
-						$product_countries_list = implode('|', $product_countries);
-						break;
-					}
-					else
-						$product_countries_list = $dm['product'][0][0]['@attributes']['countryIso2Code'];
+		} catch (Exception $e) {
+			return array('Error' => (401 === (int)$e->getCode()) ? 'Invalid Account ID / Passphrase' : $e->getMessage());
 
-				}
+		}
 
 		return $this->explodeCountryList($product_countries_list);
 	}

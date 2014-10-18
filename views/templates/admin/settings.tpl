@@ -134,7 +134,7 @@
 				{l s='Display settings' mod='bpostshm'}
 			{if $version < 1.6}</legend>{else}</div>{/if}
 			<div class="form-group">
-				<span class="control-label{if $version < 1.6}-bw{/if} col-lg-3"">{l s='Home delivery only' mod='bpostshm'}</span>
+				<span class="control-label{if $version < 1.6}-bw{/if} col-lg-3">{l s='Home delivery only' mod='bpostshm'}</span>
 				<div class="margin-form col-lg-9">
 					<span class="switch prestashop-switch fixed-width-lg">
 						<input type="radio" name="display_home_delivery_only" id="home_delivery_only_1" value="1"{if !empty($display_home_delivery_only)} checked="checked"{/if} />
@@ -153,6 +153,27 @@
 						{l s='If you enable this option, only the home delivery option is enabled. all other delivery methods (pick-up points and bpack 24/7) are disabled.' mod='bpostshm'}
 					</p>
 				</div>
+
+				<span class="control-label{if $version < 1.6}-bw{/if} col-lg-3">{l s='International delivery' mod='bpostshm'}</span>
+				<div class="margin-form col-lg-9">
+					<p class="radio">
+						<label for="international_delivery_0">
+							<input type="radio" name="display_international_delivery" id="international_delivery_0" value="0"{if empty($display_international_delivery)} checked="checked"{/if} />
+							{l s='World Express Pro' mod='bpostshm'}
+						</label>
+						<br />
+						<label for="international_delivery_1">
+							<input type="radio" name="display_international_delivery" id="international_delivery_1" value="1"{if !empty($display_international_delivery)} checked="checked"{/if} />
+							{l s='World Business' mod='bpostshm'}
+						</label>
+					</p>
+				</div>
+				<div class="margin-form col-lg-9 col-lg-offset-3">
+					<p class="preference_description help-block">
+						{l s='Choose international delivery option.' mod='bpostshm'}
+					</p>
+				</div>
+
 			</div>
 			<div class="clear"></div>
 			<div class="margin-form panel-footer">
@@ -246,7 +267,7 @@
 				{l s='Label settings' mod='bpostshm'}
 			{if $version < 1.6}</legend>{else}</div>{/if}
 			<div class="form-group">
-				<span class="control-label{if $version < 1.6}-bw{/if} col-lg-3"">{l s='Use PrestaShop to manage labels' mod='bpostshm'}</span>
+				<span class="control-label{if $version < 1.6}-bw{/if} col-lg-3">{l s='Use PrestaShop to manage labels' mod='bpostshm'}</span>
 				<div class="margin-form col-lg-9">
 					<span class="switch prestashop-switch fixed-width-lg">
 						<input type="radio" name="label_use_ps_labels" id="label_use_ps_labels_1" value="1"{if !empty($label_use_ps_labels)} checked="checked"{/if} />
