@@ -184,26 +184,30 @@
 
 {if $version >= 1.5}
 	<script type="text/javascript">
+	{literal}
+		var fancy_pop = false;
 		srgBox = {
+			_links: [],
+			reset: function () { while (this._links.length) { this._links.pop(); } },
+			addLink: function (link) { this._links.push({href: link}); },
 			display: function (content) {
-				$.fancybox.open({
+				$.fancybox.open(content, {
 					type: 'html',
-					href: content,
 					closeBtn: false,
 				});
 			},
 			open: function (url, fnClosed) {
-				if ('undefined' === typeof(url)) return;
+				if ('undefined' === typeof(url) || '' === url) if (this._links.length) url = this._links; else return;
 				if ('undefined' === typeof(fnClosed)) fnClosed = '';
-				$.fancybox.open({
+				$.fancybox.open(url, {
 					type: 'iframe',
-					href: url,
 					minWidth: '75%',
 					minHeight: '75%',
 					afterClose: fnClosed
 				});
 			},
 		};
+	{/literal}	
 		// SRG end
 		(function($) {
 			$(function() {
@@ -290,9 +294,11 @@
 						{
 							if ('undefined' !== typeof $(this).children(':selected').data('target')) {
 								// used for 'Open order'
-								srgBox.open(this.value);
-								return; 
-								//return window.open(this.value);
+								if (fancy_pop) {
+									srgBox.open(this.value);
+									return;
+								} else 
+									return window.open(this.value);
 							}
 
 							$.get(this.value, { }, function(response) {
@@ -304,23 +310,32 @@
 											errors += "\n";
 										errors += error;
 									});
-									srgBox.display(errors);
-									return;
-									//return alert(errors);
+									if (fancy_pop) {
+										srgBox.display(errors);
+										return;
+									} else
+										return alert(errors);
 								}
 
 								if ('undefined' !== typeof response.links)
 								{
+									srgBox.reset();
 									$.each(response.links, function(i, link) {
-										srgBox.open(link, function () {
-											window.location.reload();
-										});
-										//window.open(link);
+										if (fancy_pop)
+											srgBox.addLink(link);
+										else
+											window.open(link);
 									});
-									//window.location.reload();
+									srgBox.open('', function () {
+										window.location.reload();
+									});
+
+									if (!fancy_pop)
+										window.location.reload();
+									
 									return;
 								}
-
+								
 								if (response)
 								{
 									if ($('#tab1').is(':visible') && location.href.substr(-5) === '#tab2')
@@ -344,8 +359,10 @@
 					.children(':disabled').on('click', function() {
 						var $option = $(this);
 						if ($option.data('disabled'))
-							srgBox.display($option.data('disabled'));
-							//alert($option.data('disabled'));
+							if (fancy_pop)
+								srgBox.display($option.data('disabled'));
+							else
+								alert($option.data('disabled'));
 					});
 
 				$('img.print').on('click', function(e) {
@@ -356,23 +373,31 @@
 
 					if ('undefined' !== typeof $img.data('labels'))
 						$.get($img.data('labels'), { }, function(response) {
-							if ('undefined' !== typeof response.links)
+							if ('undefined' !== typeof response.links) {
+								srgBox.reset();
 								$.each(response.links, function(i, link) {
-									srgBox.open(link);
-									//window.open(link);
+									if (fancy_pop)
+										srgBox.addLink(link);
+									else
+										window.open(link);
 								});
+								srgBox.open();
+							}
 						});
 				});
 
 				// Print assigned labels
 				{if !empty($labels) && is_array($labels)}
 					var labels = {$labels|json_encode};
-
+					srgBox.reset();
 					$.each(labels, function(i, label) {
 						$.each(label, function(j, link) {
-							srgBox.open(link);
-							//window.open(link);
+							if (fancy_pop)
+								srgBox.addLink(link);
+							else
+								window.open(link);
 						});
+						srgBox.open();
 					});
 				{/if}
 

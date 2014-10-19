@@ -320,7 +320,8 @@ class Service
 		}
 
 		// create $bpost_sender
-		preg_match('#([0-9]+)?[, ]*([\p{L}a-zA-Z -]+)[, ]*([0-9]+)?#iu', $sender['address1'], $matches);
+		//preg_match('#([0-9]+)?[, ]*([\p{L}a-zA-Z -]+)[, ]*([0-9]+)?#iu', $sender['address1'], $matches);
+		preg_match('#([0-9]+)?[, ]*([\p{L}a-zA-Z -\']+)[, ]*([0-9]+)?#iu', $sender['address1'], $matches);
 		if (!empty($matches[1]) && is_numeric($matches[1]))
 			$nr = $matches[1];
 		elseif (!empty($matches[3]) && is_numeric($matches[3]))
@@ -346,7 +347,8 @@ class Service
 		$bpost_sender->setEmailAddress(Tools::substr($sender['email'], 0, 50));
 
 		// create $bpost_receiver
-		preg_match('#([0-9]+)?[, ]*([\p{L}a-zA-Z -]+)[, ]*([0-9]+)?#iu', $receiver['address1'], $matches);
+		//preg_match('#([0-9]+)?[, ]*([\p{L}a-zA-Z -]+)[, ]*([0-9]+)?#iu', $receiver['address1'], $matches);
+		preg_match('#([0-9]+)?[, ]*([\p{L}a-zA-Z -\']+)[, ]*([0-9]+)?#iu', $receiver['address1'], $matches);
 		if (!empty($matches[1]) && is_numeric($matches[1]))
 			$nr = $matches[1];
 		elseif (!empty($matches[3]) && is_numeric($matches[3]))
@@ -438,12 +440,13 @@ class Service
 						$international->setProduct('bpack World Easy Return');
 					else*/
 						//$international->setProduct('bpack World Express Pro');
-					$international_options = array(
-						'bpack World Express Pro',
-						'bpack World Business',
-						);
-					$international_delivery = Configuration::get('BPOST_INTERNATIONAL_DELIVERY_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id));
-					$international->setProduct($international_options[$international_delivery]);
+					// $international_options = array(
+					// 	'bpack World Express Pro',
+					// 	'bpack World Business',
+					// 	);
+					// $international_delivery = Configuration::get('BPOST_INTERNATIONAL_DELIVERY_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id));
+					//$international->setProduct($international_options[$international_delivery]);
+					$international->setProduct($this->getInternationalDelivery());
 					$international->setReceiver($receiver);
 					$international->setParcelWeight($weight);
 					$international->setCustomsInfo($customs_info);
@@ -594,7 +597,8 @@ class Service
 			$country = new Country((int)$address['id_country']);
 
 			if ($delivery_method == $this->module->shipping_methods[BpostShm::SHIPPING_METHOD_AT_HOME]['slug'] && 'BE' != $country->iso_code)
-				$delivery_method = '@international';
+				$delivery_method = str_replace('bpack ', '', $this->getInternationalDelivery());
+				// $delivery_method = '@international';
 		}
 
 		$query = '
@@ -1172,6 +1176,17 @@ WHERE
 			(int)$obj_id,
 			true
 		);	
+	}
+
+	private function getInternationalDelivery()
+	{
+		$international_options = array(
+						'bpack World Express Pro',
+						'bpack World Business',
+						);
+		$international_delivery = Configuration::get('BPOST_INTERNATIONAL_DELIVERY_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id));
+		
+		return $international_options[$international_delivery];	
 	}
 
 	/**

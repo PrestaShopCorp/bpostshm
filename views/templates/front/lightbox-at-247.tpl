@@ -23,7 +23,7 @@
 					<img class="loader" src="{$module_dir|escape}views/img/ajax-loader.gif" alt="{l s='Loading...' mod='bpostshm'}" />
 					<br />
 					<input name="bpack247_register" id="bpack247_register_1" type="radio" value="1" />
-					<label for="bpack247_register_1">{l s='I would like to register for pack 24/7' mod='bpostshm'}</label>
+					<label for="bpack247_register_1">{l s='I would like to register for bpack 24/7' mod='bpostshm'}</label>
 				</form>
 			</div>
 			<div id="register" class="clearfix">
