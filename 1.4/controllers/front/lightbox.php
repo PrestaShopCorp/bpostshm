@@ -192,7 +192,8 @@ class Lightbox extends FrontController
 						self::$smarty->assign('firstname', $delivery_address->firstname, true);
 						self::$smarty->assign('lastname', $delivery_address->lastname, true);
 
-						preg_match('#([0-9]+)?[, ]*([\p{L}a-zA-Z -]+)[, ]*([0-9]+)?#iu', $delivery_address->address1, $matches);
+						//preg_match('#([0-9]+)?[, ]*([\p{L}a-zA-Z -]+)[, ]*([0-9]+)?#iu', $delivery_address->address1, $matches);
+						preg_match('#([0-9]+)?[, ]*([\p{L}a-zA-Z -\']+)[, ]*([0-9]+)?#iu', $delivery_address->address1, $matches);
 						if (!empty($matches[1]) && is_numeric($matches[1]))
 							$nr = $matches[1];
 						elseif (!empty($matches[3]) && is_numeric($matches[3]))
@@ -261,30 +262,46 @@ class Lightbox extends FrontController
 							return false;
 
 						$customer = Tools::jsonDecode($customer, true);
-						$zone = $customer['Postalcode'];
-						self::$smarty->assign('postcode', $customer['Postalcode'], true);
-						if (!empty($customer['Town']))
-						{
-							self::$smarty->assign('city', $customer['Town'], true);
-							$zone .= ' '.$customer['Town'];
-						}
+
+						$focus_point = array(
+							'Street'		=> $customer['Street'],
+							'Number'		=> $customer['Number'],
+							'Postalcode' 	=> $customer['Postalcode'],
+							'Town'			=> $customer['Town'],
+							);
 						if (!empty($customer['PackstationID']))
-							self::$smarty->assign('defaultStation', sprintf('%06s', $customer['PackstationID']), true);
+						{
+							$packstation_id = $customer['PackstationID'];
+							self::$smarty->assign('defaultStation', sprintf('%06s', $packstation_id), true);
+							$service_point_details = $service->getServicePointDetails($packstation_id, $shipping_method);
+							if (!empty($service_point_details))
+							{
+								$focus_point['Street'] = $service_point_details['street'];
+								$focus_point['Number'] = $service_point_details['nr'];
+								$focus_point['Postalcode'] = $service_point_details['zip'];
+								$focus_point['Town'] = $service_point_details['city'];
+							}
+						}
+						$zone = $focus_point['Postalcode'];
+						self::$smarty->assign('postcode', $focus_point['Postalcode'], true);
+						if (!empty($focus_point['Town']))
+						{
+							self::$smarty->assign('city', $focus_point['Town'], true);
+							$zone .= ' '.$focus_point['Town'];
+						}
 
 						$search_params = array(
-							'street' 	=> $customer['street'],
-							'nr' 		=> $customer['number'],
+							'street' 	=> $focus_point['Street'],
+							'nr' 		=> $focus_point['Number'],
 							'zone'		=> $zone,
 						);
 						$service_points = $service->getNearestServicePoint($search_params, $shipping_method);
 						if (empty($service_points))
 						{
-							$search_params['zone'] = $customer['Postalcode'];
+							$search_params['zone'] = $focus_point['Postalcode'];
 							$service_points = $service->getNearestServicePoint($search_params, $shipping_method);
 						}
 
-						//self::$smarty->assign('city', $customer['town'], true);
-						//self::$smarty->assign('postcode', '', true);
 						self::$smarty->assign('servicePoints', $service_points, true);
 
 						self::$smarty->assign('url_get_nearest_service_points', _MODULE_DIR_.'bpostshm/1.4/controllers/front/lightbox.php?'
