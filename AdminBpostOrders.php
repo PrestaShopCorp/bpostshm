@@ -142,10 +142,18 @@ class AdminBpostOrders extends AdminTab
 				'align' => 'left',
 				'filter_key' => 'a!reference',
 			),
+			/*
 			'delivery_method' => array(
 				'title' => $this->l('Delivery method'),
 				'search' => false,
 				'filter_key' => 'a!delivery_method',
+			),
+			*/
+			'delivery_method' => array(
+				'title' => $this->l('Delivery method'),
+				'search' => false,
+				'filter_key' => 'a!delivery_method',
+				'callback' => 'getDeliveryMethod',
 			),
 			'recipient' => array(
 				'title' => $this->l('Recipient'),
@@ -871,6 +879,32 @@ class AdminBpostOrders extends AdminTab
 				$response &= $response && $this->sendTTEmail($reference);
 
 		return $response;
+	}
+
+	/**
+	 * @param string $delivery_method as stored
+	 * @return string
+	 */
+	public function getDeliveryMethod($delivery_method = '')
+	{
+		if (empty($delivery_method))
+			return;
+
+		// format: slug[:option list]*
+		// @bpost or @home:300|330
+		$dm_options = explode(':', $delivery_method);
+		$delivery_method = $dm_options[0];
+		if (isset($dm_options[1]))
+		{
+			$dm_options = Service::getDeliveryOptions($dm_options[1]);
+			$opts = '<ul style="list-style:none;font-size:11px;line-height:14px;padding:0;">';
+			foreach ($dm_options as $key => $option)
+				$opts .= '<li>+ '.$option.'</li>';
+
+			$delivery_method .= $opts.'</ul>';
+		}
+
+		return $delivery_method;
 	}
 
 	/**

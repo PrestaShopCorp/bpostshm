@@ -215,7 +215,8 @@ class TijsVerkoyenBpostBpostOrderBoxInternational
 					$option = TijsVerkoyenBpostBpostOrderBoxOptionMessaging::createFromXML($option_data);
 				else
 				{
-					$class_name = 'TijsVerkoyenBpostBpostOrderBoxOption'.\Tools::ucfirst($option_data->getName());
+				//	$class_name = 'TijsVerkoyenBpostBpostOrderBoxOption'.\Tools::ucfirst($option_data->getName());
+					$class_name = 'TijsVerkoyenBpostBpostOrderBoxOptionSrg'.\Tools::ucfirst($option_data->getName());
 					if (!method_exists($class_name, 'createFromXML'))
 						throw new TijsVerkoyenBpostException('Not Implemented');
 					$option = call_user_func(

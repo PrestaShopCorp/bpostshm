@@ -11,8 +11,16 @@
  * @license   http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
-require_once('../../../../../config/config.inc.php');
-// require_once('../../../../../sites/bpost/ps14/config/config.inc.php');
+const _CONFIG_FILE_ = '../../../../../config/config.inc.php';
+const _CONFIG_FILE_DEV_ = '../../../../../sites/bpost/ps14/config/config.inc.php';
+
+if (file_exists(_CONFIG_FILE_))
+	require_once(_CONFIG_FILE_);
+elseif (file_exists(_CONFIG_FILE_DEV_))
+	require_once(_CONFIG_FILE_DEV_);
+else
+	die('Cannot locate config');
+
 require_once(_PS_MODULE_DIR_.'bpostshm/bpostshm.php');
 require_once(_PS_MODULE_DIR_.'bpostshm/classes/Service.php');
 

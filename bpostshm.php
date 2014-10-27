@@ -64,8 +64,6 @@ class BpostShm extends CarrierModule
 			self::SHIPPING_METHOD_AT_24_7 => array(
 				'name' 	=> $this->l('Delivery in a bpack 24/7 parcel machine'),
 				'delay' => $this->l('Pick-up your parcel whenever you want, thanks to the 24/7 service of bpost.'),
-				//'delay' => $this->l('Pick-up your parcel whenever you want, thanks to the 24/7 service of bpost.').' <a href="#" title="'
-				//	.$this->l('More info').'">'.$this->l('More info').'</a>',
 				'slug' 	=> '@24/7',
 			),
 		);
@@ -152,6 +150,7 @@ class BpostShm extends CarrierModule
 			'fields' => array(
 				'id_order_label' => 'int(11) NOT NULL AUTO_INCREMENT',
 				'reference' => 'varchar(50) NOT NULL',
+				'id_shop' => 'int(11) unsigned NOT NULL DEFAULT 1',
 				'status' => 'varchar(20) NOT NULL',
 				'delivery_method' => 'varchar(25) NOT NULL',
 				'recipient' => 'varchar(255) NOT NULL',
@@ -191,6 +190,9 @@ class BpostShm extends CarrierModule
 		$cache_dir = defined('_PS_CACHE_DIR_') ? _PS_CACHE_DIR_ : _PS_ROOT_DIR_.'/cache/';
 		if (file_exists($cache_dir.'class_index.php'))
 			$return = $return && unlink($cache_dir.'class_index.php');
+
+		if (file_exists($cache_dir.'class_bpost_index.php'))
+			$return = $return && unlink($cache_dir.'class_bpost_index.php');
 
 		$return = $return && $this->unregisterHook('actionValidateOrder');
 		$return = $return && $this->unregisterHook('displayBackOfficeHeader');
@@ -605,6 +607,7 @@ ADD COLUMN
 			'account_api_url',
 			Configuration::get('BPOST_ACCOUNT_API_URL_'.$context_shop_id)
 		);
+		//
 		$display_home_delivery_only = Tools::getValue(
 			'display_home_delivery_only',
 			Configuration::get('BPOST_HOME_DELIVERY_ONLY_'.$context_shop_id)
@@ -613,6 +616,12 @@ ADD COLUMN
 			'display_international_delivery',
 			Configuration::get('BPOST_INTERNATIONAL_DELIVERY_'.$context_shop_id)
 		);
+		//
+		$delivery_options_list = Tools::getValue(
+			'delivery_options_list',
+			Configuration::get('BPOST_DELIVERY_OPTIONS_LIST_'.$context_shop_id)
+		);
+		//
 		$country_international_orders = Tools::getValue(
 			'country_international_orders',
 			Configuration::get('BPOST_INTERNATIONAL_ORDERS_'.$context_shop_id)
@@ -621,6 +630,7 @@ ADD COLUMN
 			'enabled_country_list',
 			Configuration::get('BPOST_ENABLED_COUNTRY_LIST_'.$context_shop_id)
 		);
+		//
 		$label_use_ps_labels = Tools::getValue(
 			'label_use_ps_labels',
 			Configuration::get('BPOST_USE_PS_LABELS_'.$context_shop_id)
@@ -662,7 +672,7 @@ ADD COLUMN
 				Configuration::updateValue('BPOST_ACCOUNT_API_URL_'.$context_shop_id, $api_url);
 			}
 		}
-		elseif (Tools::isSubmit('submitDisplaySettings'))
+		elseif (Tools::isSubmit('submitDeliverySettings'))
 		{
 			if (Configuration::get('BPOST_HOME_DELIVERY_ONLY_'.$context_shop_id) !== $display_home_delivery_only
 					&& is_numeric($display_home_delivery_only))
@@ -687,6 +697,12 @@ ADD COLUMN
 			if (Configuration::get('BPOST_INTERNATIONAL_DELIVERY_'.$context_shop_id) !== $display_international_delivery
 					&& is_numeric($display_international_delivery))
 				Configuration::updateValue('BPOST_INTERNATIONAL_DELIVERY_'.$context_shop_id, (int)$display_international_delivery);
+
+		}
+		elseif (Tools::isSubmit('submitDeliveryOptions'))
+		{
+			if (Configuration::get('BPOST_DELIVERY_OPTIONS_LIST_'.$context_shop_id) !== $delivery_options_list)
+				Configuration::updateValue('BPOST_DELIVERY_OPTIONS_LIST_'.$context_shop_id, $delivery_options_list);
 
 		}
 		elseif (Tools::isSubmit('submitCountrySettings'))
@@ -789,6 +805,36 @@ ADD COLUMN
 		$this->smarty->assign('account_api_url', $api_url, true);
 		$this->smarty->assign('display_home_delivery_only', $display_home_delivery_only, true);
 		$this->smarty->assign('display_international_delivery', $display_international_delivery, true);
+		// delivery options
+		if (isset($delivery_options_list))
+			$delivery_options_list = json_decode($delivery_options_list, true);
+
+		$delivery_options = array(
+			'home' => array(
+				'title' => '@home: Belgium',
+				'full' => '300|330|350|470',
+				),
+			'bpost' => array(
+				'title' => 'bpack@bpost: Belgium',
+				'full' => '350|470',
+				),
+			'247' => array(
+				'title' => 'bpack@24/7: Belgium',
+				'full' => '350|470',
+				),
+			'intl' => array(
+				'title' => '@home: International',
+				'full' => '540',
+				),
+			);
+		foreach ($delivery_options as $name => $options)
+		{
+			$options['full'] = Service::getDeliveryOptions($options['full']);
+			$options['list'] = isset($delivery_options_list) ? explode('|', $delivery_options_list[$name]) : array();
+			$delivery_options[$name] = $options;
+		}
+		$this->smarty->assign('delivery_options', $delivery_options, true);
+		//
 		$this->smarty->assign('country_international_orders', $country_international_orders, true);
 		$service = Service::getInstance($this->context);
 		$product_countries = $service->getProductCountries();

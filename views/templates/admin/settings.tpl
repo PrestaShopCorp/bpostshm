@@ -131,7 +131,7 @@
 	<form class="form-horizontal{if $version < 1.5} v1-4{elseif $version < 1.6} v1-5{/if}" action="#" method="POST" autocomplete="off">
 		<fieldset class="panel">
 			{if $version < 1.6}<legend><img src="{$module_dir|escape}views/img/icons/bpost.png" alt="bpost" />{else}<div class="panel-heading">{/if}
-				{l s='Display settings' mod='bpostshm'}
+				{l s='Delivery settings' mod='bpostshm'}
 			{if $version < 1.6}</legend>{else}</div>{/if}
 			<div class="form-group">
 				<span class="control-label{if $version < 1.6}-bw{/if} col-lg-3">{l s='Home delivery only' mod='bpostshm'}</span>
@@ -177,12 +177,58 @@
 			</div>
 			<div class="clear"></div>
 			<div class="margin-form panel-footer">
-				<button class="button btn btn-default pull-right" type="submit" name="submitDisplaySettings">
+				<button class="button btn btn-default pull-right" type="submit" name="submitDeliverySettings">
 					<i class="process-icon-save"></i>
 					{l s='Save settings' mod='bpostshm'}
 				</button>
 			</div>
 		</fieldset>
+	</form>
+	<br />
+	<form class="form-horizontal{if $version < 1.5} v1-4{elseif $version < 1.6} v1-5{/if}" action="#" method="POST" autocomplete="off">
+		<fieldset class="panel">
+			{if $version < 1.6}<legend><img src="{$module_dir|escape}views/img/icons/bpost.png" alt="bpost" />{else}<div class="panel-heading">{/if}
+				{l s='Delivery options' mod='bpostshm'}
+			{if $version < 1.6}</legend>{else}</div>{/if}
+			<div id="delivery-options" class="form-group">
+			<!-- content start -->
+			<input type="hidden" name="delivery_options_list" value="">
+			{$delivery_sections = array()}
+			{foreach $delivery_options as $name => $options}
+				{$delivery_sections[] = "$name"}
+				<div id="section-{$name}">
+					<span class="control-label{if $version < 1.6}-bw{/if} col-lg-3">{l s=$options['title'] mod='bpostshm'}</span>
+					<div class="margin-form col-lg-9">
+						<p class="checkbox">
+						{foreach $options['full'] as $key => $opt_name}
+							{assign var="chk_id" value="$name-$key"}
+							<label for="{$chk_id}">
+								<input type="checkbox" name="{$chk_id}" id="{$chk_id}" value="{$key}" {if in_array($key, $options['list'])}checked="checked"{/if} />&nbsp;{l s=$opt_name mod='bpostshm'}
+							</label>
+							<br />
+						{/foreach}	
+						</p>
+					</div>
+					<div class="margin-form col-lg-9 col-lg-offset-3">
+						<p class="preference_description help-block">
+						{foreach $options['full'] as $key => $opt_name}
+							{l s={$opt_name|cat:' info'} mod='bpostshm'}
+							<br />
+						{/foreach}
+						</p>
+					</div>
+				</div>	 		
+			{/foreach}
+			<!-- content end -->
+			</div>
+			<div class="clear"></div>
+			<div class="margin-form panel-footer">
+				<button class="button btn btn-default pull-right" type="submit" name="submitDeliveryOptions">
+					<i class="process-icon-save"></i>
+					{l s='Save settings' mod='bpostshm'}
+				</button>
+			</div>
+		</fieldset>	
 	</form>
 	<br />
 	{if !empty($account_id_account) && !empty($account_passphrase)}
@@ -480,6 +526,42 @@
 				//eclist.remove().end().append('<option selected value="REMOVE">(empty)</option>') ;
 		});
 
+		// Delivery options submit
+		var del_sections = {$delivery_sections|@json_encode};
+		$('button[name="submitDeliveryOptions"]').live('click', function(e) {
+			//e.preventDefault();
+{literal}
+			delopts = {};
+			$.each(del_sections, function() {
+				checked_opts = '';
+				$('#section-' + this).find('input:checkbox').each(function() {
+					if (this.checked)
+						checked_opts += '|' + this.value;
+				});
+				if ('' !== checked_opts)
+					checked_opts = checked_opts.substr(1);
+					//$('input[name="delopt_list_'+this+'"]').val(checked_opts.substr(1));
+				delopts['__'+this] = checked_opts;
+			});
+			json_options = JSON.stringify(delopts).replace(/__/g, '');
+			//$.fancybox.open(json_options, {});
+			$('input[name="delivery_options_list"]').val(json_options);
+{/literal}
+		});
+		
+		// special section-home: if 350-insurance is checked 300-signature is unchecked & disabled
+		$('#home-350').change(function() {
+			elm = $('input[name="home-300"]');
+			if (this.checked && elm.prop('checked'))
+				elm.prop('checked', false);
+
+			elm.prop('disabled', this.checked);
+		});
+		// and at page load
+		if ($('#home-350').prop('checked')) {
+			$('input[name="home-300"]').prop('disabled', true);
+		}
+		//
 		$('input[name="label_use_ps_labels"]').live('change', function() {
 			$(this).closest('.form-group').nextAll('.form-group').toggleClass('hidden');
 		});

@@ -17,6 +17,19 @@ require_once(_PS_MODULE_DIR_.'bpostshm/bpostshm.php');
 
 class Service
 {
+	private static $_slugs_international = array(
+		'bpack World Express Pro',
+		'bpack World Business',
+		);
+
+	private static $_delivery_options_all = array(
+		300 => 'Signature',
+		330 => '2nd Presentation',
+		350 => 'Insurance',
+		470 => 'Saturday Delivery',
+		540 => 'Insurance basic',
+		);
+
 	const GEO6_PARTNER = 999999;
 	const GEO6_APP_ID = '';
 	const BPACK247_ID = 'test@bpost.be';
@@ -265,9 +278,9 @@ class Service
 			else
 				$response = $response && $this->createPSLabel($reference);
 
-		} catch (TijsVerkoyenBpostException $e) {
+		//} catch (TijsVerkoyenBpostException $e) {
+		} catch (Exception $e) {
 			self::logError('makeOrder Ref: '.$reference, $e->getMessage(), $e->getCode(), 'Order', $id_order);
-			//Logger::addLog('BpostSHM::Service makeOrder - '.$e->getMessage(), 3, $e->getCode(), 'Order', (int)$id_order, true);
 			$response = false;
 		}
 
@@ -446,10 +459,14 @@ class Service
 					// 	);
 					// $international_delivery = Configuration::get('BPOST_INTERNATIONAL_DELIVERY_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id));
 					//$international->setProduct($international_options[$international_delivery]);
-					$international->setProduct($this->getInternationalDelivery());
+					$international->setProduct($this->getInternationalSlug());
 					$international->setReceiver($receiver);
 					$international->setParcelWeight($weight);
 					$international->setCustomsInfo($customs_info);
+
+					$delivery_options = $this->getDeliveryBoxOptions('intl');
+					foreach ($delivery_options as $option)
+						$international->addOption($option);
 
 					$box->setInternationalBox($international);
 				}
@@ -471,6 +488,9 @@ class Service
 							$sender->getEmailAddress()
 						);
 						$at_home->addOption($option);
+						$delivery_options = $this->getDeliveryBoxOptions('home');
+						foreach ($delivery_options as $option)
+							$at_home->addOption($option);
 					}
 
 					$box->setNationalBox($at_home);
@@ -502,6 +522,9 @@ class Service
 					$sender->getEmailAddress()
 				);
 				$at_bpost->addOption($option);
+				$delivery_options = $this->getDeliveryBoxOptions('bpost');
+				foreach ($delivery_options as $option)
+					$at_bpost->addOption($option);
 
 				$box->setNationalBox($at_bpost);
 				break;
@@ -536,6 +559,10 @@ class Service
 				$at247->setMemberId($bpack247_customer->DeliveryCode);
 				$at247->setReceiverName(Tools::substr($receiver->getName(), 0, 40));
 				$at247->setReceiverCompany(Tools::substr($receiver->getCompany(), 0, 40));
+
+				$delivery_options = $this->getDeliveryBoxOptions('247');
+				foreach ($delivery_options as $option)
+					$at247->addOption($option);
 
 				$box->setNationalBox($at247);
 				break;
@@ -591,21 +618,52 @@ class Service
 		else
 			$ps_order = new Order((int)Tools::substr($reference, 7));
 		$delivery_method = $this->getOrderShippingMethod((int)$ps_order->id_carrier, true);
-
+/*
 		if ($address = Address::getCountryAndState((int)$ps_order->id_address_delivery))
 		{
 			$country = new Country((int)$address['id_country']);
 
 			if ($delivery_method == $this->module->shipping_methods[BpostShm::SHIPPING_METHOD_AT_HOME]['slug'] && 'BE' != $country->iso_code)
-				$delivery_method = str_replace('bpack ', '', $this->getInternationalDelivery());
+				$delivery_method = $this->getInternationalSlug(true);
 				// $delivery_method = '@international';
 		}
+*/
+		switch ($delivery_method)
+		{
+			case $this->module->shipping_methods[BpostShm::SHIPPING_METHOD_AT_HOME]['slug']:
+				if ($address = Address::getCountryAndState((int)$ps_order->id_address_delivery))
+				{
+					$country = new Country((int)$address['id_country']);
 
+					if ('BE' != $country->iso_code)
+					{
+						// $delivery_method = '@international';
+						$options_list = $this->getDeliveryOptionsList('intl', ':');
+						$delivery_method = $this->getInternationalSlug(true).$options_list;
+					}
+					else
+						// Belgian address
+						$delivery_method .= $this->getDeliveryOptionsList('home', ':');
+				}
+				break;
+
+			case $this->module->shipping_methods[BpostShm::SHIPPING_METHOD_AT_SHOP]['slug']:
+				$delivery_method .= $this->getDeliveryOptionsList('bpost', ':');
+				break;
+
+			case $this->module->shipping_methods[BpostShm::SHIPPING_METHOD_AT_24_7]['slug']:
+				$delivery_method .= $this->getDeliveryOptionsList('247', ':');
+				break;
+
+		}
+
+		$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
 		$query = '
 INSERT INTO
 	'._DB_PREFIX_.'order_label
 (
 	`reference`,
+	`id_shop`,
 	`status`,
 	`delivery_method`,
 	`recipient`,
@@ -613,6 +671,7 @@ INSERT INTO
 )
 VALUES(
 	"'.pSQL($reference).'",
+	'.(int)$context_shop_id.',
 	"'.pSQL($status).'",
 	"'.pSQL($delivery_method).'",
 	"'.pSQL($recipient).'",
@@ -683,8 +742,9 @@ VALUES(
 								.$address->getPostalCode().' '.$address->getLocality();
 							break;
 						}
-			} catch (TijsVerkoyenBpostException $e) {
-				self::logError('getOrderRecipient Ref: '.$reference, $e->getMessage(), $e->getCode(), 'Order', -1);
+			//} catch (TijsVerkoyenBpostException $e) {
+			} catch (Exception $e) {
+				self::logError('getOrderRecipient Ref: '.$reference, $e->getMessage(), $e->getCode(), 'Order', isset($order->id) ? $order->id : 0);
 				$recipient = '-';
 			}
 		}
@@ -754,7 +814,7 @@ WHERE
 				if ($boxes = $order->getBoxes())
 					$status = $boxes[0]->getStatus();
 			} catch (TijsVerkoyenBpostException $e) {
-				self::logError('getOrderStatus Ref: '.$reference, $e->getMessage(), $e->getCode(), 'Order', -1);
+				self::logError('getOrderStatus Ref: '.$reference, $e->getMessage(), $e->getCode(), 'Order', isset($order->id) ? $order->id : 0);
 				$status = '-';
 			}
 		}
@@ -778,7 +838,7 @@ WHERE
 			try {
 				$response = $this->bpost->modifyOrderStatus($reference, $status);
 			} catch (TijsVerkoyenBpostException $e) {
-				self::logError('updateOrderStatus Ref: '.$reference.', Status '.$status , $e->getMessage(), $e->getCode(), 'Order', -1);
+				self::logError('updateOrderStatus Ref: '.$reference.', Status '.$status , $e->getMessage(), $e->getCode(), 'Order', 0);
 				$response = false;
 			}
 		}
@@ -827,8 +887,6 @@ SET
 	`status` = "'.pSQL($status).'"
 WHERE
 	`reference` = "'.pSQL($reference).'"');
-	
-		// $response = $response && $this->updateOrderStatus($reference, $status)
 
 		return $response;
 	}
@@ -1168,25 +1226,93 @@ WHERE
 
 	private static function logError($func, $msg, $err_code, $obj, $obj_id)
 	{
+		$msg_format = 'BpostSHM::Service > '.$func.' - '.$msg;
 		Logger::addLog(
-			'BpostSHM::Service->'.$func.' - '.$msg,
+			$msg_format,
 			3,
 			$err_code,
 			$obj,
 			(int)$obj_id,
 			true
-		);	
+		);
 	}
 
-	private function getInternationalDelivery()
+	private function getInternationalSlug($short = false)
 	{
-		$international_options = array(
-						'bpack World Express Pro',
-						'bpack World Business',
-						);
-		$international_delivery = Configuration::get('BPOST_INTERNATIONAL_DELIVERY_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id));
-		
-		return $international_options[$international_delivery];	
+		$setting = (int)Configuration::get('BPOST_INTERNATIONAL_DELIVERY_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id));
+		$slug = self::$_slugs_international[$setting];
+		return $short ? str_replace('bpack ', '', $slug) : $slug;
+	}
+
+	/**
+	 * [getDeliveryOptionsList description]
+	 * @param  string $deliveryMethod (home, bpost, 247 or intl)
+	 * @return string                 empty or option keys seperated by |
+	 */
+	private function getDeliveryOptionsList($delivery_method, $prepend = '')
+	{
+		$list = '';
+		if ($options_list = Configuration::get('BPOST_DELIVERY_OPTIONS_LIST_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id)))
+		{
+			$options_list = json_decode($options_list, true);
+			if (isset($options_list[$delivery_method]))
+				$list = $options_list[$delivery_method];
+
+			$list = empty($list) ? '' : $prepend.$list;
+		}
+
+		return $list;
+	}
+
+	private function getDeliveryBoxOptions($delivery_method)
+	{
+		$options = array();
+		$options_list = $this->getDeliveryOptionsList($delivery_method);
+		if (!empty($options_list))
+		{
+			$option_keys = explode('|', $options_list);
+			foreach ($option_keys as $key)
+				switch ($key)
+				{
+					case '300': // Signature
+						$options[] = new TijsVerkoyenBpostBpostOrderBoxOptionSrgSigned();
+						break;
+
+					case '330': // 2nd Presentation
+						$options[] = new TijsVerkoyenBpostBpostOrderBoxOptionSrgAutomaticSecondPresentation();
+						break;
+
+					case '540':
+					case '350': // Insurance
+						$options[] = new TijsVerkoyenBpostBpostOrderBoxOptionSrgInsured('basicInsurance');
+						break;
+
+					case '470': // Saturday delivery (Not yet implemented)
+						// $options[] = new TijsVerkoyenBpostBpostOrderBoxOption_XXX();
+						break;
+
+					default:
+						throw new Exception('Not a valid delivery option');
+						break;
+				}
+		}
+
+		return $options;
+	}
+
+	/* Static array accessors */
+	public static function getDeliveryOptions($selection = '')
+	{
+		if (empty($selection))
+			return self::$_delivery_options_all;
+
+		$options = array();
+		$selection = explode('|', $selection);
+		foreach ($selection as $key)
+			if (isset(self::$_delivery_options_all[$key]))
+				$options[$key] = self::$_delivery_options_all[$key];
+
+		return $options;
 	}
 
 	/**
@@ -1240,7 +1366,7 @@ WHERE
 	public function getProductCountries()
 	{
 		$product_countries_list = 'BE';
-	
+
 		try {
 			$xml = $this->doCall(
 				TijsVerkoyenBpostBpost::API_URL.'/'.$this->bpost->getAccountId().'/productconfig',
@@ -1259,10 +1385,10 @@ WHERE
 							$product_countries = array();
 							foreach ($product->price as $price)
 								$product_countries[] = (string)$price->attributes()->countryIso2Code;
-							
+
 							if (count($product_countries))
 								$product_countries_list = implode('|', $product_countries);
-							
+
 							break;
 						}
 
