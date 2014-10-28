@@ -384,6 +384,7 @@ class Service
 		if (!empty($receiver['company']))
 			$bpost_receiver->setCompany(Tools::substr($receiver['company'], 0, 40));
 		$bpost_receiver->setPhoneNumber(Tools::substr($receiver['phone'], 0, 20));
+		$bpost_receiver->setEmailAddress(Tools::substr($receiver['email'], 0, 50));
 
 		return array(
 			'receiver' => $bpost_receiver,
@@ -481,13 +482,14 @@ class Service
 					else
 					{
 						$at_home->setProduct('bpack 24h Pro');
-
+						/*
 						$option = new TijsVerkoyenBpostBpostOrderBoxOptionMessaging(
 							'infoDistributed',
 							$this->context->language->iso_code,
 							$sender->getEmailAddress()
 						);
 						$at_home->addOption($option);
+						*/
 						$delivery_options = $this->getDeliveryBoxOptions('home');
 						foreach ($delivery_options as $option)
 							$at_home->addOption($option);
@@ -516,10 +518,20 @@ class Service
 				$at_bpost->setReceiverName(Tools::substr($receiver->getName(), 0, 40));
 				$at_bpost->setReceiverCompany(Tools::substr($receiver->getCompany(), 0, 40));
 
+				/*
 				$option = new TijsVerkoyenBpostBpostOrderBoxOptionMessaging(
 					'keepMeInformed',
 					$this->context->language->iso_code,
 					$sender->getEmailAddress()
+				);
+				*/
+				// language must default to EN if not in allowed values
+				$lang_iso = $this->context->language->iso_code;
+				$lang_iso = in_array($lang_iso, array('EN', 'NL', 'FR', 'DE',)) ? $lang_iso : 'EN';
+				$option = new TijsVerkoyenBpostBpostOrderBoxOptionMessaging(
+					'keepMeInformed',
+					$lang_iso,
+					$receiver->getEmailAddress()
 				);
 				$at_bpost->addOption($option);
 				$delivery_options = $this->getDeliveryBoxOptions('bpost');

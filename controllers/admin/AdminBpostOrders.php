@@ -139,15 +139,21 @@ class AdminBpostOrders extends ModuleAdminController
 		'delivery_method' => array(
 			'title' => $this->l('Delivery method'),
 			'search' => false,
-			'filter_key' => 'a!delivery_method',
+			//'filter_key' => 'a!delivery_method',
 			'callback' => 'getDeliveryMethod',
 		),
 		'recipient' => array(
 			'title' => $this->l('Recipient'),
 			'filter_key' => 'a!recipient',
 		),
+		/*
 		'status' => array(
 			'title' => $this->l('Status'),
+		),
+		*/
+		'status' => array(
+			'title' => $this->l('Status'),
+			'callback' => 'getCurrentStatus',
 		),
 		'date_add' => array(
 			'title' => $this->l('Creation date'),
@@ -698,6 +704,25 @@ class AdminBpostOrders extends ModuleAdminController
 		}
 
 		return $delivery_method;
+	}
+
+	/**
+	 * @param string $delivery_method as stored
+	 * @return string
+	 */
+	public function getCurrentStatus($status = '', $fields_list)
+	{
+		if (empty($status) || empty($fields_list))
+			return;
+
+		$current_status = $status;
+		// $reference = $fields_list['reference'];
+		// $current_state = (int)$fields_list['current_state'];
+		// $current_status = (13 === $current_state) ? $this->service->getOrderStatus($reference) : $status;
+
+		// $current_status = $this->service->getOrderStatus($reference);
+
+		return $current_status;
 	}
 
 	/**

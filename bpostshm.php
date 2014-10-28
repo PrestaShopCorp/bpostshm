@@ -812,7 +812,8 @@ ADD COLUMN
 		$delivery_options = array(
 			'home' => array(
 				'title' => '@home: Belgium',
-				'full' => '300|330|350|470',
+				//'full' => '300|330|350|470',
+				'full' => '330|350|470|300',
 				),
 			'bpost' => array(
 				'title' => 'bpack@bpost: Belgium',
