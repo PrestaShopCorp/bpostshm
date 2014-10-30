@@ -12,30 +12,30 @@
 			<div class="clearfix">
 				<h1 class="col-xs-12"{if $version < 1.5} style="line-height: 4.6em;"{/if}>
 					<span class="step">1</span>
-					{l s='Select or create a bpack 24/7 account' mod='bpostshm'}
+					{l s='Select or create an account' mod='bpostshm'}
 				</h1>
 				<form class="col-xs-12" action="" id="rc-form" method="POST" autocomplete="off"{if $version < 1.5} style="margin-top: 46px;"{/if}>
 					<input name="bpack247_register" id="bpack247_register_0" type="radio" value="0" checked="checked" />
-					<label for="bpack247_register_0">{l s='I am a bpack 24/7 registered user' mod='bpostshm'}</label>
+					<label for="bpack247_register_0">{l s='I am a registered user' mod='bpostshm'}</label>
 					<label for="rc">{l s='RC:' mod='bpostshm'}</label>
 					<input type="text" name="rc" id="rc" type="text" value="" placeholder="{l s='123-456-789' mod='bpostshm'}" />
 					<a id="rc-info" href="#rc-info-content" title="{l s='Where can I find this info?' mod='bpostshm'}">{l s='Where can I find this info?' mod='bpostshm'}</a>
 					<img class="loader" src="{$module_dir|escape}views/img/ajax-loader.gif" alt="{l s='Loading...' mod='bpostshm'}" />
 					<br />
 					<input name="bpack247_register" id="bpack247_register_1" type="radio" value="1" />
-					<label for="bpack247_register_1">{l s='I would like to register for bpack 24/7' mod='bpostshm'}</label>
+					<label for="bpack247_register_1">{l s='I would like to register for the parcel locker delivery service' mod='bpostshm'}</label>
 				</form>
 			</div>
 			<div id="register" class="clearfix">
-				<h2>{l s='What is bpack 24/7 ?' mod='bpostshm'}</h2>
+				<h2>{l s='What is the parcel locker delivery service ?' mod='bpostshm'}</h2>
 				<div class="col-xs-6">
-					<p>{l s='Are you rarely at home during the day? Do you have enough time to go when you want to send or retrieve packages to the post office?' mod='bpostshm'}</p>
-					<h3>{l s='Discover bpack 24/7!' mod='bpostshm'}</h3>
-					<p>{l s='With bpack 24/7 send or take your packages on when and where you want with the package vending machines in Belgium. They are open 24 hours a day, 7 days a week. Find and register to a vending machine near you to send or pick-up packages.' mod='bpostshm'}</p>
-					<p>{l s='You don\'t need to wait at home for the postman or go to the post office: bpack 24/7 is easy, convenient, and always available when it suits you.' mod='bpostshm'}</p>
+					<p>{l s='Are you rarely at home during the day? Do you have enough time to go to the post office, when you want to send or retrieve packages?' mod='bpostshm'}</p>
+					<h3>{l s='Discover the parcel locker delivery service!' mod='bpostshm'}</h3>
+					<p>{l s='With parcel lockers, send or retrieve your packages, when and where you want, using the package vending machines in Belgium. They are open 24 hours a day, 7 days a week. Find and register to a vending machine near you to send or pick-up packages.' mod='bpostshm'}</p>
+					<p>{l s='You don\'t need to wait at home for the postman or go to the post office: the parcel locker delivery service is easy, convenient, and always available when it suits you.' mod='bpostshm'}</p>
 					<h3>{l s='Your advantages:' mod='bpostshm'}</h3>
 					<ul>{strip}
-						<li>{l s='bpack 24/7 is available 24 hours/day, 7 days/week' mod='bpostshm'}</li>
+						<li>{l s='Parcel lockers are available 24 hours/day, 7 days/week' mod='bpostshm'}</li>
 						<li>{l s='You register for free' mod='bpostshm'}</li>
 						<li>{l s='You will receive your packages for free' mod='bpostshm'}</li>
 						<li>{l s='Shipments are done in a jiffy' mod='bpostshm'}</li>
@@ -128,9 +128,9 @@
 				</form>
 			</div>
 
-			<div id="rc-info-content" title="{l s='Where can I find my user ID?' mod='bpostshm'}">
+			<div id="rc-info-content" title="{l s='Where can I find my RC number?' mod='bpostshm'}">
 				<img src="{$module_dir|escape}views/img/card_{$lang_iso|escape}.png" alt="{l s='User card' mod='bpostshm'}" />
-				<p>{l s='Your bpack 24/7 user number is an unique nine-digit code that allows bpost to identify you and notify you when a package comes in the machine. The nine-digit user number is on your user card and begins with the letters RC.' mod='bpostshm'}</p>
+				<p>{l s='Your parcel locker RC number is an unique nine-digit code that allows bpost to identify you and notify you when a package comes in the machine. The nine-digit RC number is on your user card and begins with the letters RC.' mod='bpostshm'}</p>
 			</div>
 
 			<script type="text/javascript">

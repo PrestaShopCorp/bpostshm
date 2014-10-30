@@ -284,7 +284,7 @@ class AdminBpostOrders extends AdminTab
 		$treated_status = Configuration::get('BPOST_ORDER_STATE_TREATED_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id));
 		// disable if order already is treated
 		if ($ps_order->getCurrentState() == $treated_status)
-			$tpl_vars['disabled'] = $this->l('Order already is treated.');
+			$tpl_vars['disabled'] = $this->l('Order is already treated.');
 
 		return $tpl_vars;
 	}
@@ -306,7 +306,7 @@ class AdminBpostOrders extends AdminTab
 			return;
 
 		$tpl_vars = array(
-			'action' => $this->l('Send T&T e-mail'),
+			'action' => $this->l('Send Track & Trace e-mail'),
 			'href' => Tools::safeOutput(self::$current_index.'&reference='.$reference.'&sendTTEmail'.$this->table
 					.'&token='.($token != null ? $token : $this->token)),
 		);

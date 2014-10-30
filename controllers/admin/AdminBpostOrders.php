@@ -62,7 +62,7 @@ class AdminBpostOrders extends ModuleAdminController
 		$this->bulk_actions = array(
 			'markTreated' => array('text' => $this->l('Mark treated'), 'confirm' => $this->l('Mark order as treated?')),
 			'printLabels' => array('text' => $this->l('Print labels')),
-			'sendTTEmail' => array('text' => $this->l('Send T&T e-mail'), 'confirm' => $this->l('Send track & trace email to recipient?')),
+			'sendTTEmail' => array('text' => $this->l('Send T&T e-mail'), 'confirm' => $this->l('Send Track & Trace e-mail to recipient?')),
 		);
 
 		$this->_select = '
@@ -862,7 +862,7 @@ class AdminBpostOrders extends ModuleAdminController
 		$treated_status = Configuration::get('BPOST_ORDER_STATE_TREATED_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id));
 		// disable if order already is treated
 		if ($ps_order->current_state == $treated_status)
-			$tpl_vars['disabled'] = $this->l('Order already is treated.');
+			$tpl_vars['disabled'] = $this->l('Order is already treated.');
 
 		$tpl = $this->createTemplate('helpers/list/list_action_option.tpl');
 		$tpl->assign($tpl_vars);
@@ -886,7 +886,7 @@ class AdminBpostOrders extends ModuleAdminController
 			return;
 
 		$tpl_vars = array(
-			'action' => $this->l('Send T&T e-mail'),
+			'action' => $this->l('Send Track & Trace e-mail'),
 			'href' => Tools::safeOutput(self::$currentIndex.'&reference='.$reference.'&sendTTEmail'.$this->table
 				.'&token='.($token != null ? $token : $this->token)),
 		);

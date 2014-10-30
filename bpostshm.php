@@ -48,7 +48,7 @@ class BpostShm extends CarrierModule
 
 		$this->displayName = $this->l('bpost Shipping Manager - bpost customers only');
 		$this->description = $this->l('Allow your customers to choose their preferrred delivery method: delivery at home or the office, at a pick-up
-			location or in a bpack 24/7 parcel machine.');
+			location or in a parcel locker.');
 
 		$this->shipping_methods = array(
 			self::SHIPPING_METHOD_AT_HOME => array(
@@ -62,7 +62,7 @@ class BpostShm extends CarrierModule
 				'slug' 	=> '@bpost',
 			),
 			self::SHIPPING_METHOD_AT_24_7 => array(
-				'name' 	=> $this->l('Delivery in a bpack 24/7 parcel machine'),
+				'name' 	=> $this->l('Delivery in a parcel locker'),
 				'delay' => $this->l('Pick-up your parcel whenever you want, thanks to the 24/7 service of bpost.'),
 				'slug' 	=> '@24/7',
 			),
@@ -820,7 +820,7 @@ ADD COLUMN
 				'full' => '350|470',
 				),
 			'247' => array(
-				'title' => 'bpack@24/7: Belgium',
+				'title' => 'Parcel locker: Belgium',
 				'full' => '350|470',
 				),
 			'intl' => array(
@@ -940,6 +940,8 @@ ADD COLUMN
 				$service = Service::getInstance($this->context);
 				$service->makeOrder((int)$params['order']->id, $shipping_method);
 
+				// 2014-10-30:  No Retour label when placing order 1st time
+				/*
 				$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
 
 				// Generate retour if auto-generation is enabled
@@ -952,6 +954,7 @@ ADD COLUMN
 						$reference .= Tools::substr($params['order']->reference, 0, 42).'_'.time();
 					$service->addLabel($reference, true);
 				}
+				*/
 
 				break;
 			}

@@ -49,7 +49,7 @@
 			<ul>{strip}
 				<li>{l s='Delivery at home or at the office' mod='bpostshm'}</li>
 				<li>{l s='Delivery in a pick-up point or postal office' mod='bpostshm'}</li>
-				<li>{l s='Delivery in a bpack 24/7 parcel machine' mod='bpostshm'}</li>
+				<li>{l s='Delivery in a parcel locker' mod='bpostshm'}</li>
 			{/strip}</ul>
 			<p>{l s='When activated and correctly installed, this module also allows you to completely integrate the bpost administration into your webshop. This means that orders are automatically added to the bpost portal. Furthermore, if enabled, it is possible to generate your labels and tracking codes directly from the Prestashop order admin page.' mod='bpostshm'}
 				<br />{l s='No more hassle and 100% transparent!' mod='bpostshm'}
@@ -114,7 +114,11 @@
 				</div>
 				<div class="margin-form col-lg-9 col-lg-offset-3">
 					<p class="preference_description help-block">
+					{if $version < 1.5}
+						{l s='Do not modify this setting if you are not 100% sure of what you are doing' mod='bpostshm'}
+					{else}	
 						{l s='Do not modify this setting if you are not 100%% sure of what you are doing' mod='bpostshm'}
+					{/if}
 					</p>
 				</div>
 			</div>
@@ -150,7 +154,7 @@
 				</div>
 				<div class="margin-form col-lg-9 col-lg-offset-3">
 					<p class="preference_description help-block">
-						{l s='If you enable this option, only the home delivery option is enabled. all other delivery methods (pick-up points and bpack 24/7) are disabled.' mod='bpostshm'}
+						{l s='If you enable this option, only the home delivery option is enabled. all other delivery methods (pick-up points and parcel locker) are disabled.' mod='bpostshm'}
 					</p>
 				</div>
 
@@ -329,7 +333,7 @@
 				</div>
 				<div class="margin-form col-lg-9 col-lg-offset-3">
 					<p class="preference_description help-block">
-						{l s='If you enable this option, labels are generated directly within PrestaShop. It is not needed to use the bpost Shipping manager for these tasks.' mod='bpostshm'}
+						{l s='If you enable this option, labels are generated directly within PrestaShop. It is not needed to use the bpost Shipping Manager for these tasks.' mod='bpostshm'}
 						<br /><a href="" title="{l s='Click here' mod='bpostshm'}">{l s='Click here' mod='bpostshm'}</a> {l s='to learn more about this option.' mod='bpostshm'}
 					</p>
 				</div>

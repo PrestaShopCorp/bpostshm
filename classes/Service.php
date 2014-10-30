@@ -26,7 +26,7 @@ class Service
 		300 => 'Signature',
 		330 => '2nd Presentation',
 		350 => 'Insurance',
-		470 => 'Saturday Delivery',
+		/* 470 => 'Saturday Delivery', */
 		540 => 'Insurance basic',
 		);
 
@@ -328,6 +328,19 @@ class Service
 		$receiver = $shippers['client'];
 		if ($is_retour)
 		{
+			/*
+			// Try this
+			// If service_point_delivered
+			$sp_delivered = false;
+			if ($sp_delivered)
+			{
+				$shippers['client']['address1'] = $invoice_address->address1;
+				$shippers['client']['address2'] = $invoice_address->address2;
+				$shippers['client']['city'] = $invoice_address->city;
+				$shippers['client']['id_country'] = $invoice_address->id_country;
+				$shippers['client']['postcode'] = $invoice_address->postcode;
+			}
+			//*/
 			$sender = $shippers['client'];
 			$receiver = $shippers['shop'];
 		}
@@ -527,11 +540,12 @@ class Service
 				*/
 				// language must default to EN if not in allowed values
 				$lang_iso = $this->context->language->iso_code;
-				$lang_iso = in_array($lang_iso, array('EN', 'NL', 'FR', 'DE',)) ? $lang_iso : 'EN';
+				$lang_iso = in_array(strtoupper($lang_iso), array('EN', 'NL', 'FR', 'DE',)) ? $lang_iso : 'EN';
 				$option = new TijsVerkoyenBpostBpostOrderBoxOptionMessaging(
 					'keepMeInformed',
 					$lang_iso,
 					$receiver->getEmailAddress()
+					// $is_retour ? $sender->getEmailAddress() : $receiver->getEmailAddress()
 				);
 				$at_bpost->addOption($option);
 				$delivery_options = $this->getDeliveryBoxOptions('bpost');
@@ -664,7 +678,8 @@ class Service
 				break;
 
 			case $this->module->shipping_methods[BpostShm::SHIPPING_METHOD_AT_24_7]['slug']:
-				$delivery_method .= $this->getDeliveryOptionsList('247', ':');
+				// $delivery_method .= $this->getDeliveryOptionsList('247', ':');
+				$delivery_method = 'Parcel locker'.$this->getDeliveryOptionsList('247', ':');
 				break;
 
 		}
