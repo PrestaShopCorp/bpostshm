@@ -47,8 +47,7 @@ class BpostShm extends CarrierModule
 		parent::__construct();
 
 		$this->displayName = $this->l('bpost Shipping Manager - bpost customers only');
-		$this->description = $this->l('Allow your customers to choose their preferrred delivery method: delivery at home or the office, at a pick-up
-			location or in a parcel locker.');
+		$this->description = $this->l('IMPORTANT: bpostshm module description');
 
 		$this->shipping_methods = array(
 			self::SHIPPING_METHOD_AT_HOME => array(
@@ -66,6 +65,31 @@ class BpostShm extends CarrierModule
 				'delay' => $this->l('Pick-up your parcel whenever you want, thanks to the 24/7 service of bpost.'),
 				'slug' 	=> '@24/7',
 			),
+		);
+
+		$this->_all_delivery_options = array(
+			300 => array(
+				'title' => $this->l('Signature'),
+				'info' => $this->l('The delivery happens against signature by the receiver.'),
+				),
+			330 => array(
+				'title' => $this->l('2nd Presentation'),
+				'info' => $this->l('IMPORTANT: 2nd presentation info'),
+				),
+			350 => array(
+				'title' => $this->l('Insurance'),
+				'info' => $this->l('Insurance to insure your goods to a maximum of 500,00 euro.'),
+				),
+			/*
+			470 => array(
+				'title' => $this->l('Saturday Delivery'),
+				'info' => $this->l(''),
+				),
+			*/
+			540 => array(
+				'title' => $this->l('Insurance basic'),
+				'info' => $this->l('Insurance to insure your goods to a maximum of 500,00 euro.'),
+				),
 		);
 
 		/** Backward compatibility */
@@ -830,7 +854,8 @@ ADD COLUMN
 			);
 		foreach ($delivery_options as $name => $options)
 		{
-			$options['full'] = Service::getDeliveryOptions($options['full']);
+			// true gets [title & info] for each option
+			$options['full'] = $this->getDeliveryOptions($options['full'], true);
 			$options['list'] = isset($delivery_options_list) ? explode('|', $delivery_options_list[$name]) : array();
 			$delivery_options[$name] = $options;
 		}
@@ -1189,5 +1214,19 @@ ADD COLUMN
 	public function getOrderShippingCostExternal($params)
 	{
 
+	}
+
+	public function getDeliveryOptions($selection = '', $inc_info = false)
+	{
+		if (empty($selection))
+			return $this->_all_delivery_options;
+
+		$options = array();
+		$selection = explode('|', $selection);
+		foreach ($selection as $key)
+			if (isset($this->_all_delivery_options[$key]))
+				$options[$key] = $inc_info ? $this->_all_delivery_options[$key] : $this->_all_delivery_options[$key]['title'];
+
+		return $options;
 	}
 }

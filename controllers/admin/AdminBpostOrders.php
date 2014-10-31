@@ -695,7 +695,7 @@ class AdminBpostOrders extends ModuleAdminController
 		$delivery_method = $dm_options[0];
 		if (isset($dm_options[1]))
 		{
-			$dm_options = Service::getDeliveryOptions($dm_options[1]);
+			$dm_options = $this->service->getDeliveryOptions($dm_options[1]);
 			$opts = '<ul style="list-style:none;font-size:11px;line-height:14px;padding:0;">';
 			foreach ($dm_options as $key => $option)
 				$opts .= '<li>+ '.$option.'</li>';

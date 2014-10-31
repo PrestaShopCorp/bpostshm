@@ -22,13 +22,15 @@ class Service
 		'bpack World Business',
 		);
 
+/*
 	private static $_delivery_options_all = array(
 		300 => 'Signature',
 		330 => '2nd Presentation',
 		350 => 'Insurance',
-		/* 470 => 'Saturday Delivery', */
+		470 => 'Saturday Delivery',
 		540 => 'Insurance basic',
 		);
+*/
 
 	const GEO6_PARTNER = 999999;
 	const GEO6_APP_ID = '';
@@ -1327,19 +1329,9 @@ WHERE
 		return $options;
 	}
 
-	/* Static array accessors */
-	public static function getDeliveryOptions($selection = '')
+	public function getDeliveryOptions($selection)
 	{
-		if (empty($selection))
-			return self::$_delivery_options_all;
-
-		$options = array();
-		$selection = explode('|', $selection);
-		foreach ($selection as $key)
-			if (isset(self::$_delivery_options_all[$key]))
-				$options[$key] = self::$_delivery_options_all[$key];
-
-		return $options;
+		return $this->module->getDeliveryOptions($selection);
 	}
 
 	/**

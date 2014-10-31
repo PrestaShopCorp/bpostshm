@@ -204,10 +204,10 @@
 					<span class="control-label{if $version < 1.6}-bw{/if} col-lg-3">{l s=$options['title'] mod='bpostshm'}</span>
 					<div class="margin-form col-lg-9">
 						<p class="checkbox">
-						{foreach $options['full'] as $key => $opt_name}
+						{foreach $options['full'] as $key => $opt}
 							{assign var="chk_id" value="$name-$key"}
 							<label for="{$chk_id}">
-								<input type="checkbox" name="{$chk_id}" id="{$chk_id}" value="{$key}" {if in_array($key, $options['list'])}checked="checked"{/if} />&nbsp;{l s=$opt_name mod='bpostshm'}
+								<input type="checkbox" name="{$chk_id}" id="{$chk_id}" value="{$key}" {if in_array($key, $options['list'])}checked="checked"{/if} />&nbsp;{$opt['title']}
 							</label>
 							<br />
 						{/foreach}	
@@ -215,8 +215,8 @@
 					</div>
 					<div class="margin-form col-lg-9 col-lg-offset-3">
 						<p class="preference_description help-block">
-						{foreach $options['full'] as $key => $opt_name}
-							{l s={$opt_name|cat:' info'} mod='bpostshm'}
+						{foreach $options['full'] as $key => $opt}
+							{$opt['info']}
 							<br />
 						{/foreach}
 						</p>
