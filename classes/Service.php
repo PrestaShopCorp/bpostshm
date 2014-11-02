@@ -892,6 +892,32 @@ WHERE
 			} catch (TijsVerkoyenBpostException $e) {
 				$response = false;
 			}
+
+			/*
+			$ps_labels = $this->getPSLabels($reference);
+			$labels = array();
+			try {
+				foreach ($ps_labels['labels'] as $cur_label)
+				{
+					if (!isset($cur_label['barcode']))
+					{
+						$label = $this->bpost->createLabelForOrder($reference, $format, $with_return_labels, true);
+						$labels = array_merge($labels, $label);
+					}
+					// if ($barcode = $cur_label['barcode'])
+					// 	$label = $this->bpost->createLabelForBox($barcode, $format, $with_return_labels, true);
+					// else
+					// 	$label = $this->bpost->createLabelForOrder($reference, $format, $with_return_labels, true);
+
+					// $labels = array_merge($labels, $label);
+				}
+
+				$response = $labels; //array_merge($printed_labels, $new_labels);
+
+			} catch (TijsVerkoyenBpostException $e) {
+				$response = false;
+			}
+			*/
 		}
 
 		return $response;
@@ -1019,6 +1045,9 @@ WHERE
 
 			$response = $response && $this->addBox($order, (int)$type, $shippers['sender'], $shippers['receiver'], null, $cart->service_point_id, $box);
 			$response = $response && $this->createPSLabel($order->getReference());
+			// New
+			// $retour_only = true;
+			// New end
 		}
 
 		if (!$retour_only)

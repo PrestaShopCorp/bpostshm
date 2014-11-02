@@ -242,26 +242,29 @@
 					{l s='Country settings' mod='bpostshm'}
 				{if $version < 1.6}</legend>{else}</div>{/if}
 				<div class="form-group">
-					<span class="control-label{if $version < 1.6}-bw{/if} col-lg-3">{l s='International orders' mod='bpostshm'}</span>
+					<span class="control-label{if $version < 1.6}-bw{/if} col-lg-3">{l s='Zone configuration' mod='bpostshm'}</span>
 					<div class="margin-form col-lg-9">
 						<p class="radio">
 							<label for="country_international_orders_1">
 								<input type="radio" name="country_international_orders" id="country_international_orders_1" value="1"
 									{if empty($country_international_orders) || 1 == $country_international_orders} checked="checked"{/if} />
-								{l s='bpost is used for all available countries' mod='bpostshm'}
+								{l s='Configure carrier prices using existing PrestaShop zones' mod='bpostshm'}
 							</label>
 						</p>
 						<p class="radio">
 							<label for="country_international_orders_2">
 								<input type="radio" name="country_international_orders" id="country_international_orders_2" value="2"
 									{if !empty($country_international_orders) && 2 == $country_international_orders} checked="checked"{/if} />
-								{l s='I want to manually configure the countries for which bpost needs to be enabled' mod='bpostshm'}
+								{l s='Configure carrier prices by country, creating new zones' mod='bpostshm'}
 							</label>
 						</p>
 					</div>
 					<div class="margin-form col-lg-9 col-lg-offset-3">
 						<p class="preference_description help-block">
-							<a href="" title="{l s='Click here' mod='bpostshm'}">{l s='Click here' mod='bpostshm'}</a> {l s='to see how this list is created' mod='bpostshm'}
+							<a id="link-zone-config" href="" title="{l s='Click here' mod='bpostshm'}">{l s='Click here' mod='bpostshm'}</a> {l s='to see how this list is created' mod='bpostshm'}
+						</p>
+						<p class="preference_description help-block" id="desc-zone-config" style="display:none;">
+							{l s='IMPORTANT: description zone-config' mod='bpostshm'}
 						</p>
 					</div>
 				</div>
@@ -427,6 +430,11 @@
 
 	<script type="text/javascript">
 	$(function() {
+		$('#link-zone-config').live('click', function(e) {
+			e.preventDefault();
+			$('#desc-zone-config').toggle();
+		});
+
 		$('#country-list, #enabled-country-list').live('focus', function() {
 			var $select = $(this),
 				$handler = $select.is('#country-list') ? $('#add_country') : $('#remove_country');
