@@ -57,6 +57,10 @@ class AdminBpostOrders extends AdminTab
 		$this->context = Context::getContext();
 		self::$current_index = $_SERVER['SCRIPT_NAME'].(($tab = Tools::getValue('tab')) ? '?tab='.$tab : '');
 
+		$iso_code = $this->context->language->iso_code;
+		$iso_code = in_array($iso_code, array('de', 'fr', 'nl', 'en')) ? $iso_code : 'en';
+		$this->tracking_params['oss_language'] = $iso_code;
+
 		$this->module = new BpostShm();
 		$this->service = Service::getInstance($this->context);
 
@@ -945,6 +949,9 @@ class AdminBpostOrders extends AdminTab
 			return;
 
 		$tracking_url = $controller->tracking_url;
+		$params = $controller->tracking_params;
+		$params['customerReference'] = $reference;
+/*
 		foreach ($controller->tracking_params as $param => $value)
 			if (empty($value) && false !== $value)
 				switch ($param)
@@ -965,6 +972,8 @@ class AdminBpostOrders extends AdminTab
 						break;
 				}
 		$tracking_url .= '?'.http_build_query($controller->tracking_params);
+*/
+		$tracking_url .= '?'.http_build_query($params);
 
 		return '<a href="'.$tracking_url.'" target="_blank" title="'.$controller->l('View Track & Trace status').'">
 			<img class="t_t" src="'._MODULE_DIR_.'bpostshm/views/img/icons/track_and_trace.png" /></a>';

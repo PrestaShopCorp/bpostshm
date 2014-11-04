@@ -42,7 +42,7 @@ class BpostShm extends CarrierModule
 		$this->name = 'bpostshm';
 		$this->need_instance = 0;
 		$this->tab = 'shipping_logistics';
-		$this->version = '0.9';
+		$this->version = '1.0';
 
 		parent::__construct();
 
@@ -671,10 +671,12 @@ ADD COLUMN
 			'label_tt_integration',
 			Configuration::get('BPOST_LABEL_TT_INTEGRATION_'.$context_shop_id)
 		);
+		/*
 		$label_tt_frequency = Tools::getValue(
 			'label_tt_frequency',
 			Configuration::get('BPOST_LABEL_TT_FREQUENCY_'.$context_shop_id)
 		);
+		*/
 		$label_tt_update_on_open = Tools::getValue(
 			'label_tt_update_on_open',
 			Configuration::get('BPOST_LABEL_TT_UPDATE_ON_OPEN_'.$context_shop_id)
@@ -797,9 +799,10 @@ ADD COLUMN
 			{
 				if (Configuration::get('BPOST_LABEL_PDF_FORMAT_'.$context_shop_id) !== $label_pdf_format)
 					Configuration::updateValue('BPOST_LABEL_PDF_FORMAT_'.$context_shop_id, $label_pdf_format);
+				/*
 				if (Configuration::get('BPOST_LABEL_TT_FREQUENCY_'.$context_shop_id) !== $label_tt_frequency && is_numeric($label_tt_frequency))
 					Configuration::updateValue('BPOST_LABEL_TT_FREQUENCY_'.$context_shop_id, (int)$label_tt_frequency);
-
+				*/
 				$this->installModuleTab(
 					'AdminBpostOrders',
 					'bpost',
@@ -878,7 +881,7 @@ ADD COLUMN
 		$this->smarty->assign('label_pdf_format', $label_pdf_format, true);
 		$this->smarty->assign('label_retour_label', $label_retour_label, true);
 		$this->smarty->assign('label_tt_integration', $label_tt_integration, true);
-		$this->smarty->assign('label_tt_frequency', (int)$label_tt_frequency, true);
+		// $this->smarty->assign('label_tt_frequency', (int)$label_tt_frequency, true);
 		$this->smarty->assign('label_tt_update_on_open', $label_tt_update_on_open, true);
 
 		$this->smarty->assign('errors', $errors, true);

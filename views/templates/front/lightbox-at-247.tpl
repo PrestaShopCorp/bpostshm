@@ -154,7 +154,7 @@
 
 					$("#terms").fancybox({
 					    type:  			'iframe',
-					    href: 			"{l s='https://www.bpack247.be/en/general-terms-conditions.aspx' mod='bpostshm'}",
+					    href: 			"{l s='http://www.bpost.be/site/fr/docs/conditions/Conditions_generales_bpack247_EN.pdf' mod='bpostshm'}",
 					    autoDimensions:	false,
 					    width: 			'95%',
 					    height: 		'95%',

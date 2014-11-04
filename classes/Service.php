@@ -706,7 +706,10 @@ VALUES(
 	"'.pSQL($recipient).'",
 	NOW()
 )';
-		$response &= Db::getInstance()->execute($query);
+		$response = $response && Db::getInstance()->execute($query);
+
+		// Creating a label means they're all PENDING until printed
+		$response = $response && $this->updatePSLabelStatus($reference, 'PENDING');
 
 		return $response;
 	}
@@ -1041,13 +1044,14 @@ WHERE
 
 		if ((bool)Configuration::get('BPOST_LABEL_RETOUR_LABEL_'.$context_shop_id))
 		{
-			$shippers = $this->getReceiverAndSender($ps_order, true);
+			// $shippers = $this->getReceiverAndSender($ps_order, true);
+			// New
+			$shippers = $this->getReceiverAndSender($ps_order);
+			$retour_only = true;
+			// New end
 
 			$response = $response && $this->addBox($order, (int)$type, $shippers['sender'], $shippers['receiver'], null, $cart->service_point_id, $box);
 			$response = $response && $this->createPSLabel($order->getReference());
-			// New
-			// $retour_only = true;
-			// New end
 		}
 
 		if (!$retour_only)

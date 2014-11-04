@@ -44,6 +44,10 @@ class AdminBpostOrders extends ModuleAdminController
 		$this->list_no_link = true;
 		$this->context = Context::getContext();
 
+		$iso_code = $this->context->language->iso_code;
+		$iso_code = in_array($iso_code, array('de', 'fr', 'nl', 'en')) ? $iso_code : 'en';
+		$this->tracking_params['oss_language'] = $iso_code;
+
 		$this->bootstrap = true;
 		$this->show_filters = true;
 		$this->module = new BpostShm();
@@ -759,6 +763,7 @@ class AdminBpostOrders extends ModuleAdminController
 			return;
 
 		$tracking_url = $this->tracking_url;
+		/*
 		foreach ($this->tracking_params as $param => $value)
 			if (empty($value) && false !== $value)
 				switch ($param)
@@ -778,7 +783,31 @@ class AdminBpostOrders extends ModuleAdminController
 					default:
 						break;
 				}
-		$tracking_url .= '?'.http_build_query($this->tracking_params);
+		*/
+		$params = $this->tracking_params;
+		$params['customerReference'] = $reference;
+		// $iso_code = $this->context->language->iso_code;
+		// $iso_code = in_array($iso_code, array('de', 'fr', 'nl', 'en')) ? $iso_code : 'en';
+		/*
+		foreach ($params as $key => $value)
+			if (empty($value) && false !== $value)
+				switch ($key)
+				{
+					case 'searchByCustomerReference':
+						$params[$key] = true;
+						break;
+					case 'oss_language':
+						$params[$key] = $iso_code;
+						break;
+					case 'customerReference':
+						$params[$key] = $reference;
+						break;
+					default:
+						break;
+				}
+				*/
+		//$tracking_url .= '?'.http_build_query($this->tracking_params);
+		$tracking_url .= '?'.http_build_query($params);
 
 		return '<a href="'.$tracking_url.'" target="_blank" title="'.$this->l('View Track & Trace status').'">
 			<img class="t_t" src="'._MODULE_DIR_.'bpostshm/views/img/icons/track_and_trace.png" /></a>';

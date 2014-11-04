@@ -55,7 +55,7 @@
 				<br />{l s='No more hassle and 100% transparent!' mod='bpostshm'}
 			</p>
 			<p>
-				<a href="#" title="{l s='Documentation' mod='bpostshm'}">
+				<a href="{l s='http://bpost.freshdesk.com/support/solutions/folders/208531' mod='bpostshm'}" title="{l s='Documentation' mod='bpostshm'}" target="_blank">
 					<img src="{$module_dir|escape}views/img/icons/information.png" alt="{l s='Documentation' mod='bpostshm'}" />{l s='Documentation' mod='bpostshm'}
 				</a>
 			</p>
@@ -77,8 +77,8 @@
 					{if $version >= 1.6}<p><span class="label label-danger red">{l s='Important' mod='bpostshm'}</span></p>{/if}
 					<p>
 						{l s='You need a user account from bpost to use this module. Call 02 0201 11 11.' mod='bpostshm'}
-						<br />
-						{l s='Only here to test? Key in 999033 as account ID and DEMO_SHM as passphrase.' mod='bpostshm'}
+						<!-- <br />
+						{l s='Only here to test? Key in 999033 as account ID and DEMO_SHM as passphrase.' mod='bpostshm'} -->
 					</p>
 				</div>
 			</div>
@@ -216,7 +216,7 @@
 					<div class="margin-form col-lg-9 col-lg-offset-3">
 						<p class="preference_description help-block">
 						{foreach $options['full'] as $key => $opt}
-							{$opt['info']}
+							<b>{$opt['title']}</b>: {$opt['info']}
 							<br />
 						{/foreach}
 						</p>
@@ -261,7 +261,7 @@
 					</div>
 					<div class="margin-form col-lg-9 col-lg-offset-3">
 						<p class="preference_description help-block">
-							<a id="link-zone-config" href="" title="{l s='Click here' mod='bpostshm'}">{l s='Click here' mod='bpostshm'}</a> {l s='to see how this list is created' mod='bpostshm'}
+							<a class="info-link" href="#desc-zone-config" title="{l s='Click here' mod='bpostshm'}">{l s='Click here' mod='bpostshm'}</a> {l s='to see how this list is created' mod='bpostshm'}
 						</p>
 						<p class="preference_description help-block" id="desc-zone-config" style="display:none;">
 							{l s='IMPORTANT: description zone-config' mod='bpostshm'}
@@ -272,6 +272,11 @@
 				<div class="form-group">
 				<table class="select-multiple{if empty($country_international_orders) || 1 == $country_international_orders} hidden{/if}">
 					<tbody>
+						<tr>
+							<th width="45%"><i>{l s='Countries activated in the Shipping Manager' mod='bpostshm'}</i></th>
+							<th></th>
+							<th width="45%"><i>{l s='Zones to create' mod='bpostshm'}</i></th>
+						</tr>
 						<tr>
 							<td>
 								<select multiple="multiple" id="country-list">
@@ -337,7 +342,10 @@
 				<div class="margin-form col-lg-9 col-lg-offset-3">
 					<p class="preference_description help-block">
 						{l s='If you enable this option, labels are generated directly within PrestaShop. It is not needed to use the bpost Shipping Manager for these tasks.' mod='bpostshm'}
-						<br /><a href="" title="{l s='Click here' mod='bpostshm'}">{l s='Click here' mod='bpostshm'}</a> {l s='to learn more about this option.' mod='bpostshm'}
+						<br /><a class="info-link" href="#desc-use-labels" title="{l s='Click here' mod='bpostshm'}">{l s='Click here' mod='bpostshm'}</a> {l s='to learn more about this option.' mod='bpostshm'}
+					</p>
+					<p class="preference_description help-block" id="desc-use-labels" style="display:none;">
+						{l s='IMPORTANT: description use-labels' mod='bpostshm'}
 					</p>
 				</div>
 			</div>
@@ -346,12 +354,18 @@
 				<span class="control-label{if $version < 1.6}-bw{/if} col-lg-3">{l s='Label format' mod='bpostshm'}</span>
 				<div class="margin-form col-lg-9">
 					<p class="radio">
-						<input type="radio" name="label_pdf_format" id="label_pdf_format_A4" value="A4"{if empty($label_pdf_format) || 'A4' == $label_pdf_format} checked="checked"{/if} />
-						<label for="label_pdf_format_A4">{l s='Default format A4 (PDF)' mod='bpostshm'}</label>
+						
+						<label for="label_pdf_format_A4">
+							<input type="radio" name="label_pdf_format" id="label_pdf_format_A4" value="A4"{if empty($label_pdf_format) || 'A4' == $label_pdf_format} checked="checked"{/if} />
+							{l s='Default format A4 (PDF)' mod='bpostshm'}
+						</label>
 					</p>
 					<p class="radio">
-						<input type="radio" name="label_pdf_format" id="label_pdf_format_A6" value="A6"{if !empty($label_pdf_format) && 'A6' == $label_pdf_format} checked="checked"{/if} />
-						<label for="label_pdf_format_A6">{l s='Default format A6 (PDF)' mod='bpostshm'}</label>
+						
+						<label for="label_pdf_format_A6">
+							<input type="radio" name="label_pdf_format" id="label_pdf_format_A6" value="A6"{if !empty($label_pdf_format) && 'A6' == $label_pdf_format} checked="checked"{/if} />
+							{l s='Default format A6 (PDF)' mod='bpostshm'}
+						</label>
 					</p>
 				</div>
 			</div>
@@ -374,7 +388,10 @@
 				<div class="margin-form col-lg-9 col-lg-offset-3">
 					<p class="preference_description help-block">
 						{l s='If you enable this option, a retour label is automatically added and printed when generating labels. If disabled, you are able to manually create retour labels.' mod='bpostshm'}
-						<a href="" title="{l s='Click here' mod='bpostshm'}">{l s='Click here' mod='bpostshm'}</a> {l s='to learn more about this option.' mod='bpostshm'}
+						<a class="info-link" href="#desc-retour-label" title="{l s='Click here' mod='bpostshm'}">{l s='Click here' mod='bpostshm'}</a> {l s='to learn more about this option.' mod='bpostshm'}
+					</p>
+					<p class="preference_description help-block" id="desc-retour-label" style="display:none;">
+						{l s='IMPORTANT: description retour-label' mod='bpostshm'}
 					</p>
 				</div>
 			</div>
@@ -397,7 +414,10 @@
 				<div class="margin-form col-lg-9 col-lg-offset-3">
 					<p class="preference_description help-block">
 						{l s='If you enable this option, an email containing Track & Trace information is automatically sent to customers when generating labels.' mod='bpostshm'}
-						<a href="" title="{l s='Click here' mod='bpostshm'}">{l s='Click here' mod='bpostshm'}</a> {l s='to learn more about this option.' mod='bpostshm'}
+						<a class="info-link" href="#desc-tt-email" title="{l s='Click here' mod='bpostshm'}">{l s='Click here' mod='bpostshm'}</a> {l s='to learn more about this option.' mod='bpostshm'}
+					</p>
+					<p class="preference_description help-block" id="desc-tt-email" style="display:none;">
+						{l s='IMPORTANT: description tt-email' mod='bpostshm'}
 					</p>
 				</div>
 			</div>
@@ -405,16 +425,20 @@
 			<div class="form-group{if empty($label_use_ps_labels)} hidden{/if}">
 				<span class="control-label{if $version < 1.6}-bw{/if} col-lg-3">{l s='Other settings' mod='bpostshm'}</span>
 				<div class="margin-form col-lg-9">
-					{l s='Update T&T status of treated orders every' mod='bpostshm'}
+					<!-- {l s='Update T&T status of treated orders every' mod='bpostshm'}
 					<select name="label_tt_frequency" class="fixed-width-xs">
 						{for $i=1 to 4 nocache}
 							<option value="{$i|escape}"{if !empty($label_tt_frequency) && $i == $label_tt_frequency} selected="selected"{/if}>{$i|escape}&nbsp;</option>
 						{/for}
 					</select> {l s='hour(s)' mod='bpostshm'}
-					<div class="clear"></div>
+					<div class="clear"></div> -->
 					<p class="checkbox">
-						<input type="checkbox" name="label_tt_update_on_open" id="label_tt_update_on_open" value="1"{if !empty($label_tt_update_on_open)} checked="checked"{/if} />
-						<label for="label_tt_update_on_open">{l s='Update T&T status of treated orders automatically when opening orders.' mod='bpostshm'}</label>
+						
+						<label for="label_tt_update_on_open">
+							<input type="checkbox" name="label_tt_update_on_open" id="label_tt_update_on_open" style="margin-right:2px;" 
+							value="1"{if !empty($label_tt_update_on_open)} checked="checked"{/if} />
+							{l s='Update T&T status of treated orders automatically when opening orders.' mod='bpostshm'}
+						</label>
 					</p>
 				</div>
 			</div>
@@ -430,9 +454,11 @@
 
 	<script type="text/javascript">
 	$(function() {
-		$('#link-zone-config').live('click', function(e) {
+		$('.info-link').live('click', function(e) {
 			e.preventDefault();
-			$('#desc-zone-config').toggle();
+			
+			var targetDescription = $($(this).attr('href'));
+			targetDescription.toggle();
 		});
 
 		$('#country-list, #enabled-country-list').live('focus', function() {

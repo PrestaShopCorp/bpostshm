@@ -270,6 +270,7 @@
 							$li.addClass('active').siblings().removeClass('active');
 							$parent.children().hide();
 							$($link.attr('href')).show();
+							// $thead.prependTo('.order_label:visible');
 						});
 					}
 
