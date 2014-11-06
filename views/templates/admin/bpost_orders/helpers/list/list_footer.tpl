@@ -311,11 +311,11 @@
 											errors += "\n";
 										errors += error;
 									});
-									if (fancy_pop) {
+									//if (fancy_pop) {
 										srgBox.display(errors);
 										return;
-									} else
-										return alert(errors);
+									//} else
+									//	return alert(errors);
 								}
 
 								if ('undefined' !== typeof response.links)

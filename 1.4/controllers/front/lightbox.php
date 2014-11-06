@@ -143,11 +143,11 @@ class Lightbox extends FrontController
 					'nr' 		=> '',
 					'zone'		=> $delivery_address->postcode.' '.$delivery_address->city,
 				);
-				$service_points = $service->getNearestServicePoint($search_params, $shipping_method);
+				$service_points = $service->getNearestServicePoint($search_params/*, $shipping_method*/);
 				if (empty($service_points))
 				{
 					$search_params['zone'] = $delivery_address->postcode;
-					$service_points = $service->getNearestServicePoint($search_params, $shipping_method);
+					$service_points = $service->getNearestServicePoint($search_params/*, $shipping_method*/);
 				}
 
 				self::$smarty->assign('city', $delivery_address->city, true);

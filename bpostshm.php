@@ -49,6 +49,7 @@ class BpostShm extends CarrierModule
 		$this->displayName = $this->l('bpost Shipping Manager - bpost customers only');
 		$this->description = $this->l('IMPORTANT: bpostshm module description');
 
+		/*
 		$this->shipping_methods = array(
 			self::SHIPPING_METHOD_AT_HOME => array(
 				'name' 	=> $this->l('Delivery at home or at the office'),
@@ -63,6 +64,36 @@ class BpostShm extends CarrierModule
 			self::SHIPPING_METHOD_AT_24_7 => array(
 				'name' 	=> $this->l('Delivery in a parcel locker'),
 				'delay' => $this->l('Pick-up your parcel whenever you want, thanks to the 24/7 service of bpost.'),
+				'slug' 	=> '@24/7',
+			),
+		);
+		*/
+		$this->shipping_methods = array(
+			self::SHIPPING_METHOD_AT_HOME => array(
+				'name' 	=> 'Home delivery / Livraison à domicile / Thuislevering',
+				'delay' => array(
+					'en' =>	'Receive your parcel at home or at the office.',
+					'fr' =>	'Recevez votre colis à domicile ou au bureau.',
+					'nl' =>	'Ontvang uw pakket thuis of op kantoor.',
+					),
+				'slug' 	=> '@home',
+			),
+			self::SHIPPING_METHOD_AT_SHOP => array(
+				'name' 	=> 'Pick-up point / Point d’enlèvement / Afhaalpunt',
+				'delay' => array(
+					'en' =>	'Over 1.400 locations nearby home or the office.',
+					'fr' =>	'Plus de 1400 points de livraison près de chez vous !',
+					'nl' =>	'Meer dan 1400 locaties dichtbij huis of kantoor.',
+					),
+				'slug' 	=> '@bpost',
+			),
+			self::SHIPPING_METHOD_AT_24_7 => array(
+				'name' 	=> 'Parcel locker / Distributeur de paquets / Pakjesautomaat',
+				'delay' => array(
+					'en' =>	'Pick-up your parcel whenever you want, thanks to the 24/7 service of bpost.',
+					'fr' =>	'Retirez votre colis quand vous le souhaitez grâce au distributeur de paquets.',
+					'nl' =>	'Haal uw pakket op wanneer u maar wilt, dankzij de pakjesautomaten van bpost.',
+					),
 				'slug' 	=> '@24/7',
 			),
 		);
@@ -137,6 +168,9 @@ class BpostShm extends CarrierModule
 			$return = $return && $this->registerHook('backOfficeHeader');
 		}
 
+		// get Correct display names & langs for all versions
+		//$return = $return && $this->registerHook('displayBeforeCarrier');
+		//
 		$return = $return && $this->registerHook('extraCarrier');
 		$return = $return && $this->registerHook('updateCarrier');
 
@@ -220,6 +254,7 @@ class BpostShm extends CarrierModule
 
 		$return = $return && $this->unregisterHook('actionValidateOrder');
 		$return = $return && $this->unregisterHook('displayBackOfficeHeader');
+		// $return = $return && $this->unregisterHook('displayBeforeCarrier');
 		$return = $return && $this->unregisterHook('extraCarrier');
 		$return = $return && $this->unregisterHook('updateCarrier');
 		$return = $return && $this->deleteCarriers();
@@ -247,11 +282,23 @@ class BpostShm extends CarrierModule
 		{
 			$carrier = new Carrier();
 			$carrier->active = true;
+			/*
 			if ($languages = Language::getLanguages(true, $this->context->shop->id))
 				foreach ($languages as $language)
 					$carrier->delay[$language['id_lang']] = $lang_fields['delay'];
 			else
 				$carrier->delay[$this->context->language->id] = $lang_fields['delay'];
+			*/
+
+			if ($languages = Language::getLanguages(false))
+				foreach ($languages as $language)
+					if (isset($lang_fields['delay'][$language['iso_code']]))
+						$carrier->delay[$language['id_lang']] = $lang_fields['delay'][$language['iso_code']];
+					else
+						$carrier->delay[$language['id_lang']] = $lang_fields['delay']['en'];
+			else
+				$carrier->delay[$this->context->language->id] = $lang_fields['delay']['en'];
+
 			$carrier->external_module_name = $this->name;
 			$carrier->name = $lang_fields['name'];
 			$carrier->need_range = true;
@@ -1117,6 +1164,15 @@ ADD COLUMN
 			$link_conditions .= '&content_only=1';
 
 		$carriers = $this->context->cart->simulateCarriersOutput();
+		// Srg new
+		/*
+		foreach ($carriers as $carrier)
+		{
+			$carrier['name'] = $this->l($carrier['name']);
+			//$carrier['delay'] = $this->l($carrier['delay']);
+		}
+		*/
+		// Srg end
 		$delivery_option = $this->context->cart->getDeliveryOption(null, false, false);
 
 		$wrapping_fees_tax_inc = $wrapping_fees = $this->context->cart->getGiftWrappingPrice();

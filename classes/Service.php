@@ -371,7 +371,9 @@ class Service
 		$bpost_sender->setName(Tools::substr($sender['name'], 0, 40));
 		if (!empty($sender['company']))
 			$bpost_sender->setCompany(Tools::substr($sender['company'], 0, 40));
-		$bpost_sender->setPhoneNumber(Tools::substr($sender['phone'], 0, 20));
+		$sender_phone = Tools::substr($sender['phone'], 0, 20);
+		if (!(empty($sender_phone)))
+			$bpost_sender->setPhoneNumber($sender_phone);
 		$bpost_sender->setEmailAddress(Tools::substr($sender['email'], 0, 50));
 
 		// create $bpost_receiver
@@ -398,7 +400,10 @@ class Service
 		$bpost_receiver->setName(Tools::substr($receiver['name'], 0, 40));
 		if (!empty($receiver['company']))
 			$bpost_receiver->setCompany(Tools::substr($receiver['company'], 0, 40));
-		$bpost_receiver->setPhoneNumber(Tools::substr($receiver['phone'], 0, 20));
+		$receiver_phone = Tools::substr($receiver['phone'], 0, 20);
+		if (!(empty($receiver_phone)))
+			$bpost_receiver->setPhoneNumber($receiver_phone);
+		//$bpost_receiver->setPhoneNumber(Tools::substr($receiver['phone'], 0, 20));
 		$bpost_receiver->setEmailAddress(Tools::substr($receiver['email'], 0, 50));
 
 		return array(
@@ -870,7 +875,7 @@ WHERE
 			try {
 				$response = $this->bpost->modifyOrderStatus($reference, $status);
 			} catch (TijsVerkoyenBpostException $e) {
-				self::logError('updateOrderStatus Ref: '.$reference.', Status '.$status , $e->getMessage(), $e->getCode(), 'Order', 0);
+				self::logError('updateOrderStatus Ref: '.$reference.', Status '.$status, $e->getMessage(), $e->getCode(), 'Order', 0);
 				$response = false;
 			}
 		}
@@ -1013,55 +1018,64 @@ WHERE
 	{
 		$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
 		$response = true;
-		$order = $this->bpost->fetchOrder($reference);
+		try {
+			$order = $this->bpost->fetchOrder($reference);
 
-		if ($this->isPrestashopFresherThan14())
-			$ps_order = Order::getByReference(Tools::substr($reference, 7))->getFirst();
-		else
-			$ps_order = new Order((int)Tools::substr($reference, 7));
+			if ($this->isPrestashopFresherThan14())
+				$ps_order = Order::getByReference(Tools::substr($reference, 7))->getFirst();
+			else
+				$ps_order = new Order((int)Tools::substr($reference, 7));
 
-		$cart = new Cart((int)$ps_order->id_cart);
-		$id_carrier = $this->getOrderShippingMethod($ps_order->id_carrier, false);
+			$cart = new Cart((int)$ps_order->id_cart);
+			$id_carrier = $this->getOrderShippingMethod($ps_order->id_carrier, false);
 
-		$boxes = $order->getBoxes();
-		$box = $boxes[0];
-		// Remove existing boxes so that they won't get duplicated
-		$order->setBoxes(array());
+			$boxes = $order->getBoxes();
+			$box = $boxes[0];
+			// Remove existing boxes so that they won't get duplicated
+			$order->setBoxes(array());
 
-		switch ($id_carrier)
-		{
-			case (int)Configuration::get('BPOST_SHIP_METHOD_'.BpostShm::SHIPPING_METHOD_AT_HOME.'_ID_CARRIER_'.$this->context->shop->id):
-			default:
-				$type = BpostShm::SHIPPING_METHOD_AT_HOME;
-				break;
-			case (int)Configuration::get('BPOST_SHIP_METHOD_'.BpostShm::SHIPPING_METHOD_AT_SHOP.'_ID_CARRIER_'.$this->context->shop->id):
-				$type = BpostShm::SHIPPING_METHOD_AT_SHOP;
-				break;
-			case (int)Configuration::get('BPOST_SHIP_METHOD_'.BpostShm::SHIPPING_METHOD_AT_24_7.'_ID_CARRIER_'.$this->context->shop->id):
-				$type = BpostShm::SHIPPING_METHOD_AT_24_7;
-				break;
+			switch ($id_carrier)
+			{
+				case (int)Configuration::get('BPOST_SHIP_METHOD_'.BpostShm::SHIPPING_METHOD_AT_HOME.'_ID_CARRIER_'.$this->context->shop->id):
+				default:
+					$type = BpostShm::SHIPPING_METHOD_AT_HOME;
+					break;
+				case (int)Configuration::get('BPOST_SHIP_METHOD_'.BpostShm::SHIPPING_METHOD_AT_SHOP.'_ID_CARRIER_'.$this->context->shop->id):
+					$type = BpostShm::SHIPPING_METHOD_AT_SHOP;
+					break;
+				case (int)Configuration::get('BPOST_SHIP_METHOD_'.BpostShm::SHIPPING_METHOD_AT_24_7.'_ID_CARRIER_'.$this->context->shop->id):
+					$type = BpostShm::SHIPPING_METHOD_AT_24_7;
+					break;
+			}
+
+			if ((bool)Configuration::get('BPOST_LABEL_RETOUR_LABEL_'.$context_shop_id))
+			{
+				// $shippers = $this->getReceiverAndSender($ps_order, true);
+				// New
+				$shippers = $this->getReceiverAndSender($ps_order);
+				$retour_only = true;
+				// New end
+
+				$response = $response && $this->addBox($order, (int)$type, $shippers['sender'], $shippers['receiver'], null, $cart->service_point_id, $box);
+				$response = $response && $this->createPSLabel($order->getReference());
+			}
+
+			if (!$retour_only)
+			{
+				$shippers = $this->getReceiverAndSender($ps_order);
+				$response = $response && $this->addBox($order, (int)$type, $shippers['sender'], $shippers['receiver'], null, $cart->service_point_id);
+				$response = $response && $this->createPSLabel($order->getReference());
+			}
+
+			$response = $response && $this->bpost->createOrReplaceOrder($order);
+
+		} catch (Exception $e) {
+
+				self::logError('addLabel Ref: '.$reference.', retour_only '.$retour_only, $e->getMessage(), $e->getCode(), 'Order', 0);
+				$response = false;
 		}
 
-		if ((bool)Configuration::get('BPOST_LABEL_RETOUR_LABEL_'.$context_shop_id))
-		{
-			// $shippers = $this->getReceiverAndSender($ps_order, true);
-			// New
-			$shippers = $this->getReceiverAndSender($ps_order);
-			$retour_only = true;
-			// New end
-
-			$response = $response && $this->addBox($order, (int)$type, $shippers['sender'], $shippers['receiver'], null, $cart->service_point_id, $box);
-			$response = $response && $this->createPSLabel($order->getReference());
-		}
-
-		if (!$retour_only)
-		{
-			$shippers = $this->getReceiverAndSender($ps_order);
-			$response = $response && $this->addBox($order, (int)$type, $shippers['sender'], $shippers['receiver'], null, $cart->service_point_id);
-			$response = $response && $this->createPSLabel($order->getReference());
-		}
-
-		return $response && $this->bpost->createOrReplaceOrder($order);
+		return $response;
 	}
 
 	/**

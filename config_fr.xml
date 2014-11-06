@@ -2,7 +2,7 @@
 <module>
 	<name>bpostshm</name>
 	<displayName><![CDATA[bpost Shipping Manager - R&eacute;serv&eacute; aux utilisateurs bpost]]></displayName>
-	<version><![CDATA[0.9]]></version>
+	<version><![CDATA[1.0]]></version>
 	<description><![CDATA[Permet &agrave; vos clients de choisir leur m&eacute;thode d&#039;exp&eacute;dition pr&eacute;f&eacute;r&eacute;e : livraison &agrave; domicile ou au bureau, dans un point de retrait ou dans un distributeur de paquet.]]></description>
 	<author><![CDATA[Stigmi.eu]]></author>
 	<tab><![CDATA[shipping_logistics]]></tab>

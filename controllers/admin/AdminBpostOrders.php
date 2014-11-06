@@ -219,7 +219,12 @@ class AdminBpostOrders extends ModuleAdminController
 			$reference 	= (string)Tools::getValue('reference');
 
 			if (Tools::getIsset('addLabel'.$this->table))
-				$this->jsonEncode($this->service->addLabel($reference));
+			{
+				if (!$response = $this->service->addLabel($reference))
+					$response = array('errors' => array('Unable to add Label to order ['.$reference.'] Please check logs for errors.'));
+
+				$this->jsonEncode($response);
+			}
 			elseif (Tools::getIsset('printLabels'.$this->table))
 			{
 				$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);

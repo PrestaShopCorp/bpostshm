@@ -370,7 +370,7 @@
 				</div>
 			</div>
 			<div class="clear"></div>
-			<div class="form-group{if empty($label_use_ps_labels)} hidden{/if}">
+			<!-- <div class="form-group{if empty($label_use_ps_labels)} hidden{/if}">
 				<span class="control-label{if $version < 1.6}-bw{/if} col-lg-3">{l s='Retour label' mod='bpostshm'}</span>
 				<div class="margin-form col-lg-9">
 					<span class="switch prestashop-switch fixed-width-lg">
@@ -394,7 +394,7 @@
 						{l s='IMPORTANT: description retour-label' mod='bpostshm'}
 					</p>
 				</div>
-			</div>
+			</div> -->
 			<div class="clear"></div>
 			<div class="form-group{if empty($label_use_ps_labels)} hidden{/if}">
 				<span class="control-label{if $version < 1.6}-bw{/if} col-lg-3">{l s='Track & Trace integration' mod='bpostshm'}</span>
