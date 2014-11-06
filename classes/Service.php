@@ -60,11 +60,11 @@ class Service
 			spl_autoload_register(array(Autoloader::getInstance(), 'loadPS14'));
 
 		$this->context = $context;
-		$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
+		//$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
 
 		$this->bpost = new TijsVerkoyenBpostBpost(
-			Configuration::get('BPOST_ACCOUNT_ID_'.$context_shop_id),
-			Configuration::get('BPOST_ACCOUNT_PASSPHRASE_'.$context_shop_id)
+			Configuration::get('BPOST_ACCOUNT_ID'),
+			Configuration::get('BPOST_ACCOUNT_PASSPHRASE')
 		);
 		$this->geo6 = new TijsVerkoyenBpostGeo6(
 			self::GEO6_PARTNER,
@@ -73,14 +73,11 @@ class Service
 		$this->module = new BpostShm();
 
 		$this->delivery_methods_list = array(
-			(int)Configuration::get('BPOST_SHIP_METHOD_'.BpostShm::SHIPPING_METHOD_AT_HOME.'_ID_CARRIER_'
-					.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id))
+			(int)Configuration::get('BPOST_SHIP_METHOD_'.BpostShm::SHIPPING_METHOD_AT_HOME.'_ID_CARRIER')
 				=> $this->module->shipping_methods[BpostShm::SHIPPING_METHOD_AT_HOME]['slug'],
-			(int)Configuration::get('BPOST_SHIP_METHOD_'.BpostShm::SHIPPING_METHOD_AT_SHOP.'_ID_CARRIER_'
-					.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id))
+			(int)Configuration::get('BPOST_SHIP_METHOD_'.BpostShm::SHIPPING_METHOD_AT_SHOP.'_ID_CARRIER')
 				=> $this->module->shipping_methods[BpostShm::SHIPPING_METHOD_AT_SHOP]['slug'],
-			(int)Configuration::get('BPOST_SHIP_METHOD_'.BpostShm::SHIPPING_METHOD_AT_24_7.'_ID_CARRIER_'
-					.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id))
+			(int)Configuration::get('BPOST_SHIP_METHOD_'.BpostShm::SHIPPING_METHOD_AT_24_7.'_ID_CARRIER')
 				=> $this->module->shipping_methods[BpostShm::SHIPPING_METHOD_AT_24_7]['slug'],
 		);
 
@@ -116,6 +113,14 @@ class Service
 	public static function isPrestashop16()
 	{
 		return version_compare(_PS_VERSION_, '1.6', '>');
+	}
+
+	public static function updateGlobalValue($key, $value)
+	{
+		if (self::isPrestashopFresherThan14())
+			return Configuration::updateGlobalValue($key, $value);
+		else
+			return Configuration::updateValue($key, $value);
 	}
 
 	/**
@@ -207,10 +212,10 @@ class Service
 		$ps_order = new Order((int)$id_order);
 
 		if ($this->isPrestashopFresherThan14())
-			$reference = Configuration::get('BPOST_ACCOUNT_ID_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id)).'_'
+			$reference = Configuration::get('BPOST_ACCOUNT_ID').'_'
 				.Tools::substr($ps_order->reference, 0, 53);
 		elseif (is_null($reference))
-			$reference = Configuration::get('BPOST_ACCOUNT_ID_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id)).'_'
+			$reference = Configuration::get('BPOST_ACCOUNT_ID').'_'
 				.Tools::substr($ps_order->id, 0, 42).'_'.time();
 
 		$order = new TijsVerkoyenBpostBpostOrder($reference);
@@ -448,7 +453,7 @@ class Service
 					$weight = 1000;
 
 				$is_international = false;
-				$id_zone_be = Configuration::get('BPOST_ID_COUNTRY_BELGIUM_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id));
+				$id_zone_be = Configuration::get('BPOST_ID_COUNTRY_BELGIUM');
 				$receiver_id_country = Country::getByIso($receiver->getAddress()->getCountryCode());
 
 				if ($id_zone_be != Country::getIdZone((int)$receiver_id_country))
@@ -1016,7 +1021,7 @@ WHERE
 	 */
 	public function addLabel($reference = '', $retour_only = false)
 	{
-		$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
+		//$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
 		$response = true;
 		try {
 			$order = $this->bpost->fetchOrder($reference);
@@ -1036,19 +1041,19 @@ WHERE
 
 			switch ($id_carrier)
 			{
-				case (int)Configuration::get('BPOST_SHIP_METHOD_'.BpostShm::SHIPPING_METHOD_AT_HOME.'_ID_CARRIER_'.$this->context->shop->id):
+				case (int)Configuration::get('BPOST_SHIP_METHOD_'.BpostShm::SHIPPING_METHOD_AT_HOME.'_ID_CARRIER'):
 				default:
 					$type = BpostShm::SHIPPING_METHOD_AT_HOME;
 					break;
-				case (int)Configuration::get('BPOST_SHIP_METHOD_'.BpostShm::SHIPPING_METHOD_AT_SHOP.'_ID_CARRIER_'.$this->context->shop->id):
+				case (int)Configuration::get('BPOST_SHIP_METHOD_'.BpostShm::SHIPPING_METHOD_AT_SHOP.'_ID_CARRIER'):
 					$type = BpostShm::SHIPPING_METHOD_AT_SHOP;
 					break;
-				case (int)Configuration::get('BPOST_SHIP_METHOD_'.BpostShm::SHIPPING_METHOD_AT_24_7.'_ID_CARRIER_'.$this->context->shop->id):
+				case (int)Configuration::get('BPOST_SHIP_METHOD_'.BpostShm::SHIPPING_METHOD_AT_24_7.'_ID_CARRIER'):
 					$type = BpostShm::SHIPPING_METHOD_AT_24_7;
 					break;
 			}
 
-			if ((bool)Configuration::get('BPOST_LABEL_RETOUR_LABEL_'.$context_shop_id))
+			if ((bool)Configuration::get('BPOST_LABEL_RETOUR_LABEL'))
 			{
 				// $shippers = $this->getReceiverAndSender($ps_order, true);
 				// New
@@ -1315,7 +1320,7 @@ WHERE
 
 	private function getInternationalSlug($short = false)
 	{
-		$setting = (int)Configuration::get('BPOST_INTERNATIONAL_DELIVERY_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id));
+		$setting = (int)Configuration::get('BPOST_INTERNATIONAL_DELIVERY');
 		$slug = self::$_slugs_international[$setting];
 		return $short ? str_replace('bpack ', '', $slug) : $slug;
 	}
@@ -1328,7 +1333,7 @@ WHERE
 	private function getDeliveryOptionsList($delivery_method, $prepend = '')
 	{
 		$list = '';
-		if ($options_list = Configuration::get('BPOST_DELIVERY_OPTIONS_LIST_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id)))
+		if ($options_list = Configuration::get('BPOST_DELIVERY_OPTIONS_LIST'))
 		{
 			$options_list = json_decode($options_list, true);
 			if (isset($options_list[$delivery_method]))

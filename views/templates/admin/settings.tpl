@@ -261,7 +261,9 @@
 					</div>
 					<div class="margin-form col-lg-9 col-lg-offset-3">
 						<p class="preference_description help-block">
-							<a class="info-link" href="#desc-zone-config" title="{l s='Click here' mod='bpostshm'}">{l s='Click here' mod='bpostshm'}</a> {l s='to see how this list is created' mod='bpostshm'}
+							<a href="http://bpost.freshdesk.com/support/solutions/articles/4000033754" title="{l s='Click here' mod='bpostshm'}" target="_blank">
+							<!-- <a class="info-link" href="#desc-zone-config" title="{l s='Click here' mod='bpostshm'}"> -->
+							{l s='Click here' mod='bpostshm'}</a> {l s='to see how this list is created' mod='bpostshm'}
 						</p>
 						<p class="preference_description help-block" id="desc-zone-config" style="display:none;">
 							{l s='IMPORTANT: description zone-config' mod='bpostshm'}
@@ -342,7 +344,11 @@
 				<div class="margin-form col-lg-9 col-lg-offset-3">
 					<p class="preference_description help-block">
 						{l s='If you enable this option, labels are generated directly within PrestaShop. It is not needed to use the bpost Shipping Manager for these tasks.' mod='bpostshm'}
-						<br /><a class="info-link" href="#desc-use-labels" title="{l s='Click here' mod='bpostshm'}">{l s='Click here' mod='bpostshm'}</a> {l s='to learn more about this option.' mod='bpostshm'}
+						<br />
+						<a href="http://bpost.freshdesk.com/support/solutions/articles/4000033755" title="{l s='Click here' mod='bpostshm'}" target="_blank">
+						<!-- <a class="info-link" href="#desc-use-labels" title="{l s='Click here' mod='bpostshm'}">{l s='Click here' mod='bpostshm'}</a>  -->
+						{l s='Click here' mod='bpostshm'}</a> 
+						{l s='to learn more about this option.' mod='bpostshm'}
 					</p>
 					<p class="preference_description help-block" id="desc-use-labels" style="display:none;">
 						{l s='IMPORTANT: description use-labels' mod='bpostshm'}
@@ -414,7 +420,10 @@
 				<div class="margin-form col-lg-9 col-lg-offset-3">
 					<p class="preference_description help-block">
 						{l s='If you enable this option, an email containing Track & Trace information is automatically sent to customers when generating labels.' mod='bpostshm'}
-						<a class="info-link" href="#desc-tt-email" title="{l s='Click here' mod='bpostshm'}">{l s='Click here' mod='bpostshm'}</a> {l s='to learn more about this option.' mod='bpostshm'}
+						<a href="http://bpost.freshdesk.com/support/solutions/articles/4000033757" title="{l s='Click here' mod='bpostshm'}" target="_blank">
+						<!-- <a class="info-link" href="#desc-tt-email" title="{l s='Click here' mod='bpostshm'}"> -->
+						{l s='Click here' mod='bpostshm'}</a> 
+						{l s='to learn more about this option.' mod='bpostshm'}
 					</p>
 					<p class="preference_description help-block" id="desc-tt-email" style="display:none;">
 						{l s='IMPORTANT: description tt-email' mod='bpostshm'}

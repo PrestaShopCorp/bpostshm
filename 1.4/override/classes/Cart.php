@@ -287,7 +287,7 @@ class Cart extends CartCore
 						$carrier_collection[$id_carrier] = new Carrier($id_carrier);
 
 					if ($id_carrier == (int)Configuration::get(
-						'BPOST_SHIP_METHOD_'.BpostShm::SHIPPING_METHOD_AT_HOME.'_ID_CARRIER_'.$context->shop->id))
+						'BPOST_SHIP_METHOD_'.BpostShm::SHIPPING_METHOD_AT_HOME.'_ID_CARRIER'))
 					{
 						$delivery = new Address((int)$this->id_address_delivery);
 						$carrier_collection[$id_carrier]->delay[$context->language->id] = $delivery->address1

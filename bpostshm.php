@@ -174,10 +174,7 @@ class BpostShm extends CarrierModule
 		$return = $return && $this->registerHook('extraCarrier');
 		$return = $return && $this->registerHook('updateCarrier');
 
-		$return = $return && Configuration::updateValue(
-			'BPOST_ACCOUNT_API_URL_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id),
-			$this->api_url
-		);
+		$return = $return && Service::updateGlobalValue('BPOST_ACCOUNT_API_URL', $this->api_url);
 
 		$return = $return && $this->addOrderState();
 
@@ -332,10 +329,7 @@ class BpostShm extends CarrierModule
 						$id_zone_be = (int)$zone->id;
 					}
 
-					Configuration::updateValue(
-						'BPOST_ID_COUNTRY_BELGIUM_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id),
-						(int)$id_zone_be
-					);
+					Configuration::updateValue('BPOST_ID_COUNTRY_BELGIUM', (int)$id_zone_be);
 
 					if ($id_country = Country::getByIso('BE'))
 					{
@@ -358,10 +352,7 @@ class BpostShm extends CarrierModule
 						foreach ($zones as $zone)
 							$carrier->addZone((int)$zone['id_zone']);
 
-				Configuration::updateValue(
-					'BPOST_SHIP_METHOD_'.$shipping_method.'_ID_CARRIER_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id),
-					(int)$carrier->id
-				);
+				Configuration::updateValue('BPOST_SHIP_METHOD_'.$shipping_method.'_ID_CARRIER', (int)$carrier->id);
 
 				// Enable carrier for every user groups
 				if (is_array($user_groups) && !empty($user_groups) && method_exists($carrier, 'setGroups'))
@@ -414,10 +405,7 @@ class BpostShm extends CarrierModule
 		if (!$order_state->save())
 			return !$return;
 
-		$return = $return && Configuration::updateValue(
-			'BPOST_ORDER_STATE_TREATED_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id),
-			(int)$order_state->id
-		);
+		$return = $return && Configuration::updateValue('BPOST_ORDER_STATE_TREATED', (int)$order_state->id);
 
 		copy(_PS_MODULE_DIR_.$this->name.'/views/img/icons/box_closed.png', _PS_IMG_DIR_.'os/'.(int)$order_state->id.'.gif');
 
@@ -431,8 +419,7 @@ class BpostShm extends CarrierModule
 	{
 		if (empty($this->carriers))
 			foreach (array_keys($this->shipping_methods) as $shipping_method)
-				$this->carriers[$shipping_method] = (int)Configuration::get('BPOST_SHIP_METHOD_'.$shipping_method.'_ID_CARRIER_'
-					.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id));
+				$this->carriers[$shipping_method] = (int)Configuration::get('BPOST_SHIP_METHOD_'.$shipping_method.'_ID_CARRIER');
 
 		return $this->carriers;
 	}
@@ -645,7 +632,7 @@ ADD COLUMN
 	private function postValidation()
 	{
 		$errors = array();
-		$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
+		//$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
 
 		// Check PrestaShop contact info, they will be used as shipper address
 		if (!Configuration::get('PS_SHOP_ADDR1')
@@ -667,90 +654,90 @@ ADD COLUMN
 
 		$id_account = Tools::getValue(
 			'account_id_account',
-			Configuration::get('BPOST_ACCOUNT_ID_'.$context_shop_id)
+			Configuration::get('BPOST_ACCOUNT_ID')
 		);
 
 		$passphrase = Tools::getValue(
 			'account_passphrase',
-			Configuration::get('BPOST_ACCOUNT_PASSPHRASE_'.$context_shop_id)
+			Configuration::get('BPOST_ACCOUNT_PASSPHRASE')
 		);
 		$api_url = Tools::getValue(
 			'account_api_url',
-			Configuration::get('BPOST_ACCOUNT_API_URL_'.$context_shop_id)
+			Configuration::get('BPOST_ACCOUNT_API_URL')
 		);
 		//
 		$display_home_delivery_only = Tools::getValue(
 			'display_home_delivery_only',
-			Configuration::get('BPOST_HOME_DELIVERY_ONLY_'.$context_shop_id)
+			Configuration::get('BPOST_HOME_DELIVERY_ONLY')
 		);
 		$display_international_delivery = Tools::getValue(
 			'display_international_delivery',
-			Configuration::get('BPOST_INTERNATIONAL_DELIVERY_'.$context_shop_id)
+			Configuration::get('BPOST_INTERNATIONAL_DELIVERY')
 		);
 		//
 		$delivery_options_list = Tools::getValue(
 			'delivery_options_list',
-			Configuration::get('BPOST_DELIVERY_OPTIONS_LIST_'.$context_shop_id)
+			Configuration::get('BPOST_DELIVERY_OPTIONS_LIST')
 		);
 		//
 		$country_international_orders = Tools::getValue(
 			'country_international_orders',
-			Configuration::get('BPOST_INTERNATIONAL_ORDERS_'.$context_shop_id)
+			Configuration::get('BPOST_INTERNATIONAL_ORDERS')
 		);
 		$enabled_country_list = Tools::getValue(
 			'enabled_country_list',
-			Configuration::get('BPOST_ENABLED_COUNTRY_LIST_'.$context_shop_id)
+			Configuration::get('BPOST_ENABLED_COUNTRY_LIST')
 		);
 		//
 		$label_use_ps_labels = Tools::getValue(
 			'label_use_ps_labels',
-			Configuration::get('BPOST_USE_PS_LABELS_'.$context_shop_id)
+			Configuration::get('BPOST_USE_PS_LABELS')
 		);
 		$label_pdf_format = Tools::getValue(
 			'label_pdf_format',
-			Configuration::get('BPOST_LABEL_PDF_FORMAT_'.$context_shop_id)
+			Configuration::get('BPOST_LABEL_PDF_FORMAT')
 		);
 		$label_retour_label = Tools::getValue(
 			'label_retour_label',
-			Configuration::get('BPOST_LABEL_RETOUR_LABEL_'.$context_shop_id)
+			Configuration::get('BPOST_LABEL_RETOUR_LABEL')
 		);
 		$label_tt_integration = Tools::getValue(
 			'label_tt_integration',
-			Configuration::get('BPOST_LABEL_TT_INTEGRATION_'.$context_shop_id)
+			Configuration::get('BPOST_LABEL_TT_INTEGRATION')
 		);
 		/*
 		$label_tt_frequency = Tools::getValue(
 			'label_tt_frequency',
-			Configuration::get('BPOST_LABEL_TT_FREQUENCY_'.$context_shop_id)
+			Configuration::get('BPOST_LABEL_TT_FREQUENCY')
 		);
 		*/
 		$label_tt_update_on_open = Tools::getValue(
 			'label_tt_update_on_open',
-			Configuration::get('BPOST_LABEL_TT_UPDATE_ON_OPEN_'.$context_shop_id)
+			Configuration::get('BPOST_LABEL_TT_UPDATE_ON_OPEN')
 		);
 
 		if (Tools::isSubmit('submitAccountSettings'))
 		{
-			if (Configuration::get('BPOST_ACCOUNT_ID_'.$context_shop_id) !== $id_account && is_numeric($id_account))
-				Configuration::updateValue('BPOST_ACCOUNT_ID_'.$context_shop_id, (int)$id_account);
-			if (Configuration::get('BPOST_ACCOUNT_PASSPHRASE_'.$context_shop_id) !== $passphrase)
-				Configuration::updateValue('BPOST_ACCOUNT_PASSPHRASE_'.$context_shop_id, $passphrase);
-			if (Configuration::get('BPOST_ACCOUNT_API_URL_'.$context_shop_id) !== $api_url)
+			if (Configuration::get('BPOST_ACCOUNT_ID') !== $id_account && is_numeric($id_account))
+				Configuration::updateValue('BPOST_ACCOUNT_ID', (int)$id_account);
+			if (Configuration::get('BPOST_ACCOUNT_PASSPHRASE') !== $passphrase)
+				Configuration::updateValue('BPOST_ACCOUNT_PASSPHRASE', $passphrase);
+			if (Configuration::get('BPOST_ACCOUNT_API_URL') !== $api_url)
 			{
 				if (empty($api_url))
 				{
 					$errors[] = $this->l('API URL shall not be empty !');
 					$api_url = $this->api_url;
 				}
-				Configuration::updateValue('BPOST_ACCOUNT_API_URL_'.$context_shop_id, $api_url);
+				Service::updateGlobalValue('BPOST_ACCOUNT_API_URL', $api_url);
 			}
 		}
 		elseif (Tools::isSubmit('submitDeliverySettings'))
 		{
-			if (Configuration::get('BPOST_HOME_DELIVERY_ONLY_'.$context_shop_id) !== $display_home_delivery_only
+			if (Configuration::get('BPOST_HOME_DELIVERY_ONLY') !== $display_home_delivery_only
 					&& is_numeric($display_home_delivery_only))
 			{
-				Configuration::updateValue('BPOST_HOME_DELIVERY_ONLY_'.$context_shop_id, (int)$display_home_delivery_only);
+				Configuration::updateValue('BPOST_HOME_DELIVERY_ONLY', (int)$display_home_delivery_only);
 
 				foreach ($this->getIdCarriers() as $shipping_method => $id_carrier)
 				{
@@ -767,20 +754,20 @@ ADD COLUMN
 				}
 			}
 			// Display international delivery
-			if (Configuration::get('BPOST_INTERNATIONAL_DELIVERY_'.$context_shop_id) !== $display_international_delivery
+			if (Configuration::get('BPOST_INTERNATIONAL_DELIVERY') !== $display_international_delivery
 					&& is_numeric($display_international_delivery))
-				Configuration::updateValue('BPOST_INTERNATIONAL_DELIVERY_'.$context_shop_id, (int)$display_international_delivery);
+				Configuration::updateValue('BPOST_INTERNATIONAL_DELIVERY', (int)$display_international_delivery);
 
 		}
 		elseif (Tools::isSubmit('submitDeliveryOptions'))
 		{
-			if (Configuration::get('BPOST_DELIVERY_OPTIONS_LIST_'.$context_shop_id) !== $delivery_options_list)
-				Configuration::updateValue('BPOST_DELIVERY_OPTIONS_LIST_'.$context_shop_id, $delivery_options_list);
+			if (Configuration::get('BPOST_DELIVERY_OPTIONS_LIST') !== $delivery_options_list)
+				Configuration::updateValue('BPOST_DELIVERY_OPTIONS_LIST', $delivery_options_list);
 
 		}
 		elseif (Tools::isSubmit('submitCountrySettings'))
 		{
-			Configuration::updateValue('BPOST_INTERNATIONAL_ORDERS_'.$context_shop_id, $country_international_orders);
+			Configuration::updateValue('BPOST_INTERNATIONAL_ORDERS', $country_international_orders);
 
 			if (2 == $country_international_orders)
 			{
@@ -791,7 +778,7 @@ ADD COLUMN
 					else
 					{
 						$id_carriers = array(
-							(int)Configuration::get('BPOST_SHIP_METHOD_'.self::SHIPPING_METHOD_AT_HOME.'_ID_CARRIER_'.$context_shop_id),
+							(int)Configuration::get('BPOST_SHIP_METHOD_'.self::SHIPPING_METHOD_AT_HOME.'_ID_CARRIER'),
 						);
 
 						foreach ($enabled_country_list as $iso_code)
@@ -831,24 +818,24 @@ ADD COLUMN
 					}
 				}
 
-				if (Configuration::get('BPOST_ENABLED_COUNTRY_LIST_'.$context_shop_id) !== $enabled_country_list)
-					Configuration::updateValue('BPOST_ENABLED_COUNTRY_LIST_'.$context_shop_id, $enabled_country_list);
+				if (Configuration::get('BPOST_ENABLED_COUNTRY_LIST') !== $enabled_country_list)
+					Configuration::updateValue('BPOST_ENABLED_COUNTRY_LIST', $enabled_country_list);
 			}
 			else
-				Configuration::updateValue('BPOST_ENABLED_COUNTRY_LIST_'.$context_shop_id, '');
+				Configuration::updateValue('BPOST_ENABLED_COUNTRY_LIST', '');
 		}
 		elseif (Tools::isSubmit('submitLabelSettings'))
 		{
-			if (Configuration::get('BPOST_USE_PS_LABELS_'.$context_shop_id) !== $label_use_ps_labels && is_numeric($label_use_ps_labels))
-				Configuration::updateValue('BPOST_USE_PS_LABELS_'.$context_shop_id, (int)$label_use_ps_labels);
+			if (Configuration::get('BPOST_USE_PS_LABELS') !== $label_use_ps_labels && is_numeric($label_use_ps_labels))
+				Configuration::updateValue('BPOST_USE_PS_LABELS', (int)$label_use_ps_labels);
 
 			if ($label_use_ps_labels)
 			{
-				if (Configuration::get('BPOST_LABEL_PDF_FORMAT_'.$context_shop_id) !== $label_pdf_format)
-					Configuration::updateValue('BPOST_LABEL_PDF_FORMAT_'.$context_shop_id, $label_pdf_format);
+				if (Configuration::get('BPOST_LABEL_PDF_FORMAT') !== $label_pdf_format)
+					Configuration::updateValue('BPOST_LABEL_PDF_FORMAT', $label_pdf_format);
 				/*
-				if (Configuration::get('BPOST_LABEL_TT_FREQUENCY_'.$context_shop_id) !== $label_tt_frequency && is_numeric($label_tt_frequency))
-					Configuration::updateValue('BPOST_LABEL_TT_FREQUENCY_'.$context_shop_id, (int)$label_tt_frequency);
+				if (Configuration::get('BPOST_LABEL_TT_FREQUENCY') !== $label_tt_frequency && is_numeric($label_tt_frequency))
+					Configuration::updateValue('BPOST_LABEL_TT_FREQUENCY', (int)$label_tt_frequency);
 				*/
 				$this->installModuleTab(
 					'AdminBpostOrders',
@@ -865,13 +852,13 @@ ADD COLUMN
 				$this->uninstallModuleTab('AdminBpostOrders');
 			}
 
-			if (Configuration::get('BPOST_LABEL_RETOUR_LABEL_'.$context_shop_id) !== $label_retour_label && is_numeric($label_retour_label))
-				Configuration::updateValue('BPOST_LABEL_RETOUR_LABEL_'.$context_shop_id, (int)$label_retour_label);
-			if (Configuration::get('BPOST_LABEL_TT_INTEGRATION_'.$context_shop_id) !== $label_tt_integration && is_numeric($label_tt_integration))
-				Configuration::updateValue('BPOST_LABEL_TT_INTEGRATION_'.$context_shop_id, (int)$label_tt_integration);
-			if (Configuration::get('BPOST_LABEL_TT_UPDATE_ON_OPEN_'.$context_shop_id) !== $label_tt_update_on_open
+			if (Configuration::get('BPOST_LABEL_RETOUR_LABEL') !== $label_retour_label && is_numeric($label_retour_label))
+				Configuration::updateValue('BPOST_LABEL_RETOUR_LABEL', (int)$label_retour_label);
+			if (Configuration::get('BPOST_LABEL_TT_INTEGRATION') !== $label_tt_integration && is_numeric($label_tt_integration))
+				Configuration::updateValue('BPOST_LABEL_TT_INTEGRATION', (int)$label_tt_integration);
+			if (Configuration::get('BPOST_LABEL_TT_UPDATE_ON_OPEN') !== $label_tt_update_on_open
 					&& is_numeric($label_tt_update_on_open))
-				Configuration::updateValue('BPOST_LABEL_TT_UPDATE_ON_OPEN_'.$context_shop_id, (int)$label_tt_update_on_open);
+				Configuration::updateValue('BPOST_LABEL_TT_UPDATE_ON_OPEN', (int)$label_tt_update_on_open);
 		}
 
 		$this->smarty->assign('account_id_account', $id_account, true);
@@ -1145,10 +1132,7 @@ ADD COLUMN
 		if (!empty($params['id_carrier']))
 		{
 			if ($shipping_method = array_search((int)$params['id_carrier'], $this->getIdCarriers()))
-				Configuration::updateValue(
-					'BPOST_SHIP_METHOD_'.$shipping_method.'_ID_CARRIER_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id),
-					(int)$params['carrier']->id
-				);
+				Configuration::updateValue('BPOST_SHIP_METHOD_'.$shipping_method.'_ID_CARRIER', (int)$params['carrier']->id);
 		}
 	}
 

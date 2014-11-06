@@ -84,7 +84,7 @@ class AdminBpostOrders extends ModuleAdminController
 		$this->_where = '
 		AND a.status IN("'.implode('", "', $this->statuses).'")
 		AND o.current_state IN('.implode(', ', $this->ps_order_states).', '
-			.(int)Configuration::get('BPOST_ORDER_STATE_TREATED_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id)).')
+			.(int)Configuration::get('BPOST_ORDER_STATE_TREATED').')
 		AND DATEDIFF(NOW(), a.date_add) <= 14
 		';
 
@@ -227,10 +227,10 @@ class AdminBpostOrders extends ModuleAdminController
 			}
 			elseif (Tools::getIsset('printLabels'.$this->table))
 			{
-				$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
+				//$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
 				$links = $this->printLabels($reference);
 
-				if (Configuration::get('BPOST_LABEL_TT_INTEGRATION_'.$context_shop_id) && !empty($links))
+				if (Configuration::get('BPOST_LABEL_TT_INTEGRATION') && !empty($links))
 					$this->sendTTEmail($reference);
 
 				$this->jsonEncode(array('links' => $links));
@@ -256,8 +256,7 @@ class AdminBpostOrders extends ModuleAdminController
 				$ps_order = Order::getByReference(Tools::substr($reference, 7))->getFirst();
 
 				foreach (array_keys($this->module->shipping_methods) as $shipping_method)
-					if ((int)$ps_order->id_carrier == (int)Configuration::get('BPOST_SHIP_METHOD_'.$shipping_method.'_ID_CARRIER_'
-						.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id)))
+					if ((int)$ps_order->id_carrier == (int)Configuration::get('BPOST_SHIP_METHOD_'.$shipping_method.'_ID_CARRIER'))
 					{
 						$i = 1;
 
@@ -282,12 +281,12 @@ class AdminBpostOrders extends ModuleAdminController
 
 						if ($this->service->makeOrder($ps_order->id, $shipping_method, true))
 						{
-							$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
+							//$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
 
 							if ($links = $this->service->createLabelForOrder(
 								$reference,
-								Configuration::get('BPOST_LABEL_PDF_FORMAT_'.$context_shop_id),
-								(bool)Configuration::get('BPOST_LABEL_RETOUR_LABEL_'.$context_shop_id)))
+								Configuration::get('BPOST_LABEL_PDF_FORMAT'),
+								(bool)Configuration::get('BPOST_LABEL_RETOUR_LABEL')))
 							{
 								foreach ($links as $label)
 								{
@@ -383,7 +382,7 @@ class AdminBpostOrders extends ModuleAdminController
 		if (empty($reference))
 			return $links;
 
-		$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
+		//$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
 		$do_not_open = array('.', '..', 'labels');
 		$i = 1;
 
@@ -406,8 +405,8 @@ class AdminBpostOrders extends ModuleAdminController
 
 		if ($labels = $this->service->createLabelForOrder(
 			$reference,
-			Configuration::get('BPOST_LABEL_PDF_FORMAT_'.$context_shop_id),
-			(bool)Configuration::get('BPOST_LABEL_RETOUR_LABEL_'.$context_shop_id)))
+			Configuration::get('BPOST_LABEL_PDF_FORMAT'),
+			(bool)Configuration::get('BPOST_LABEL_RETOUR_LABEL')))
 		{
 			foreach ($labels as $label)
 			{
@@ -571,7 +570,7 @@ class AdminBpostOrders extends ModuleAdminController
 		}
 
 		$response = true;
-		$treated_status = Configuration::get('BPOST_ORDER_STATE_TREATED_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id));
+		$treated_status = Configuration::get('BPOST_ORDER_STATE_TREATED');
 		$ps_order = Order::getByReference(Tools::substr($reference, 7))->getFirst();
 		$ps_order->current_state = (int)$treated_status;
 		$response = $response && $ps_order->save();
@@ -619,7 +618,7 @@ class AdminBpostOrders extends ModuleAdminController
 			$this->tpl_list_vars,
 			array(
 				'treated_status' =>
-					Configuration::get('BPOST_ORDER_STATE_TREATED_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id)),
+					Configuration::get('BPOST_ORDER_STATE_TREATED'),
 				'url_get_label' =>
 					'index.php?tab=AdminOrders&addorder&token='.Tools::getAdminTokenLite('AdminOrders'),
 			)
@@ -893,7 +892,7 @@ class AdminBpostOrders extends ModuleAdminController
 			$tpl_vars['disabled'] = $this->l('Actions are only available for orders that are printed.');
 
 		$ps_order = Order::getByReference(Tools::substr($reference, 7))->getFirst();
-		$treated_status = Configuration::get('BPOST_ORDER_STATE_TREATED_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id));
+		$treated_status = Configuration::get('BPOST_ORDER_STATE_TREATED');
 		// disable if order already is treated
 		if ($ps_order->current_state == $treated_status)
 			$tpl_vars['disabled'] = $this->l('Order is already treated.');
@@ -913,10 +912,10 @@ class AdminBpostOrders extends ModuleAdminController
 		if (empty($reference))
 			return;
 
-		$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
+		//$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
 
 		// Do not display if T&T mails are automatically sent
-		if ((bool)Configuration::get('BPOST_LABEL_TT_INTEGRATION_'.$context_shop_id))
+		if ((bool)Configuration::get('BPOST_LABEL_TT_INTEGRATION'))
 			return;
 
 		$tpl_vars = array(
@@ -945,10 +944,10 @@ class AdminBpostOrders extends ModuleAdminController
 		if (empty($reference))
 			return;
 
-		$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
+		//$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
 
 		// Do not display if retours are automatically generated
-		if ((bool)Configuration::get('BPOST_LABEL_RETOUR_LABEL_'.$context_shop_id))
+		if ((bool)Configuration::get('BPOST_LABEL_RETOUR_LABEL'))
 			return;
 
 		$tpl_vars = array(
