@@ -400,8 +400,8 @@
 						{l s='IMPORTANT: description retour-label' mod='bpostshm'}
 					</p>
 				</div>
-			</div> -->
-			<div class="clear"></div>
+			</div>
+			<div class="clear"></div> -->
 			<div class="form-group{if empty($label_use_ps_labels)} hidden{/if}">
 				<span class="control-label{if $version < 1.6}-bw{/if} col-lg-3">{l s='Track & Trace integration' mod='bpostshm'}</span>
 				<div class="margin-form col-lg-9">
@@ -442,7 +442,6 @@
 					</select> {l s='hour(s)' mod='bpostshm'}
 					<div class="clear"></div> -->
 					<p class="checkbox">
-						
 						<label for="label_tt_update_on_open">
 							<input type="checkbox" name="label_tt_update_on_open" id="label_tt_update_on_open" style="margin-right:2px;" 
 							value="1"{if !empty($label_tt_update_on_open)} checked="checked"{/if} />

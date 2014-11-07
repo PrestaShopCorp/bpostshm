@@ -170,6 +170,38 @@ class Service
 	 * @param int $type
 	 * @return array
 	 */
+	public function getServicePointDetails($service_point_id = 0, $type = 3)
+	{
+		$service_point_details = array();
+		// Getting round type inconsistant idiocy
+		$type = (3 === $type) ? ((int)$service_point_id < 100000 ? 1 : 2) : $type;
+
+		try {
+			if ($poi = $this->geo6->getServicePointDetails($service_point_id, $this->context->language->id, $type))
+			{
+				$service_point_details['id'] 		= $poi->getId();
+				$service_point_details['office'] 	= $poi->getOffice();
+				$service_point_details['street'] 	= $poi->getStreet();
+				$service_point_details['nr'] 		= $poi->getNr();
+				$service_point_details['zip'] 		= $poi->getZip();
+				$service_point_details['city'] 		= $poi->getCity();
+			}
+		} catch (TijsVerkoyenBpostException $e) {
+			$service_point_details = array();
+			/*
+			if (3 === $type)
+				$service_point_details = $this->getServicePointDetails($service_point_id, 1);
+			*/
+		}
+
+		return $service_point_details;
+	}
+
+	/**
+	 * @param int $service_point_id
+	 * @param int $type
+	 * @return array
+	 */
 	public function getServicePointHours($service_point_id = 0, $type = 3)
 	{
 		$service_point_hours = array();
@@ -526,7 +558,8 @@ class Service
 
 			case (int)BpostShm::SHIPPING_METHOD_AT_SHOP:
 				// @Bpost
-				$service_point = $this->getServicePointDetails($service_point_id, BpostShm::SHIPPING_METHOD_AT_SHOP);
+				//$service_point = $this->getServicePointDetails($service_point_id, BpostShm::SHIPPING_METHOD_AT_SHOP);
+				$service_point = $this->getServicePointDetails($service_point_id);
 				$pugo_address = new TijsVerkoyenBpostBpostOrderPugoAddress(
 					$service_point['street'],
 					$service_point['nr'],
@@ -537,7 +570,8 @@ class Service
 				);
 
 				$at_bpost = new TijsVerkoyenBpostBpostOrderBoxAtBpost();
-				$at_bpost->setPugoId($service_point_id);
+				//$at_bpost->setPugoId($service_point_id);
+				$at_bpost->setPugoId(sprintf('%06s', $service_point_id));
 				$at_bpost->setPugoName(Tools::substr($service_point['office'], 0, 40));
 				$at_bpost->setPugoAddress($pugo_address);
 				$at_bpost->setReceiverName(Tools::substr($receiver->getName(), 0, 40));
@@ -609,32 +643,6 @@ class Service
 		$order->addBox($box);
 
 		return $response;
-	}
-
-	/**
-	 * @param int $service_point_id
-	 * @param int $type
-	 * @return array
-	 */
-	public function getServicePointDetails($service_point_id = 0, $type = 3)
-	{
-		$service_point_details = array();
-
-		try {
-			if ($poi = $this->geo6->getServicePointDetails($service_point_id, $this->context->language->id, $type))
-			{
-				$service_point_details['id'] 		= $poi->getId();
-				$service_point_details['office'] 	= $poi->getOffice();
-				$service_point_details['street'] 	= $poi->getStreet();
-				$service_point_details['nr'] 		= $poi->getNr();
-				$service_point_details['zip'] 		= $poi->getZip();
-				$service_point_details['city'] 		= $poi->getCity();
-			}
-		} catch (TijsVerkoyenBpostException $e) {
-			$service_point_details = array();
-		}
-
-		return $service_point_details;
 	}
 
 	/**

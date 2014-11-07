@@ -715,7 +715,8 @@ class AdminBpostOrders extends ModuleAdminController
 	}
 
 	/**
-	 * @param string $delivery_method as stored
+	 * @param string $status as stored
+	 * @param mixed $fields_list current row as an array
 	 * @return string
 	 */
 	public function getCurrentStatus($status = '', $fields_list)
@@ -724,11 +725,13 @@ class AdminBpostOrders extends ModuleAdminController
 			return;
 
 		$current_status = $status;
-		// $reference = $fields_list['reference'];
-		// $current_state = (int)$fields_list['current_state'];
-		// $current_status = (13 === $current_state) ? $this->service->getOrderStatus($reference) : $status;
-
 		// $current_status = $this->service->getOrderStatus($reference);
+		if ((bool)Configuration::get('BPOST_LABEL_TT_UPDATE_ON_OPEN'))
+		{
+			$reference = $fields_list['reference'];
+			$current_state = (int)$fields_list['current_state'];
+			//$current_status = ((int)Configuration::get('BPOST_ORDER_STATE_TREATED') === $current_state) ? $this->service->getOrderStatus($reference) : $status;
+		}
 
 		return $current_status;
 	}
@@ -767,50 +770,9 @@ class AdminBpostOrders extends ModuleAdminController
 			return;
 
 		$tracking_url = $this->tracking_url;
-		/*
-		foreach ($this->tracking_params as $param => $value)
-			if (empty($value) && false !== $value)
-				switch ($param)
-				{
-					case 'searchByCustomerReference':
-						$this->tracking_params[$param] = true;
-						break;
-					case 'oss_language':
-						if (in_array($this->context->language->iso_code, array('de', 'fr', 'nl', 'en')))
-							$this->tracking_params[$param] = $this->context->language->iso_code;
-						else
-							$this->tracking_params[$param] = 'en';
-						break;
-					case 'customerReference':
-						$this->tracking_params[$param] = $reference;
-						break;
-					default:
-						break;
-				}
-		*/
 		$params = $this->tracking_params;
 		$params['customerReference'] = $reference;
-		// $iso_code = $this->context->language->iso_code;
-		// $iso_code = in_array($iso_code, array('de', 'fr', 'nl', 'en')) ? $iso_code : 'en';
-		/*
-		foreach ($params as $key => $value)
-			if (empty($value) && false !== $value)
-				switch ($key)
-				{
-					case 'searchByCustomerReference':
-						$params[$key] = true;
-						break;
-					case 'oss_language':
-						$params[$key] = $iso_code;
-						break;
-					case 'customerReference':
-						$params[$key] = $reference;
-						break;
-					default:
-						break;
-				}
-				*/
-		//$tracking_url .= '?'.http_build_query($this->tracking_params);
+
 		$tracking_url .= '?'.http_build_query($params);
 
 		return '<a href="'.$tracking_url.'" target="_blank" title="'.$this->l('View Track & Trace status').'">

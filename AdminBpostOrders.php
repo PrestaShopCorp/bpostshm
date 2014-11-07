@@ -61,12 +61,15 @@ class AdminBpostOrders extends AdminTab
 		$iso_code = in_array($iso_code, array('de', 'fr', 'nl', 'en')) ? $iso_code : 'en';
 		$this->tracking_params['oss_language'] = $iso_code;
 
+		$this->bpost_treated_state = (int)Configuration::get('BPOST_ORDER_STATE_TREATED');
+
 		$this->module = new BpostShm();
 		$this->service = Service::getInstance($this->context);
 
 		$this->_select = '
 		a.`reference` as print,
 		a.`reference` as t_t,
+		ocs.`current_state`,
 		COUNT(a.`reference`) as count
 		';
 
@@ -141,6 +144,13 @@ class AdminBpostOrders extends AdminTab
 				'search' => false,
 				'orderby' => false,
 			),
+			/*
+			'current_state' => array(
+				'title' => $this->l('State'),
+				'callback' => 'getCurrentOrderState',
+				'search' => false,
+			),
+			*/
 			'reference' => array(
 				'title' => $this->l('Reference'),
 				'align' => 'left',
@@ -165,6 +175,7 @@ class AdminBpostOrders extends AdminTab
 			),
 			'status' => array(
 				'title' => $this->l('Status'),
+				'callback' => 'getCurrentStatus',
 			),
 			'date_add' => array(
 				'title' => $this->l('Creation date'),
@@ -913,6 +924,42 @@ class AdminBpostOrders extends AdminTab
 		}
 
 		return $delivery_method;
+	}
+
+	/**
+	 * @param string $current_state
+	 * @return string
+	 */
+	public function getCurrentOrderState($current_state = ''/*, $fields_list */)
+	{
+		if (empty($current_state)/* || empty($fields_list)*/)
+			return;
+
+		$current_state = ($this->bpost_treated_state === (int)$current_state) ? 'T' : '-';
+
+		return $current_state;
+	}
+
+	/**
+	 * @param string $status as stored
+	 * @param mixed $fields_list current row as an array
+	 * @return string
+	 */
+	public function getCurrentStatus($status = '', $fields_list)
+	{
+		if (empty($status) || empty($fields_list))
+			return;
+
+		$current_status = $status;
+		// $current_status = $this->service->getOrderStatus($reference);
+		if ((bool)Configuration::get('BPOST_LABEL_TT_UPDATE_ON_OPEN'))
+		{
+			$reference = $fields_list['reference'];
+			$current_state = (int)$fields_list['current_state'];
+			//$current_status = ($this->bpost_treated_state === $current_state) ? $this->service->getOrderStatus($reference) : $status;
+		}
+
+		return $current_status;
 	}
 
 	/**

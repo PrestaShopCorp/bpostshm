@@ -81,9 +81,9 @@ class BpostShm extends CarrierModule
 			self::SHIPPING_METHOD_AT_SHOP => array(
 				'name' 	=> 'Pick-up point / Point d’enlèvement / Afhaalpunt',
 				'delay' => array(
-					'en' =>	'Over 1.400 locations nearby home or the office.',
-					'fr' =>	'Plus de 1400 points de livraison près de chez vous !',
-					'nl' =>	'Meer dan 1400 locaties dichtbij huis of kantoor.',
+					'en' =>	'Over 1.250 locations nearby home or the office.',
+					'fr' =>	'Plus de 1250 points de livraison près de chez vous !',
+					'nl' =>	'Meer dan 1250 locaties dichtbij huis of kantoor.',
 					),
 				'slug' 	=> '@bpost',
 			),
@@ -398,7 +398,7 @@ class BpostShm extends CarrierModule
 				$order_state->name[$language['id_lang']] = $this->l('Treated');
 		else
 			$order_state->name[$this->context->language->id] = $this->l('Treated');
-		$order_state->color = '#108510';
+		$order_state->color = '#FFC050'; //'#108510';
 		$order_state->hidden = true;
 		$order_state->logable = true;
 		$order_state->paid = true;
@@ -640,7 +640,7 @@ ADD COLUMN
 				|| !Configuration::get('PS_SHOP_EMAIL')
 				|| !Configuration::get('PS_SHOP_COUNTRY_ID')
 				|| !Configuration::get('PS_SHOP_NAME')
-				|| !Configuration::get('PS_SHOP_PHONE')
+				//|| !Configuration::get('PS_SHOP_PHONE')
 				|| !Configuration::get('PS_SHOP_CODE'))
 		{
 			$translate = 'Do not forget to fill in shipping address ';
@@ -710,10 +710,14 @@ ADD COLUMN
 			'label_tt_frequency',
 			Configuration::get('BPOST_LABEL_TT_FREQUENCY')
 		);
-		*/
+		// Old way
 		$label_tt_update_on_open = Tools::getValue(
 			'label_tt_update_on_open',
 			Configuration::get('BPOST_LABEL_TT_UPDATE_ON_OPEN')
+		);
+		*/
+		$label_tt_update_on_open = Tools::getValue(
+			'label_tt_update_on_open', 0
 		);
 
 		if (Tools::isSubmit('submitAccountSettings'))
