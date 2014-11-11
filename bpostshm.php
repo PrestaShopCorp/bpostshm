@@ -216,6 +216,8 @@ class BpostShm extends CarrierModule
 		);
 		$return = $return && $this->dbCreateTable($table_order_label_create);
 
+		// Phasing out: 1.4 reference is never used.
+		/*
 		if (!Service::isPrestashopFresherThan14())
 		{
 			// alterOrdersTable
@@ -228,6 +230,7 @@ class BpostShm extends CarrierModule
 			);
 			$return = $return && $this->dbAlterTable($table_orders_alter);
 		}
+		*/
 
 		return $return;
 	}

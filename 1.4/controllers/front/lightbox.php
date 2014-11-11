@@ -62,7 +62,10 @@ class Lightbox extends FrontController
 			if ($city)
 				$search_params['zone'] .= (string)$city;
 
-			$service_points = $service->getNearestServicePoint($search_params, $shipping_method);
+			//$service_points = $service->getNearestServicePoint($search_params, $shipping_method);
+			$service_points = (BpostShm::SHIPPING_METHOD_AT_SHOP == $shipping_method) ?
+				$service->getNearestServicePoint($search_params) :
+				$service->getNearestServicePoint($search_params, $shipping_method);
 			$this->jsonEncode($service_points);
 		}
 		elseif (Tools::getValue('get_service_point_hours') && $service_point_id = (int)Tools::getValue('service_point_id'))

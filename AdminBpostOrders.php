@@ -52,7 +52,9 @@ class AdminBpostOrders extends AdminTab
 		$this->lang = false;
 		$this->explicitSelect = true;
 		$this->deleted = false;
-		$this->list_no_link = true;
+		//$this->list_no_link = true;
+		$this->noLink = true;
+		
 		$this->view = true;
 		$this->context = Context::getContext();
 		self::$current_index = $_SERVER['SCRIPT_NAME'].(($tab = Tools::getValue('tab')) ? '?tab='.$tab : '');
@@ -93,7 +95,7 @@ class AdminBpostOrders extends AdminTab
 		AND a.status IN("'.implode('", "', $this->statuses).'")
 		AND DATEDIFF(NOW(), a.date_add) <= 14
 		AND ocs.current_state IN('.implode(', ', $this->ps_order_states).', '
-			.(int)Configuration::get('BPOST_ORDER_STATE_TREATED').')';
+			.$this->bpost_treated_state.')';
 
 		/*
 		$this->_join = '
@@ -144,25 +146,16 @@ class AdminBpostOrders extends AdminTab
 				'search' => false,
 				'orderby' => false,
 			),
-			/*
 			'current_state' => array(
 				'title' => $this->l('State'),
 				'callback' => 'getCurrentOrderState',
 				'search' => false,
 			),
-			*/
 			'reference' => array(
 				'title' => $this->l('Reference'),
 				'align' => 'left',
 				'filter_key' => 'a!reference',
 			),
-			/*
-			'delivery_method' => array(
-				'title' => $this->l('Delivery method'),
-				'search' => false,
-				'filter_key' => 'a!delivery_method',
-			),
-			*/
 			'delivery_method' => array(
 				'title' => $this->l('Delivery method'),
 				'search' => false,
@@ -175,10 +168,12 @@ class AdminBpostOrders extends AdminTab
 			),
 			'status' => array(
 				'title' => $this->l('Status'),
+				'width' => 60,
 				'callback' => 'getCurrentStatus',
 			),
 			'date_add' => array(
 				'title' => $this->l('Creation date'),
+				'width' => 100,
 				'align' => 'right',
 				'type' => 'datetime',
 				'filter_key' => 'a!date_add'
@@ -192,6 +187,15 @@ class AdminBpostOrders extends AdminTab
 		);
 
 		parent::__construct();
+	}
+
+	public function displayList()
+	{
+		//echo 'Top of 1.4 list !!';
+
+		parent::displayList();
+
+		//echo "Bottom of 1.4 list";
 	}
 
 	public function vieworder_label()
@@ -956,7 +960,7 @@ class AdminBpostOrders extends AdminTab
 		{
 			$reference = $fields_list['reference'];
 			$current_state = (int)$fields_list['current_state'];
-			//$current_status = ($this->bpost_treated_state === $current_state) ? $this->service->getOrderStatus($reference) : $status;
+			$current_status = ($this->bpost_treated_state === $current_state) ? $this->service->getOrderStatus($reference) : $status;
 		}
 
 		return $current_status;
@@ -966,6 +970,7 @@ class AdminBpostOrders extends AdminTab
 	 * @param string $reference
 	 * @return string
 	 */
+	/*
 	public static function getPrintIcon($reference = '')
 	{
 		if (empty($reference))
@@ -976,17 +981,45 @@ class AdminBpostOrders extends AdminTab
 		return '<img class="print" src="'._MODULE_DIR_.'bpostshm/views/img/icons/print.png" data-labels="'
 			.Tools::safeOutput(self::$current_index.'&reference='.$reference.'&printLabels'.$controller->table.'&token='.$controller->token).'"/>';
 	}
+	*/
+	public function getPrintIcon($reference = '')
+	{
+		if (empty($reference))
+			return;
+
+		return '<img class="print" src="'._MODULE_DIR_.'bpostshm/views/img/icons/print.png" data-labels="'
+			.Tools::safeOutput(self::$current_index.'&reference='.$reference.'&printLabels'.$this->table.'&token='.$this->token).'"/>';
+	}
 
 	/**
 	 * @param string $reference
 	 * @return string
 	 */
-	public static function getTTIcon($reference = '')
+	public function getTTIcon($reference = '')
 	{
 		if (empty($reference))
 			return;
 
-		$controller = new AdminBpostOrders();
+		$pdf_dir = _PS_MODULE_DIR_.'bpostshm/pdf/'.$reference;
+		// do not display if labels are not PRINTED
+		if (!is_dir($pdf_dir) || !opendir($pdf_dir))
+			return;
+
+		$tracking_url = $this->tracking_url;
+		$params = $this->tracking_params;
+		$params['customerReference'] = $reference;
+		$tracking_url .= '?'.http_build_query($params);
+
+		return '<a href="'.$tracking_url.'" target="_blank" title="'.$this->l('View Track & Trace status').'">
+			<img class="t_t" src="'._MODULE_DIR_.'bpostshm/views/img/icons/track_and_trace.png" /></a>';
+	}
+
+	// public static function getTTIcon($reference = '')
+	// {
+	// 	if (empty($reference))
+	// 		return;
+
+	// 	$controller = new AdminBpostOrders();
 
 		/*$ps_order = new Order((int)Tools::substr($reference, 7));
 		$treated_status = Configuration::get('BPOST_ORDER_STATE_TREATED_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id));
@@ -994,14 +1027,14 @@ class AdminBpostOrders extends AdminTab
 		if ($ps_order->current_state != $treated_status)
 			return;*/
 
-		$pdf_dir = _PS_MODULE_DIR_.'bpostshm/pdf/'.$reference;
-		// do not display if labels are not PRINTED
-		if (!is_dir($pdf_dir) || !opendir($pdf_dir))
-			return;
+		// $pdf_dir = _PS_MODULE_DIR_.'bpostshm/pdf/'.$reference;
+		// // do not display if labels are not PRINTED
+		// if (!is_dir($pdf_dir) || !opendir($pdf_dir))
+		// 	return;
 
-		$tracking_url = $controller->tracking_url;
-		$params = $controller->tracking_params;
-		$params['customerReference'] = $reference;
+		// $tracking_url = $controller->tracking_url;
+		// $params = $controller->tracking_params;
+		// $params['customerReference'] = $reference;
 /*
 		foreach ($controller->tracking_params as $param => $value)
 			if (empty($value) && false !== $value)
@@ -1024,9 +1057,9 @@ class AdminBpostOrders extends AdminTab
 				}
 		$tracking_url .= '?'.http_build_query($controller->tracking_params);
 */
-		$tracking_url .= '?'.http_build_query($params);
+	// 	$tracking_url .= '?'.http_build_query($params);
 
-		return '<a href="'.$tracking_url.'" target="_blank" title="'.$controller->l('View Track & Trace status').'">
-			<img class="t_t" src="'._MODULE_DIR_.'bpostshm/views/img/icons/track_and_trace.png" /></a>';
-	}
+	// 	return '<a href="'.$tracking_url.'" target="_blank" title="'.$controller->l('View Track & Trace status').'">
+	// 		<img class="t_t" src="'._MODULE_DIR_.'bpostshm/views/img/icons/track_and_trace.png" /></a>';
+	// }
 }
