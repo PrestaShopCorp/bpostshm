@@ -174,7 +174,8 @@ class Service
 	{
 		$service_point_details = array();
 		// Getting round type inconsistant idiocy
-		$type = (3 === $type) ? ((int)$service_point_id < 100000 ? 1 : 2) : $type;
+		//$type = (3 === $type) ? ((int)$service_point_id < 100000 ? 1 : 2) : $type;
+		$type = (3 === $type) ? 2 : $type;
 
 		try {
 			if ($poi = $this->geo6->getServicePointDetails($service_point_id, $this->context->language->id, $type))
@@ -188,10 +189,9 @@ class Service
 			}
 		} catch (TijsVerkoyenBpostException $e) {
 			$service_point_details = array();
-			/*
-			if (3 === $type)
+			if (2 === $type)
 				$service_point_details = $this->getServicePointDetails($service_point_id, 1);
-			*/
+
 		}
 
 		return $service_point_details;
