@@ -7,7 +7,7 @@
 *}
 
 <div id="lightbox" class="at-shop{if $version == 1.5} v1-5{/if}">
-	<div id="catch-phrase">{l s='FREE pick up in one of the more than 1,100 collection points.' mod='bpostshm'}</div>
+	<div id="catch-phrase">{l s='Select where you want to pick up your parcel.' mod='bpostshm'}</div>
 	<form action="{$url_get_nearest_service_points|escape}" id="search-form" method="GET" autocomplete="off">
 		<label for="postcode">{l s='Postcode' mod='bpostshm'}</label>
 		<input type="text" name="postcode" id="postcode" value="{$postcode|default:''}" size="10" />

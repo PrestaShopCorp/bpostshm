@@ -37,7 +37,7 @@
 					<ul>{strip}
 						<li>{l s='Parcel lockers are available 24 hours/day, 7 days/week' mod='bpostshm'}</li>
 						<li>{l s='You register for free' mod='bpostshm'}</li>
-						<li>{l s='You will receive your packages for free' mod='bpostshm'}</li>
+						<!-- <li>{l s='You will receive your packages for free' mod='bpostshm'}</li> -->
 						<li>{l s='Shipments are done in a jiffy' mod='bpostshm'}</li>
 						<li>{l s='You follow your parcel online' mod='bpostshm'}</li>
 						<li>{l s='You can always choose another package dispenser' mod='bpostshm'}</li>

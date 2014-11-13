@@ -190,7 +190,7 @@ $_MODULE['<{bpostshm}prestashop>lightbox-at-247_79ebb9a0e0afd3375d9bd645b594a7ca
 $_MODULE['<{bpostshm}prestashop>lightbox-at-247_56483f8e6611d567441456b9afec2ffe'] = 'http://www.bpost.be/site/nl/docs/conditions/Conditions_generales_bpack247_NL.pdf ';
 $_MODULE['<{bpostshm}prestashop>lightbox-at-247_71f41063f39f6656241635547f5bd810'] = 'RC# kan niet geverifiëerd worden.';
 $_MODULE['<{bpostshm}prestashop>lightbox-at-247_090bcc1082afdd84d607c9e9668c2719'] = 'Registratie mislukt.';
-$_MODULE['<{bpostshm}prestashop>lightbox-point-list_a881057a4b5391d7b8e975df127c7c37'] = 'GRATIS ophaling in 1 van onze meer dan 1100 afhaalpunten.';
+$_MODULE['<{bpostshm}prestashop>lightbox-point-list_ff90c45a713321cbd9fc9b32897303d8'] = 'Kies waar u uw pakket wil ophalen.';
 $_MODULE['<{bpostshm}prestashop>lightbox-point-list_8bcdc441379cbf584638b0589a3f9adb'] = 'Postcode';
 $_MODULE['<{bpostshm}prestashop>lightbox-point-list_57d056ed0984166336b7879c2af3657f'] = 'Gemeente';
 $_MODULE['<{bpostshm}prestashop>lightbox-point-list_13348442cc6a27032d2b4aa28b75a5d3'] = 'Zoek';

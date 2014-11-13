@@ -190,7 +190,7 @@ $_MODULE['<{bpostshm}prestashop>lightbox-at-247_79ebb9a0e0afd3375d9bd645b594a7ca
 $_MODULE['<{bpostshm}prestashop>lightbox-at-247_56483f8e6611d567441456b9afec2ffe'] = 'http://www.bpost.be/site/fr/docs/conditions/Conditions_generales_bpack247_FR.pdf';
 $_MODULE['<{bpostshm}prestashop>lightbox-at-247_71f41063f39f6656241635547f5bd810'] = 'Votre numéro ne peut être vérifié';
 $_MODULE['<{bpostshm}prestashop>lightbox-at-247_090bcc1082afdd84d607c9e9668c2719'] = 'L\'inscription a échoué.';
-$_MODULE['<{bpostshm}prestashop>lightbox-point-list_a881057a4b5391d7b8e975df127c7c37'] = 'Retrait GRATUIT dans plus de 1100 points de collecte.';
+$_MODULE['<{bpostshm}prestashop>lightbox-point-list_ff90c45a713321cbd9fc9b32897303d8'] = 'Choisissez où vous voulez retirer votre colis.';
 $_MODULE['<{bpostshm}prestashop>lightbox-point-list_8bcdc441379cbf584638b0589a3f9adb'] = 'Code postal';
 $_MODULE['<{bpostshm}prestashop>lightbox-point-list_57d056ed0984166336b7879c2af3657f'] = 'Ville';
 $_MODULE['<{bpostshm}prestashop>lightbox-point-list_13348442cc6a27032d2b4aa28b75a5d3'] = 'Rechercher';
