@@ -29,11 +29,16 @@ class BpostShm extends CarrierModule
 	const SHIPPING_METHOD_AT_HOME = 1;
 	const SHIPPING_METHOD_AT_SHOP = 2;
 	const SHIPPING_METHOD_AT_24_7 = 4;
+	/*
+	 * Need to represent sudo shipping method
+	 * 9: (1+8)
+	 */
+	const SHIPPING_METHOD_AT_INTL = 9;
 
 	public $carriers = array();
 	public $shipping_methods = array();
 
-	private $api_url = 'https://shippingmanager.bpost.be/ShmFrontEnd/start'; /* 'http://shippingmanager.bpost.be/shippingmanager/frontEnd' */
+	private $api_url = 'https://shippingmanager.bpost.be/ShmFrontEnd/start';
 
 	public function __construct()
 	{
@@ -42,32 +47,13 @@ class BpostShm extends CarrierModule
 		$this->name = 'bpostshm';
 		$this->need_instance = 0;
 		$this->tab = 'shipping_logistics';
-		$this->version = '1.0';
-
-		parent::__construct();
+		$this->version = '1.1';
 
 		$this->displayName = $this->l('bpost Shipping Manager - bpost customers only');
 		$this->description = $this->l('IMPORTANT: bpostshm module description');
 
-		/*
-		$this->shipping_methods = array(
-			self::SHIPPING_METHOD_AT_HOME => array(
-				'name' 	=> $this->l('Delivery at home or at the office'),
-				'delay' => $this->l('Receive your parcel at home or at the office.'),
-				'slug' 	=> '@home',
-			),
-			self::SHIPPING_METHOD_AT_SHOP => array(
-				'name' 	=> $this->l('Pick-up in a PostOffice or Post Point'),
-				'delay' => $this->l('Over 1.400 locations nearby home or the office.'),
-				'slug' 	=> '@bpost',
-			),
-			self::SHIPPING_METHOD_AT_24_7 => array(
-				'name' 	=> $this->l('Delivery in a parcel locker'),
-				'delay' => $this->l('Pick-up your parcel whenever you want, thanks to the 24/7 service of bpost.'),
-				'slug' 	=> '@24/7',
-			),
-		);
-		*/
+		parent::__construct();
+
 		$this->shipping_methods = array(
 			self::SHIPPING_METHOD_AT_HOME => array(
 				'name' 	=> 'Home delivery / Livraison à domicile / Thuislevering',
@@ -77,6 +63,7 @@ class BpostShm extends CarrierModule
 					'nl' =>	'Ontvang uw pakket thuis of op kantoor.',
 					),
 				'slug' 	=> '@home',
+				'lname'	=> $this->l('Home delivery'),
 			),
 			self::SHIPPING_METHOD_AT_SHOP => array(
 				'name' 	=> 'Pick-up point / Point d’enlèvement / Afhaalpunt',
@@ -86,6 +73,7 @@ class BpostShm extends CarrierModule
 					'nl' =>	'Meer dan 1250 locaties dichtbij huis of kantoor.',
 					),
 				'slug' 	=> '@bpost',
+				'lname'	=> $this->l('Pick-up point'),
 			),
 			self::SHIPPING_METHOD_AT_24_7 => array(
 				'name' 	=> 'Parcel locker / Distributeur de paquets / Pakjesautomaat',
@@ -95,6 +83,7 @@ class BpostShm extends CarrierModule
 					'nl' =>	'Haal uw pakket op wanneer u maar wilt, dankzij de pakjesautomaten van bpost.',
 					),
 				'slug' 	=> '@24/7',
+				'lname'	=> $this->l('Parcel locker'),
 			),
 		);
 
@@ -137,100 +126,83 @@ class BpostShm extends CarrierModule
 
 		$return = true;
 
-		if (!Service::isPrestashopFresherThan14())
-		{
-			$return = $return && copy(_PS_MODULE_DIR_.$this->name.'/1.4/override/classes/Carrier.php', _PS_ROOT_DIR_.'/override/classes/Carrier.php');
-			$return = $return && copy(_PS_MODULE_DIR_.$this->name.'/1.4/override/classes/Cart.php', _PS_ROOT_DIR_.'/override/classes/Cart.php');
-			$return = $return && copy(
-				_PS_MODULE_DIR_.$this->name.'/1.4/override/controllers/ParentOrderController.php',
-				_PS_ROOT_DIR_.'/override/controllers/ParentOrderController.php'
-			);
-		}
-
-		$cache_dir = defined('_PS_CACHE_DIR_') ? _PS_CACHE_DIR_ : _PS_ROOT_DIR_.'/cache/';
-		if (file_exists($cache_dir.'class_index.php'))
-			$return = $return && (bool)unlink($cache_dir.'class_index.php');
-
 		$return = $return && parent::install();
-		$return = $return && $this->addCarriers();
+		$return = $return && $this->addReplaceCarriers();
 
-		if (Service::isPrestashopFresherThan14())
-		{
-			$return = $return && $this->registerHook('actionTopPayment');
-			$return = $return && $this->registerHook('actionValidateOrder');
-			$return = $return && $this->registerHook('displayBackOfficeHeader');
-			$return = $return && $this->registerHook('actionCarrierProcess'); // OPC
-		}
-		else
-		{
-			$return = $return && $this->registerHook('paymentTop');
-			$return = $return && $this->registerHook('orderConfirmation');
-			$return = $return && $this->registerHook('backOfficeHeader');
-		}
-
-		// get Correct display names & langs for all versions
-		//$return = $return && $this->registerHook('displayBeforeCarrier');
-		//
-		$return = $return && $this->registerHook('extraCarrier');
-		$return = $return && $this->registerHook('updateCarrier');
+		$return = $return && $this->registerHook('backOfficeHeader');		// displayBackOfficeHeader
+		$return = $return && $this->registerHook('beforeCarrier');			// displayBeforeCarrier
+		$return = $return && $this->registerHook('extraCarrier');			// displayCarrierList
+		$return = $return && $this->registerHook('paymentTop');				// displayPaymentTop
+		$return = $return && $this->registerHook('processCarrier');			// actionCarrierProcess
+		$return = $return && $this->registerHook('newOrder');				// actionValidateOrder
+		$return = $return && $this->registerHook('postUpdateOrderStatus');	// actionOrderStatusPostUpdate
+		$return = $return && $this->registerHook('updateCarrier');			// actionCarrierUpdate
 
 		$return = $return && Service::updateGlobalValue('BPOST_ACCOUNT_API_URL', $this->api_url);
 
-		$return = $return && $this->addOrderState();
+		$return = $return && $this->addReplaceOrderState();
 
-		// Db::execute ALTER TABLE will return nor TRUE nor FALSE
-		// WRONG: no point pretending if required table/columns don't actually exist
-		/*
-		$this->alterCartTable();
-		$this->addOrderLabelTable();
-
-		if (!Service::isPrestashopFresherThan14())
-			$this->alterOrderTable();
-		*/
-
-		// alterCartTable
-		$table_cart_alter = array(
-			'name' => _DB_PREFIX_.'cart',
+		// addCartBpostTable
+		$table_cart_bpost_create = array(
+			'name' => _DB_PREFIX_.'cart_bpost',
+			'primary_key' => 'id_cart_bpost',
 			'fields' => array(
+				'id_cart_bpost' => 'int(11) unsigned NOT NULL AUTO_INCREMENT',
+				'id_cart' => 'int(10) unsigned NOT NULL',
+				'service_point_id' => 'INT(10) unsigned NOT NULL DEFAULT 0',
+				'sp_type' => 'TINYINT(1) unsigned NOT NULL DEFAULT 0',
+				'option_kmi' => 'TINYINT(1) unsigned NOT NULL DEFAULT 0',
 				'bpack247_customer' => 'TEXT',
-				'service_point_id' => 'INT(10) unsigned'
-			)
-		);
-		$return = $return && $this->dbAlterTable($table_cart_alter);
-
-		// addOrderLabelTable
-		$table_order_label_create = array(
-			'name' => _DB_PREFIX_.'order_label',
-			'primary_key' => 'id_order_label',
-			'fields' => array(
-				'id_order_label' => 'int(11) NOT NULL AUTO_INCREMENT',
-				'reference' => 'varchar(50) NOT NULL',
-				'id_shop' => 'int(11) unsigned NOT NULL DEFAULT 1',
-				'status' => 'varchar(20) NOT NULL',
-				'delivery_method' => 'varchar(25) NOT NULL',
-				'recipient' => 'varchar(255) NOT NULL',
-				'barcode' => 'varchar(25) DEFAULT NULL',
 				'date_add' => 'datetime NOT NULL',
 				'date_upd' => 'timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP',
 			)
 		);
-		$return = $return && $this->dbCreateTable($table_order_label_create);
+		$return = $return && $this->dbCreateTable($table_cart_bpost_create);
 
-		// Phasing out: 1.4 reference is never used.
-		/*
-		if (!Service::isPrestashopFresherThan14())
-		{
-			// alterOrdersTable
-			$table_orders_alter = array(
-				'name' => _DB_PREFIX_.'orders',
-				'after' => 'id_order',
-				'fields' => array(
-					'reference' => 'VARCHAR(9)'
-				)
+		// addOrderBpostTable
+		$table_order_bpost_create = array(
+			'name' => _DB_PREFIX_.'order_bpost',
+			'primary_key' => 'id_order_bpost',
+			'fields' => array(
+				'id_order_bpost' => 'int(11) unsigned NOT NULL AUTO_INCREMENT',
+				'reference' => 'varchar(50) NOT NULL',
+				'id_shop_group' => 'int(11) unsigned NOT NULL DEFAULT 1',
+				'id_shop' => 'int(11) unsigned NOT NULL DEFAULT 1',
+				'current_state' => 'int(10) unsigned NOT NULL DEFAULT 0',
+				'status' => 'varchar(20)',
+				'shm' => 'TINYINT(1) unsigned NOT NULL DEFAULT 0',
+				'delivery_method' => 'varchar(25) NOT NULL',
+				'recipient' => 'varchar(255) NOT NULL',
+				'date_add' => 'datetime NOT NULL',
+				'date_upd' => 'timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP',
+			)
+		);
+		$return = $return && $this->dbCreateTable($table_order_bpost_create);
+
+		// addOrderBpostLabelTable
+		$table_order_bpost_label_create = array(
+			'name' => _DB_PREFIX_.'order_bpost_label',
+			'primary_key' => 'id_order_bpost_label',
+			'fields' => array(
+				'id_order_bpost_label' => 'int(11) unsigned NOT NULL AUTO_INCREMENT',
+				'id_order_bpost' => 'int(11) unsigned NOT NULL',
+				'is_retour' => 'TINYINT(1) unsigned NOT NULL DEFAULT 0',
+				'has_retour' => 'TINYINT(1) unsigned NOT NULL DEFAULT 0',
+				'status' => 'varchar(20) NOT NULL',
+				'barcode' => 'varchar(25) DEFAULT NULL',
+				'barcode_retour' => 'varchar(25) DEFAULT NULL',
+				'date_add' => 'datetime NOT NULL',
+				'date_upd' => 'timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP',
+			)
+		);
+		$return = $return && $this->dbCreateTable($table_order_bpost_label_create);
+
+		if ((bool)Configuration::get('BPOST_USE_PS_LABELS'))
+			$this->installModuleTab(
+				'AdminOrdersBpost',
+				'bpost',
+				Service::isPrestashop15plus() ? Tab::getIdFromClassName('AdminParentOrders') : Tab::getIdFromClassName('AdminOrders')
 			);
-			$return = $return && $this->dbAlterTable($table_orders_alter);
-		}
-		*/
 
 		return $return;
 	}
@@ -241,36 +213,41 @@ class BpostShm extends CarrierModule
 	public function uninstall()
 	{
 		// Do not include into function return because tab might already be uninstalled
-		$this->uninstallModuleTab('AdminBpostOrders');
+		$this->uninstallModuleTab('AdminOrdersBpost');
 
 		$return = true;
 
 		$cache_dir = defined('_PS_CACHE_DIR_') ? _PS_CACHE_DIR_ : _PS_ROOT_DIR_.'/cache/';
-		if (file_exists($cache_dir.'class_index.php'))
-			$return = $return && unlink($cache_dir.'class_index.php');
-
 		if (file_exists($cache_dir.'class_bpost_index.php'))
 			$return = $return && unlink($cache_dir.'class_bpost_index.php');
 
-		$return = $return && $this->unregisterHook('actionValidateOrder');
-		$return = $return && $this->unregisterHook('displayBackOfficeHeader');
-		// $return = $return && $this->unregisterHook('displayBeforeCarrier');
+		$return = $return && $this->unregisterHook('backOfficeHeader');
+		$return = $return && $this->unregisterHook('beforeCarrier');
 		$return = $return && $this->unregisterHook('extraCarrier');
+		$return = $return && $this->unregisterHook('paymentTop');
+		$return = $return && $this->unregisterHook('processCarrier');
+		$return = $return && $this->unregisterHook('newOrder');
+		$return = $return && $this->unregisterHook('postUpdateOrderStatus');
 		$return = $return && $this->unregisterHook('updateCarrier');
-		$return = $return && $this->deleteCarriers();
+		$return = $return && $this->removeCarriers();
+
 		$return = $return && parent::uninstall();
 
 		return $return;
 	}
 
 	/**
-	 * @return bool
+	 * [addReplaceCarriers reverses carrier removal (carrier->deleted = true) if found]
+	 * Create new otherwise
+	 * [Remark: No need to remove carrier image icons]
+	 * @author Serge <serge@stigmi.eu>
+	 * @return bool true if success
 	 */
-	private function addCarriers()
+	private function addReplaceCarriers()
 	{
 		$return = true;
 
-		$user_groups_tmp = Group::getGroups($this->context->language->id, $this->context->shop->id);
+		$user_groups_tmp = Group::getGroups($this->context->language->id);
 		if (is_array($user_groups_tmp) && !empty($user_groups_tmp))
 		{
 			$user_groups = array();
@@ -278,29 +255,17 @@ class BpostShm extends CarrierModule
 				$user_groups[] = $group['id_group'];
 		}
 
+		$stored_carrier_ids = $this->getIdCarriers();
 		foreach ($this->shipping_methods as $shipping_method => $lang_fields)
 		{
-			$carrier = new Carrier();
+			$id_carrier = $stored_carrier_ids[$shipping_method];
+			$carrier = new Carrier($id_carrier);
+			$carrier->deleted = (int)false;
 			$carrier->active = true;
-			/*
-			if ($languages = Language::getLanguages(true, $this->context->shop->id))
-				foreach ($languages as $language)
-					$carrier->delay[$language['id_lang']] = $lang_fields['delay'];
-			else
-				$carrier->delay[$this->context->language->id] = $lang_fields['delay'];
-			*/
-
-			if ($languages = Language::getLanguages(false))
-				foreach ($languages as $language)
-					if (isset($lang_fields['delay'][$language['iso_code']]))
-						$carrier->delay[$language['id_lang']] = $lang_fields['delay'][$language['iso_code']];
-					else
-						$carrier->delay[$language['id_lang']] = $lang_fields['delay']['en'];
-			else
-				$carrier->delay[$this->context->language->id] = $lang_fields['delay']['en'];
 
 			$carrier->external_module_name = $this->name;
 			$carrier->name = $lang_fields['name'];
+			$carrier->delay = $this->getTranslatedFields($lang_fields['delay']);
 			$carrier->need_range = true;
 			$carrier->shipping_external = true;
 			$carrier->shipping_handling = false;
@@ -332,7 +297,7 @@ class BpostShm extends CarrierModule
 						$id_zone_be = (int)$zone->id;
 					}
 
-					Configuration::updateValue('BPOST_ID_COUNTRY_BELGIUM', (int)$id_zone_be);
+					Service::updateGlobalValue('BPOST_ID_ZONE_BELGIUM', (int)$id_zone_be);
 
 					if ($id_country = Country::getByIso('BE'))
 					{
@@ -362,8 +327,8 @@ class BpostShm extends CarrierModule
 					$carrier->setGroups($user_groups);
 
 				// Copy carrier logo
-				copy(_PS_MODULE_DIR_.$this->name.'/views/img/logo-carrier.jpg', _PS_SHIP_IMG_DIR_.'/'.(int)$carrier->id.'.jpg');
-				copy(
+				$this->setIcon(_PS_MODULE_DIR_.$this->name.'/views/img/logo-carrier.jpg', _PS_SHIP_IMG_DIR_.'/'.(int)$carrier->id.'.jpg');
+				$this->setIcon(
 					_PS_MODULE_DIR_.$this->name.'/views/img/logo-carrier.jpg',
 					_PS_TMP_IMG_DIR_.'/carrier_mini_'.(int)$carrier->id.'_'.$this->context->language->id.'.jpg'
 				);
@@ -379,81 +344,97 @@ class BpostShm extends CarrierModule
 		return $return;
 	}
 
-	private function addOrderState()
-	{
-		$return = true;
-
-		$exists = false;
-		$order_states = OrderState::getOrderStates($this->context->language->id);
-		foreach ($order_states as $order_state)
-			if ('Treated' == $order_state['name'])
-			{
-				$exists = true;
-				break;
-			}
-
-		if ($exists)
-			return $return;
-
-		$order_state = new OrderState();
-		if ($languages = Language::getLanguages(true, $this->context->shop->id))
-			foreach ($languages as $language)
-				$order_state->name[$language['id_lang']] = $this->l('Treated');
-		else
-			$order_state->name[$this->context->language->id] = $this->l('Treated');
-		$order_state->color = '#FFC050'; //'#108510';
-		$order_state->hidden = true;
-		$order_state->logable = true;
-		$order_state->paid = true;
-		if (!$order_state->save())
-			return !$return;
-
-		$return = $return && Configuration::updateValue('BPOST_ORDER_STATE_TREATED', (int)$order_state->id);
-
-		copy(_PS_MODULE_DIR_.$this->name.'/views/img/icons/box_closed.png', _PS_IMG_DIR_.'os/'.(int)$order_state->id.'.gif');
-
-		return $return;
-	}
-
 	/**
-	 * @return array
+	 * [deleteCarriers mark carriers for deletion (carrier->deleted = true) if found]
+	 * [Remark: No need to remove carrier image icons]
+	 * @author Serge <serge@stigmi.eu>
+	 * @return bool true if success
 	 */
-	public function getIdCarriers()
-	{
-		if (empty($this->carriers))
-			foreach (array_keys($this->shipping_methods) as $shipping_method)
-				$this->carriers[$shipping_method] = (int)Configuration::get('BPOST_SHIP_METHOD_'.$shipping_method.'_ID_CARRIER');
-
-		return $this->carriers;
-	}
-
-	/**
-	 * @return bool
-	 */
-	private function deleteCarriers()
+	private function removeCarriers()
 	{
 		$return = true;
 		foreach ($this->getIdCarriers() as $id_carrier)
-		{
-			$carrier = new Carrier((int)$id_carrier);
-
-			if (!empty($carrier->id))
+			if (isset($id_carrier))
 			{
-				if ($ret_tmp = $carrier->delete())
-				{
-					unlink(_PS_SHIP_IMG_DIR_.(int)$carrier->id.'.jpg');
-					unlink(_PS_TMP_IMG_DIR_.'carrier_mini_'.(int)$carrier->id.'_'.$this->context->language->id.'.jpg');
-				}
-
-				$return = $return && $ret_tmp;
+				$carrier = new Carrier($id_carrier);
+				$carrier->active = false;
+				$carrier->deleted = (int)true;
+				$return = $return && $carrier->save();
 			}
-		}
 
 		$return = $return && (method_exists('Carrier', 'cleanPositions') ? Carrier::cleanPositions() : true);
 
 		return $return;
 	}
 
+	/**
+	 * [addReplaceOrderState add or Replace Edit BPost 'Treated' order status to Prestashop]
+	 * @author Serge <serge@stigmi.eu>
+	 */
+	private function addReplaceOrderState()
+	{
+		$treated_names = array(
+				'en' => 'Treated',
+				'fr' => 'Traitée',
+				'nl' => 'Behandeld',
+			);
+
+		$return = true;
+
+		$id_order_state = null;
+		$order_states = OrderState::getOrderStates($this->context->language->id);
+		foreach ($order_states as $order_state)
+			if (in_array($order_state['name'], array_values($treated_names)))
+			{
+				$id_order_state = $order_state['id_order_state'];
+				break;
+			}
+
+		// Creates new OrderState if id still null (ie. not found)
+		$order_state = new OrderState($id_order_state);
+		$order_state->name = $this->getTranslatedFields($treated_names);
+
+		$order_state->color = '#ddff88';
+		$order_state->hidden = true;
+		$order_state->logable = true;
+		$order_state->paid = true;
+
+		$return = $return && $order_state->save();
+		$return = $return && Service::updateGlobalValue('BPOST_ORDER_STATE_TREATED', (int)$order_state->id);
+
+		$this->setIcon(_PS_MODULE_DIR_.$this->name.'/views/img/icons/box_closed.png', _PS_IMG_DIR_.'os/'.(int)$order_state->id.'.gif');
+
+		return $return;
+	}
+
+	/**
+	 * [getTranslatedFields helper for Prestashop mixed id_lang -> string db fields]
+	 * @author Serge <serge@stigmi.eu>
+	 * @param  mixed $source array of 'iso_code' => 'translated string'
+	 * @return mixed         array of 'id_land' => 'translated string'
+	 */
+	private function getTranslatedFields($source)
+	{
+		$translated = array();
+		if (is_array($source) && count($source) && $default = reset($source))
+			if ($languages = Language::getLanguages(false))
+				foreach ($languages as $language)
+					if (isset($source[$language['iso_code']]))
+						$translated[$language['id_lang']] = $source[$language['iso_code']];
+					else
+						$translated[$language['id_lang']] = $default;
+			else
+				$translated[$this->context->language->id] = $default;
+
+		return $translated;
+	}
+
+	/**
+	 * [dbCreateTable Create new prestashop custom named table with field attribs (Alter to match if already exists]
+	 * @author Serge <serge@stigmi.eu>
+	 * @param  mixed $table array of name, position, field attribs
+	 * @return bool        true if no db error
+	 */
 	private function dbCreateTable($table)
 	{
 		if (!isset($table['name']) || empty($table['fields']))
@@ -480,6 +461,12 @@ class BpostShm extends CarrierModule
 		return $return && $this->dbAlterTable($table);
 	}
 
+	/**
+	 * [dbAlterTable Alter prestashop named table to alter/append field values at column position]
+	 * @author Serge <serge@stigmi.eu>
+	 * @param  mixed $table array of name, position, field attribs
+	 * @return bool        true if no db error
+	 */
 	private function dbAlterTable($table)
 	{
 		if (!isset($table['name']) || empty($table['fields']))
@@ -529,71 +516,7 @@ AND
 
 		return $return;
 	}
-/*
-	private function addOrderLabelTable()
-	{
-		Db::getInstance(_PS_USE_SQL_SLAVE_)->execute('
-CREATE TABLE IF NOT EXISTS
-	`'._DB_PREFIX_.'order_label`
-(
-	`id_order_label` int(11) NOT NULL AUTO_INCREMENT,
-	`reference` varchar(50) NOT NULL,
-	`status` varchar(20) NOT NULL,
-	`delivery_method` varchar(25) NOT NULL,
-	`recipient` varchar(255) NOT NULL,
-	`barcode` varchar(25) NOT NULL,
-	`date_add` datetime NOT NULL,
-	`date_upd` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	PRIMARY KEY (`id_order_label`)
-)');
-	}
 
-	private function alterCartTable()
-	{
-		$db = Db::getInstance(_PS_USE_SQL_SLAVE_);
-
-		if (!$db->getRow('
-SELECT
-	column_name
-FROM
-	information_schema.columns
-WHERE
-	table_schema = "'._DB_NAME_.'"
-AND
-	table_name = "'._DB_PREFIX_.'cart"
-AND
-	column_name = "bpack247_customer"'))
-				$db->execute('
-ALTER TABLE
-	`'._DB_PREFIX_.'cart`
-ADD COLUMN
-	`bpack247_customer` TEXT,
-ADD COLUMN
-	`service_point_id` INT(10) unsigned');
-	}
-
-	private function alterOrderTable()
-	{
-		$db = Db::getInstance(_PS_USE_SQL_SLAVE_);
-
-		if (!$db->getRow('
-SELECT
-	column_name
-FROM
-	information_schema.columns
-WHERE
-	table_schema = "'._DB_NAME_.'"
-AND
-	table_name = "'._DB_PREFIX_.'order"
-AND
-	column_name = "reference"'))
-				$db->execute('
-ALTER TABLE
-	`'._DB_PREFIX_.'order`
-ADD COLUMN
-	`reference` VARCHAR(9)');
-	}
-*/
 	/**
 	 * @param string $tab_class
 	 * @param string $tab_name
@@ -632,6 +555,42 @@ ADD COLUMN
 		return $return;
 	}
 
+	/**
+	 * [setIcon copy src image to destination if necessary. replace if different]
+	 * @author Serge <serge@stigmi.eu>
+	 * @param string $src  Source path
+	 * @param string $dest destination path
+	 * @return  bool true if icon in place
+	 */
+	private function setIcon($src, $dest)
+	{
+		$icon_exists = md5_file($src) === md5_file($dest);
+		if (!$icon_exists)
+			$icon_exists = copy($src, $dest);
+
+		return $icon_exists;
+	}
+
+	private function getCartBpost($id_cart)
+	{
+		// Service instance is required for Autoload to function
+		// correctly in the Admin context ?!
+		$service = Service::getInstance($this->context);
+		$cart_bpost = PsCartBpost::getByPsCartID((int)$id_cart);
+
+		return $cart_bpost;
+	}
+
+	private function getOrderBpost($id_order)
+	{
+		// Service instance is required for Autoload to function
+		// correctly in the Admin context ?!
+		$service = Service::getInstance($this->context);
+		$order_bpost = PsOrderBpost::getByPsOrderID((int)$id_order);
+
+		return $order_bpost;
+	}
+
 	private function postValidation()
 	{
 		$errors = array();
@@ -647,7 +606,7 @@ ADD COLUMN
 				|| !Configuration::get('PS_SHOP_CODE'))
 		{
 			$translate = 'Do not forget to fill in shipping address ';
-				if (!Service::isPrestashopFresherThan14())
+				if (!Service::isPrestashop15plus())
 					$translate .= 'into Preferences > Contact Information';
 				else
 					$translate .= 'into Preferences > Store Contacts > Contact Details';
@@ -700,9 +659,9 @@ ADD COLUMN
 			'label_pdf_format',
 			Configuration::get('BPOST_LABEL_PDF_FORMAT')
 		);
-		$label_retour_label = Tools::getValue(
-			'label_retour_label',
-			Configuration::get('BPOST_LABEL_RETOUR_LABEL')
+		$auto_retour_label = Tools::getValue(
+			'auto_retour_label',
+			Configuration::get('BPOST_AUTO_RETOUR_LABEL')
 		);
 		$label_tt_integration = Tools::getValue(
 			'label_tt_integration',
@@ -713,16 +672,11 @@ ADD COLUMN
 			'label_tt_frequency',
 			Configuration::get('BPOST_LABEL_TT_FREQUENCY')
 		);
-		// Old way
-		$label_tt_update_on_open = Tools::getValue(
-			'label_tt_update_on_open',
-			Configuration::get('BPOST_LABEL_TT_UPDATE_ON_OPEN')
-		);
-		*/
+
 		$label_tt_update_on_open = Tools::getValue(
 			'label_tt_update_on_open', 0
 		);
-
+		*/
 		if (Tools::isSubmit('submitAccountSettings'))
 		{
 			if (Configuration::get('BPOST_ACCOUNT_ID') !== $id_account && is_numeric($id_account))
@@ -845,27 +799,27 @@ ADD COLUMN
 					Configuration::updateValue('BPOST_LABEL_TT_FREQUENCY', (int)$label_tt_frequency);
 				*/
 				$this->installModuleTab(
-					'AdminBpostOrders',
+					'AdminOrdersBpost',
 					'bpost',
-					Service::isPrestashopFresherThan14() ? Tab::getIdFromClassName('AdminParentOrders') : Tab::getIdFromClassName('AdminOrders')
+					Service::isPrestashop15plus() ? Tab::getIdFromClassName('AdminParentOrders') : Tab::getIdFromClassName('AdminOrders')
 				);
 			}
 			else
 			{
-				$label_retour_label = false;
+				$auto_retour_label = false;
 				$label_tt_integration = false;
-				$label_tt_update_on_open = false;
+				// $label_tt_update_on_open = false;
 
-				$this->uninstallModuleTab('AdminBpostOrders');
+				$this->uninstallModuleTab('AdminOrdersBpost');
 			}
 
-			if (Configuration::get('BPOST_LABEL_RETOUR_LABEL') !== $label_retour_label && is_numeric($label_retour_label))
-				Configuration::updateValue('BPOST_LABEL_RETOUR_LABEL', (int)$label_retour_label);
+			if (Configuration::get('BPOST_AUTO_RETOUR_LABEL') !== $auto_retour_label && is_numeric($auto_retour_label))
+				Configuration::updateValue('BPOST_AUTO_RETOUR_LABEL', (int)$auto_retour_label);
 			if (Configuration::get('BPOST_LABEL_TT_INTEGRATION') !== $label_tt_integration && is_numeric($label_tt_integration))
 				Configuration::updateValue('BPOST_LABEL_TT_INTEGRATION', (int)$label_tt_integration);
-			if (Configuration::get('BPOST_LABEL_TT_UPDATE_ON_OPEN') !== $label_tt_update_on_open
-					&& is_numeric($label_tt_update_on_open))
-				Configuration::updateValue('BPOST_LABEL_TT_UPDATE_ON_OPEN', (int)$label_tt_update_on_open);
+			// if (Configuration::get('BPOST_LABEL_TT_UPDATE_ON_OPEN') !== $label_tt_update_on_open
+			// 		&& is_numeric($label_tt_update_on_open))
+			// 	Configuration::updateValue('BPOST_LABEL_TT_UPDATE_ON_OPEN', (int)$label_tt_update_on_open);
 		}
 
 		$this->smarty->assign('account_id_account', $id_account, true);
@@ -920,10 +874,10 @@ ADD COLUMN
 
 		$this->smarty->assign('label_use_ps_labels', $label_use_ps_labels, true);
 		$this->smarty->assign('label_pdf_format', $label_pdf_format, true);
-		$this->smarty->assign('label_retour_label', $label_retour_label, true);
+		$this->smarty->assign('auto_retour_label', $auto_retour_label, true);
 		$this->smarty->assign('label_tt_integration', $label_tt_integration, true);
 		// $this->smarty->assign('label_tt_frequency', (int)$label_tt_frequency, true);
-		$this->smarty->assign('label_tt_update_on_open', $label_tt_update_on_open, true);
+		// $this->smarty->assign('label_tt_update_on_open', $label_tt_update_on_open, true);
 
 		$this->smarty->assign('errors', $errors, true);
 		$this->smarty->assign('url_get_available_countries', $service->getControllerLink('bpostshm', 'servicepoint', array(
@@ -934,145 +888,106 @@ ADD COLUMN
 	}
 
 	/**
-	 * OPC
-	 *
-	 * @param array $params
-	 * @return bool|string
+	 * @return mixed
 	 */
-	public function hookActionTopPayment($params)
+	public function getContent()
 	{
-		return $this->hookActionCarrierProcess($params);
+		$this->postValidation();
+		$this->smarty->assign('version', (Service::isPrestashop16plus() ? 1.6 : (Service::isPrestashop15plus() ? 1.5 : 1.4)), true);
+
+		return $this->display(__FILE__, 'views/templates/admin/settings.tpl', null, null);
+	}
+
+	public function getDeliveryOptions($selection = '', $inc_info = false)
+	{
+		if (empty($selection))
+			return $this->_all_delivery_options;
+
+		$options = array();
+		$selection = explode('|', $selection);
+		foreach ($selection as $key)
+			if (isset($this->_all_delivery_options[$key]))
+				$options[$key] = $inc_info ? $this->_all_delivery_options[$key] : $this->_all_delivery_options[$key]['title'];
+
+		return $options;
 	}
 
 	/**
-	 * OPC
-	 *
-	 * @param array $params
-	 * @return bool|string
+	 * [getIdCarriers get bpost shipping method -> carrier ids if they exist ]
+	 * @author Serge <serge@stigmi.eu>
+	 * @return mixed array of 'bpost shipping method' => 'current id_carrier' (null if missing)
 	 */
-	public function hookActionCarrierProcess($params)
+	public function getIdCarriers()
 	{
-		if (!$this->context->cart->update())
-			return false;
+		if (empty($this->carriers))
+			foreach (array_keys($this->shipping_methods) as $shipping_method)
+				$this->carriers[$shipping_method] = ($id_carrier = (int)Configuration::get('BPOST_SHIP_METHOD_'.$shipping_method.'_ID_CARRIER'))
+					? $id_carrier : null;
 
-		$cart = !empty($this->context->cart) ? $this->context->cart : $params['cart'];
-
-		$carriers = $this->getIdCarriers();
-		unset($carriers[self::SHIPPING_METHOD_AT_HOME]);
-
-		if (Tools::getValue('ajax', false) && empty($params['passthrough']))
-		{
-			// Reset selected bpost service point
-			$cart->service_point_id = 0;
-			$cart->update();
-		}
-
-		if (in_array($cart->id_carrier, $carriers) && empty($cart->service_point_id))
-		{
-			if (!$this->context->customer->isLogged())
-				$warning = '<p class="warning">'.Tools::displayError('Please sign in to see payment methods.').'</p>';
-			elseif (!$this->context->cookie->checkedTOS && Configuration::get('PS_CONDITIONS'))
-				$warning = '<p class="warning">'.Tools::displayError('Please accept the Terms of Service.').'</p>';
-			else
-				$warning = '<p class="warning">'.$this->l('Please configure selected bpost shipping method.').'</p>';
-
-			$return = array(
-				'HOOK_TOP_PAYMENT' => '',
-				'HOOK_PAYMENT' => $warning,
-				'summary' => $cart->getSummaryDetails(),
-			);
-
-			$return['HOOK_SHOPPING_CART'] = Hook::exec('displayShoppingCartFooter', $return['summary']);
-			$return['HOOK_SHOPPING_CART_EXTRA'] = Hook::exec('displayShoppingCart', $return['summary']);
-
-			if (Service::isPrestashopFresherThan14())
-				$return['carrier_data'] = $this->getCarrierList();
-
-			if (Tools::getValue('ajax', false) && Service::isPrestashopFresherThan14())
-				die(Tools::jsonEncode($return));
-
-			return $warning;
-		}
-
-		return false;
+		return $this->carriers;
 	}
 
-	/**
-	 * @param array $params
-	 */
-	public function hookActionValidateOrder($params)
+	public function getShmFromCarrierID($carrier_id = 0)
 	{
-		foreach ($this->getIdCarriers() as $shipping_method => $id_carrier)
-		{
-			if ((int)$params['order']->id_carrier == $id_carrier)
+		$return = false;
+		foreach ($this->getIdCarriers() as $shm => $id_carrier)
+			if ($id_carrier == $carrier_id)
 			{
-				$service = Service::getInstance($this->context);
-				$service->makeOrder((int)$params['order']->id, $shipping_method);
-
-				// 2014-10-30:  No Retour label when placing order 1st time
-				/*
-				$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
-
-				// Generate retour if auto-generation is enabled
-				if ((bool)Configuration::get('BPOST_LABEL_RETOUR_LABEL_'.$context_shop_id))
-				{
-					$reference = Configuration::get('BPOST_ACCOUNT_ID_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id)).'_';
-					if (Service::isPrestashopFresherThan14())
-						$reference .= Tools::substr($params['order']->reference, 0, 53);
-					else
-						$reference .= Tools::substr($params['order']->reference, 0, 42).'_'.time();
-					$service->addLabel($reference, true);
-				}
-				*/
-
+				$return = $shm;
 				break;
 			}
+
+		return $return;
+	}
+
+	/**
+	 * The new hookAllStars team
+	 * see install / uninstall for listing
+	 * @author Serge <serge@stigmi.eu>
+	 * @param array $params
+	 */
+	public function hookUpdateCarrier($params)
+	{
+		if (!empty($params['id_carrier']))
+		{
+			if ($shipping_method = array_search((int)$params['id_carrier'], $this->getIdCarriers()))
+				Configuration::updateValue('BPOST_SHIP_METHOD_'.$shipping_method.'_ID_CARRIER', (int)$params['carrier']->id);
 		}
 	}
 
 	/**
-	 * Used to ease order process testings.
-	 * When hooked, will be call on order confirmation page when refreshing page
-	 * /!\ is a duplicate of $this->hookActionValidateOrder()
-	 *
 	 * @param $params
+	 * @return bool
 	 */
-	public function hookDisplayOrderConfirmation($params)
+	public function hookBeforeCarrier($params)
 	{
-		/*foreach ($this->getIdCarriers() as $shipping_method => $id_carrier)
+		//$cart = !empty($this->context->cart) ? $this->context->cart : $params['cart'];
+		// not for 1.4
+		if (!Service::isPrestashop15plus())
+			return;
+
+		$at_home_id = (int)Configuration::get('BPOST_SHIP_METHOD_'.BpostShm::SHIPPING_METHOD_AT_HOME.'_ID_CARRIER');
+		$delivery_option_list = $params['delivery_option_list'];
+		$id_address_delivery = (int)key($delivery_option_list);
+		$carrier_list = $delivery_option_list[$id_address_delivery];
+		foreach ($carrier_list as $id_carrier => $carrier_options)
 		{
-			if ((int)$params['objOrder']->id_carrier == $id_carrier)
+			$carrier = $carrier_options['carrier_list'][(int)$id_carrier]['instance'];
+			if ($at_home_id == $id_carrier)
 			{
-				$service = Service::getInstance($this->context);
-				$service->makeOrder((int)$params['objOrder']->id, $shipping_method);
+				$delivery_address = new Address((int)$id_address_delivery);
+				$delay = $delivery_address->address1
+						.(!empty($delivery_address->address2) ? ' '.$delivery_address->address2 : '')
+						.', '.$delivery_address->postcode.' '.$delivery_address->city;
 
-				$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
-
-				// Generate retour if auto-generation is enabled
-				if ((bool)Configuration::get('BPOST_LABEL_RETOUR_LABEL_'.$context_shop_id))
-				{
-					$reference = Configuration::get('BPOST_ACCOUNT_ID_'.(is_null($this->context->shop->id) ? '1' : $this->context->shop->id)).'_'
-						.Tools::substr($params['objOrder']->reference, 0, 53);
-					$service->addLabel($reference, true);
-				}
-
-				break;
+				$carrier->delay[$this->context->language->id] = $delay;
 			}
-		}*/
-	}
+			$name_parts = explode('/', $carrier->name);
+			if (count($name_parts))
+				$carrier->name = $this->l(trim($name_parts[0]));
 
-	public function hookDisplayBackOfficeHeader()
-	{
-		$this->context->controller->addCSS(($this->_path).'views/css/admin.css');
-	}
+		}
 
-	/**
-	 *  PrestaShop 1.4 hook
-	 */
-	public function hookBackOfficeHeader()
-	{
-		if (!Service::isPrestashopFresherThan14())
-			return '<link href="'.($this->_path).'views/css/admin.css" type="text/css" rel="stylesheet" />';
 		return '';
 	}
 
@@ -1083,15 +998,24 @@ ADD COLUMN
 	public function hookExtraCarrier($params)
 	{
 		$cart = !empty($this->context->cart) ? $this->context->cart : $params['cart'];
-
+		$id_zone_delivery = $params['address']->getZoneById((int)$cart->id_address_delivery);
 		$carriers = $this->getIdCarriers();
+		$our_carriers = false;
+		foreach ($carriers as $shm => $id_carrier_bpost)
+			if ($our_carriers = $cart->isCarrierInRange($id_carrier_bpost, $id_zone_delivery))
+				break;
+
+		if (!$our_carriers)
+			return;
+
 		unset($carriers[self::SHIPPING_METHOD_AT_HOME]);
 
 		$this->smarty->assign('id_carrier', $cart->id_carrier, true);
 		$this->smarty->assign('shipping_methods', $carriers, true);
 
-		if (!empty($cart->service_point_id))
-			$this->smarty->assign('service_point_id', (int)$cart->service_point_id, true);
+		$cart_bpost = $this->getCartBpost((int)$cart->id);
+		if (!empty($cart_bpost->service_point_id))
+			$this->smarty->assign('service_point_id', (int)$cart_bpost->service_point_id, true);
 
 		$url_params = array(
 			'content_only'		=> true,
@@ -1099,48 +1023,131 @@ ADD COLUMN
 			'token'				=> Tools::getToken('bpostshm'),
 		);
 
-// Srg
-		if (!empty($cart->bpack247_customer))
+		if (!empty($cart_bpost->bpack247_customer))
 			$url_params['step'] = 2;
-// Srg end
 
+		$this->smarty->assign('version', (Service::isPrestashop16plus() ? 1.6 : (Service::isPrestashop15plus() ? 1.5 : 1.4)), true);
 		$this->smarty->assign('url_lightbox', (method_exists($this->context->link, 'getModuleLink')
 			? $this->context->link->getModuleLink($this->name, 'lightbox', $url_params)
 			:  Tools::getShopDomainSsl(true, true).'/'.Tools::substr($this->_path, 1)
-			.'1.4/controllers/front/lightbox.php?'.http_build_query($url_params)
+			.'controllers/front/lightbox14.php?'.http_build_query($url_params)
 		), true);
-
-		$this->smarty->assign('version', (Service::isPrestashop16() ? 1.6 : (Service::isPrestashopFresherThan14() ? 1.5 : 1.4)), true);
 
 		return $this->display(__FILE__, 'views/templates/hook/extra-carrier.tpl', null, null);
 	}
 
 	/**
-	 * PrestaShop 1.4 hook
 	 *
-	 * @param array $order
+	 * @param array $params
+	 * @return bool|string
 	 */
-	public function hookOrderConfirmation($order)
+	public function hookPaymentTop($params)
 	{
-		if (!Service::isPrestashopFresherThan14())
-			return $this->hookActionValidateOrder(array(
-					'cart' 		=> $this->context->cart,
-					'customer' 	=> new Customer((int)$this->context->cookie->id_customer),
-					'order' 	=> $order['objOrder'],
-				));
-		return '';
+		// return $this->hookActionCarrierProcess($params);
+		return $this->hookProcessCarrier($params);
+		// return '';
 	}
 
 	/**
+	 *
 	 * @param array $params
+	 * @return bool|string
 	 */
-	public function hookUpdateCarrier($params)
+	public function hookProcessCarrier($params)
 	{
-		if (!empty($params['id_carrier']))
+		if (!$this->context->cart->update())
+			return false;
+
+		$cart = !empty($this->context->cart) ? $this->context->cart : $params['cart'];
+		if ($shm = $this->getShmFromCarrierID($cart->id_carrier))
 		{
-			if ($shipping_method = array_search((int)$params['id_carrier'], $this->getIdCarriers()))
-				Configuration::updateValue('BPOST_SHIP_METHOD_'.$shipping_method.'_ID_CARRIER', (int)$params['carrier']->id);
+			$cart_bpost = $this->getCartBpost((int)$cart->id);
+			if (!$cart_bpost->validServicePointForSHM((int)$shm))
+			{
+				//if (!$this->context->customer->isLogged())
+				if (!$this->context->cookie->logged)
+					$warning = '<p class="warning">'.Tools::displayError('Please sign in to see payment methods.').'</p>';
+				elseif (!$this->context->cookie->checkedTOS && Configuration::get('PS_CONDITIONS'))
+					$warning = '<p class="warning">'.Tools::displayError('Please accept the Terms of Service.').'</p>';
+				else
+					$warning = '<p class="warning">'.$this->l('Please configure selected bpost shipping method.').'</p>';
+
+				$return = array(
+					'HOOK_TOP_PAYMENT' => '',
+					'HOOK_PAYMENT' => $warning,
+					'summary' => $cart->getSummaryDetails(),
+				);
+
+				//$return['HOOK_SHOPPING_CART'] = Hook::exec('shoppingCart', $return['summary']);
+				//$return['HOOK_SHOPPING_CART_EXTRA'] = Hook::exec('shoppingCartExtra', $return['summary']);
+
+				if (Service::isPrestashop15plus())
+				{
+					$return['HOOK_SHOPPING_CART'] = Hook::exec('displayShoppingCartFooter', $return['summary']);
+					$return['HOOK_SHOPPING_CART_EXTRA'] = Hook::exec('displayShoppingCart', $return['summary']);
+
+					$return['carrier_data'] = $this->getCarrierList();
+				}
+				else
+				{
+					$wrapping_fees = (float)Configuration::get('PS_GIFT_WRAPPING_PRICE');
+					$wrapping_fees_tax = new Tax((int)Configuration::get('PS_GIFT_WRAPPING_TAX'));
+					$wrapping_fees_tax_inc = $wrapping_fees * (1 + (((float)($wrapping_fees_tax->rate) / 100)));
+
+					$return['order_opc_adress'] = $this->context->smarty->fetch(_PS_THEME_DIR_.'order-address.tpl');
+					$return['carrier_list'] = $this->getCarrierList14($params);
+					$return['no_address'] = 0;
+					$return['gift_price'] = Tools::displayPrice(Tools::convertPrice(Product::getTaxCalculationMethod() == 1 ?
+						$wrapping_fees :
+						$wrapping_fees_tax_inc,
+						new Currency((int)$params['cookie']->id_currency))
+					);
+
+				}
+
+				if (Tools::getValue('ajax', false))// && Service::isPrestashop15plus())
+					die(Tools::jsonEncode($return));
+
+				return $warning;
+			}
 		}
+
+		return false;
+	}
+
+	protected function getCarrierList14($params)
+	{
+		$cart = $params['cart'];
+		$cookie = $params['cookie'];
+
+		$address_delivery = new Address($cart->id_address_delivery);
+		if ($cookie->id_customer)
+		{
+			$customer = new Customer((int)$cookie->id_customer);
+			$groups = $customer->getGroups();
+		}
+		else
+			$groups = array(1);
+		if (!Address::isCountryActiveById((int)$cart->id_address_delivery))
+			$this->errors[] = Tools::displayError('This address is not in a valid area.');
+		elseif (!Validate::isLoadedObject($address_delivery) || $address_delivery->deleted)
+			$this->errors[] = Tools::displayError('This address is invalid.');
+		else
+		{
+			$carriers = Carrier::getCarriersForOrder((int)Address::getZoneById((int)$address_delivery->id), $groups);
+			$result = array(
+				'checked' => $cart->id_carrier, //$this->_setDefaultCarrierSelection($carriers),
+				'carriers' => $carriers,
+				'HOOK_BEFORECARRIER' => Module::hookExec('beforeCarrier', array('carriers' => $carriers)),
+				'HOOK_EXTRACARRIER' => Module::hookExec('extraCarrier', array('address' => $address_delivery))
+			);
+			return $result;
+		}
+		if (count($this->errors))
+			return array(
+				'hasError' => true,
+				'errors' => $this->errors
+			);
 	}
 
 	private function getCarrierList()
@@ -1155,15 +1162,6 @@ ADD COLUMN
 			$link_conditions .= '&content_only=1';
 
 		$carriers = $this->context->cart->simulateCarriersOutput();
-		// Srg new
-		/*
-		foreach ($carriers as $carrier)
-		{
-			$carrier['name'] = $this->l($carrier['name']);
-			//$carrier['delay'] = $this->l($carrier['delay']);
-		}
-		*/
-		// Srg end
 		$delivery_option = $this->context->cart->getDeliveryOption(null, false, false);
 
 		$wrapping_fees_tax_inc = $wrapping_fees = $this->context->cart->getGiftWrappingPrice();
@@ -1238,15 +1236,36 @@ ADD COLUMN
 	}
 
 	/**
-	 * @return mixed
+	 * @param array $params
 	 */
-	public function getContent()
+	public function hookNewOrder($params)
 	{
-		$this->postValidation();
+		$service = Service::getInstance($this->context);
+		$service->prepareBpostOrder((int)$params['order']->id);
+	}
 
-		$this->smarty->assign('version', (Service::isPrestashop16() ? 1.6 : (Service::isPrestashopFresherThan14() ? 1.5 : 1.4)), true);
+	/**
+	 *
+	 * @param array $params
+	 */
+	public function hookPostUpdateOrderStatus($params)
+	{
+		$return = false;
+		if ($order_bpost = $this->getOrderBpost((int)$params['id_order']))
+		{
+			$order_bpost->current_state = (int)$params['newOrderStatus']->id;
+			$return = $order_bpost->save();
+		}
 
-		return $this->display(__FILE__, 'views/templates/admin/settings.tpl', null, null);
+		return $return;
+	}
+
+	/**
+	 *  PrestaShop 1.4 hook
+	 */
+	public function hookBackOfficeHeader()
+	{
+		return '<link href="'.($this->_path).'views/css/admin-bpost.css" type="text/css" rel="stylesheet" />';
 	}
 
 	/**
@@ -1264,19 +1283,5 @@ ADD COLUMN
 	public function getOrderShippingCostExternal($params)
 	{
 
-	}
-
-	public function getDeliveryOptions($selection = '', $inc_info = false)
-	{
-		if (empty($selection))
-			return $this->_all_delivery_options;
-
-		$options = array();
-		$selection = explode('|', $selection);
-		foreach ($selection as $key)
-			if (isset($this->_all_delivery_options[$key]))
-				$options[$key] = $inc_info ? $this->_all_delivery_options[$key] : $this->_all_delivery_options[$key]['title'];
-
-		return $options;
 	}
 }

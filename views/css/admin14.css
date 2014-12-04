@@ -1,0 +1,51 @@
+/**
+ * 2014 Stigmi
+ *
+ * @author    Stigmi.eu <www.stigmi.eu>
+ * @copyright 2014 Stigmi
+ * @license   http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ */
+
+body {width:100%;}
+
+.button{
+	cursor: pointer;
+	background: #e3e3e3 url('../img/bg-button-degrade.png') repeat-x scroll left top;
+	background: -moz-linear-gradient(center top , #F9F9F9, #E3E3E3) repeat scroll 0 0 transparent;
+	background: -webkit-gradient(linear, center top ,center bottom, from(#F9F9F9), to(#E3E3E3)) repeat scroll 0 0 transparent;
+	border-color: #CCCCCC #BBBBBB #A0A0A0;border-left: 1px solid #BBBBBB;border-radius: 3px 3px 3px 3px;border-right: 1px solid #BBBBBB;border-style: solid;border-width: 1px;color: #000000;margin: 0;outline: medium none;padding: 3px 8px;text-align: center;vertical-align: middle;white-space: nowrap; text-shadow:0 1px 0 #fff;}
+.button[disabled=disabled]{color:#8C8C8C}
+.button.bt-icon { display:inline-block; margin-bottom:7px;}
+.button.bt-icon span {padding-left:5px;}
+input.button[disabled=disabled]:hover{background-color:#F1F1F1}
+.button:hover{border:1px solid #939393;}
+.button:active{border:1px solid #939393;}
+.button.export-csv span{ background: transparent url('../img/export-csv.png') no-repeat scroll left top; padding:1px 0 1px 20px}
+
+/*
+.button{background-color:#FFF6D3;border:1px solid #DFD5AF;border-left:1px solid #FFF6D3;border-top:1px solid #FFF6D3;color:#268CCD;padding:3px}
+.button[disabled=disabled]{color:#8C8C8C}
+input.button[disabled=disabled]:hover{background-color:#FFF6D3}
+.button:hover{background-color:#F0EBD6}
+*/
+table {border-color: gray;}
+input[type="text"],input[type="password"],input[type="file"],textarea {border:1px solid #CCCCCC}
+select {border: 1px solid #CCCCCC}
+select[disabled="disabled"], input[disabled="disabled"],textarea[disabled="disabled"] {border: 1px solid #CCCCCC;color: #AAAAAA}
+
+.table tr th{background:#E2EBEE;padding:4px 6px}
+.table tr td{border-bottom:1px solid #ccc;color:#333;font-size:.9em;padding: 4px 4px 4px 6px;}
+
+.footer_link, .footer_link:hover {
+	color: #666688;
+	font-weight: bold;
+	text-decoration: underline;
+}
+
+fieldset{background:#FFFFF0;border:1px solid #DFD5C3;font-size:1.1em;margin:0;padding:1em}
+legend{background:#F1F1F1;border:1px solid #DFD5C3;font-weight:700;margin:0;padding:.2em .5em;text-align:left}
+
+#submenu{background:#ECECEC;clear:both;color:#666;margin:0;padding:0;border:1px solid #999999}
+#footer {height:40px;background:#ECECEC;border:1px solid #999999;font-size:12px;clear:both;font-size:0.9em;color:#666666}
+
+ul#idTabs {padding-left: 0px;margin-bottom: 0px;}

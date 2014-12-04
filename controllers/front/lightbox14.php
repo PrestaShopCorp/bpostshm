@@ -4,20 +4,35 @@
  *
  * bpost Shipping Manager
  *
- * Allow your customers to choose their preferrred delivery method: delivery at home or the office, at a pick-up location or in a bpack 24/7 parcel
- * machine.
+ * This controller is used by PrestaShop 1.4 shops
  *
  * @author    Stigmi <www.stigmi.eu>
  * @copyright 2014 Stigmi
  * @license   http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
+const _CONFIG_FILE_ = '../../../../config/config.inc.php';
+const _CONFIG_FILE_DEV_ = '../../../../sites/bpost/sps14/config/config.inc.php';
+const _CONTROLLER_FILE_ = 'controllers/front/lightbox14.php';
+
+if (file_exists(_CONFIG_FILE_))
+	require_once(_CONFIG_FILE_);
+elseif (file_exists(_CONFIG_FILE_DEV_))
+	require_once(_CONFIG_FILE_DEV_);
+else
+	die('Cannot locate config');
+
+require_once(_PS_MODULE_DIR_.'bpostshm/bpostshm.php');
 require_once(_PS_MODULE_DIR_.'bpostshm/classes/Service.php');
 
-class BpostShmLightboxModuleFrontController extends ModuleFrontController
+class Lightbox extends FrontController
 {
-	public function initContent()
+	private $tpl;
+
+	public function process()
 	{
+		parent::process();
+
 		$shipping_method = Tools::getValue('shipping_method');
 		$token = Tools::getValue('token');
 
@@ -27,12 +42,14 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 			return;
 		}
 
-		parent::initContent();
+		$shipping_method = (int)$shipping_method;
 
-		$service = new Service($this->context);
+		$bpost = new BpostShm();
+		$context = Context::getContext();
+		$service = new Service($context);
 
 		// Reset selected bpost service point
-		$cart_bpost = PsCartBpost::getByPsCartID((int)$this->context->cart->id);
+		$cart_bpost = PsCartBpost::getByPsCartID((int)$context->cart->id);
 		$cart_bpost->reset();
 
 		// Looking for AJAX requests
@@ -75,13 +92,19 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 		{
 			$customer = array();
 			if ($id_gender = (int)Tools::getValue('id_gender'))
-			{
-				$gender = new Gender($id_gender, $this->context->language->id, $this->context->shop->id);
-				if ($gender->type)
-					$customer['Title'] = 'Ms.';
-				else
-					$customer['Title'] = 'Mr.';
-			}
+				switch ($id_gender)
+				{
+					case 1:
+					case 9:
+					default:
+						$customer['Title'] = 'Mr.';
+						break;
+
+					case 2:
+						$customer['Title'] = 'Ms.';
+						break;
+				}
+
 			if ($firstname = (string)Tools::getValue('firstname'))
 				$customer['FirstName'] = $firstname;
 			if ($lastname = (string)Tools::getValue('lastname'))
@@ -118,14 +141,14 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 		switch ($shipping_method)
 		{
 			case BpostShm::SHIPPING_METHOD_AT_SHOP:
-				self::$smarty->assign('module_dir', _MODULE_DIR_.$this->module->name.'/');
+				self::$smarty->assign('module_dir', _MODULE_DIR_.'bpostshm/');
 				self::$smarty->assign('shipping_method', $shipping_method, true);
 
-				$delivery_address = new Address($this->context->cart->id_address_delivery, $this->context->language->id);
-
+				$delivery_address = new Address($context->cart->id_address_delivery, $context->language->id);
+				
 				self::$smarty->assign('city', $delivery_address->city, true);
 				self::$smarty->assign('postcode', $delivery_address->postcode, true);
-
+				
 				$search_params = array(
 					'street' 	=> '',
 					'nr' 		=> '',
@@ -139,26 +162,28 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 				}
 				self::$smarty->assign('servicePoints', $service_points, true);
 
-				self::$smarty->assign('url_get_nearest_service_points', $this->context->link->getModuleLink('bpostshm', 'lightbox', array(
-					'ajax'							=> true,
-					'get_nearest_service_points' 	=> true,
-					'shipping_method'				=> $shipping_method,
-					'token'							=> Tools::getToken('bpostshm'),
-				)));
-				self::$smarty->assign('url_get_service_point_hours', $this->context->link->getModuleLink('bpostshm', 'lightbox', array(
-					'ajax'						=> true,
-					'get_service_point_hours' 	=> true,
-					'shipping_method'			=> $shipping_method,
-					'token'						=> Tools::getToken('bpostshm'),
-				)));
-				self::$smarty->assign('url_set_service_point', $this->context->link->getModuleLink('bpostshm', 'lightbox', array(
-					'ajax'				=> true,
-					'set_service_point' => true,
-					'shipping_method'	=> $shipping_method,
-					'token'				=> Tools::getToken('bpostshm'),
-				)));
+				self::$smarty->assign('url_get_nearest_service_points', _MODULE_DIR_.'bpostshm/'._CONTROLLER_FILE_.'?'
+					.http_build_query(array(
+						'ajax'							=> true,
+						'get_nearest_service_points' 	=> true,
+						'shipping_method'				=> $shipping_method,
+						'token'							=> Tools::getToken('bpostshm'),
+					)));
+				self::$smarty->assign('url_get_service_point_hours', _MODULE_DIR_.'bpostshm/'._CONTROLLER_FILE_.'?'
+					.http_build_query(array(
+						'ajax'						=> true,
+						'get_service_point_hours' 	=> true,
+						'shipping_method'			=> $shipping_method,
+						'token'						=> Tools::getToken('bpostshm'),
+					)));
+				self::$smarty->assign('url_set_service_point', _MODULE_DIR_.'bpostshm/'._CONTROLLER_FILE_.'?'
+					.http_build_query(array(
+						'ajax'				=> true,
+						'set_service_point' => true,
+						'shipping_method'	=> $shipping_method,
+						'token'				=> Tools::getToken('bpostshm'),
+					)));
 
-				$this->addJqueryPlugin('scrollTo');
 				$this->setTemplate('lightbox-point-list.tpl');
 				break;
 
@@ -168,14 +193,18 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 				{
 					default:
 					case 1:
-						self::$smarty->assign('module_dir', _MODULE_DIR_.$this->module->name.'/');
+						self::$smarty->assign('module_dir', _MODULE_DIR_.'bpostshm/');
 						self::$smarty->assign('shipping_method', $shipping_method, true);
 						self::$smarty->assign('step', 1, true);
 
-						$delivery_address = new Address($this->context->cart->id_address_delivery, $this->context->language->id);
+						$delivery_address = new Address($context->cart->id_address_delivery, $context->language->id);
 
-						self::$smarty->assign('gender', $this->context->customer->id_gender);
-						self::$smarty->assign('genders', Gender::getGenders($this->context->language->id));
+						self::$smarty->assign('gender', $context->customer->id_gender);
+						self::$smarty->assign('genders', array(
+							(object)array('id' => 1, 'name' => 'Mr'),
+							(object)array('id' => 2, 'name' => 'Ms'),
+							(object)array('id' => 9, 'name' => 'Mr'),
+						));
 						self::$smarty->assign('firstname', $delivery_address->firstname, true);
 						self::$smarty->assign('lastname', $delivery_address->lastname, true);
 
@@ -195,53 +224,54 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 						self::$smarty->assign('postal_code', $delivery_address->postcode, true);
 						self::$smarty->assign('locality', $delivery_address->city, true);
 						self::$smarty->assign('birthday',
-							'0000-00-00' != $this->context->customer->birthday ? $this->context->customer->birthday : '', true);
-						self::$smarty->assign('email', $this->context->customer->email, true);
+							'0000-00-00' != $context->customer->birthday ? $context->customer->birthday : '', true);
+						self::$smarty->assign('email', $context->customer->email, true);
 						self::$smarty->assign('mobile_phone',
 							!empty($delivery_address->phone) ? $delivery_address->phone : $delivery_address->phone_mobile, true);
-						self::$smarty->assign('language', $this->context->language->iso_code, true);
+						self::$smarty->assign('language', $context->language->iso_code, true);
 						self::$smarty->assign('languages', array(
 							'en' 	=> array(
 								'lang' 	=> 'en-US',
-								'name' 	=> $this->module->l('English'),
+								'name' 	=> $bpost->l('English'),
 							),
 							'fr' 	=> array(
 								'lang' 	=> 'fr-BE',
-								'name' 	=> $this->module->l('French'),
+								'name' 	=> $bpost->l('French'),
 							),
 							'nl' 	=> array(
 								'lang' 	=> 'nl-BE',
-								'name' 	=> $this->module->l('Dutch'),
+								'name' 	=> $bpost->l('Dutch'),
 							),
 						));
 
-						self::$smarty->assign('url_post_bpack247_register', $this->context->link->getModuleLink('bpostshm', 'lightbox', array(
-							'ajax'						=> true,
-							'post_bpack247_register' 	=> true,
-							'shipping_method'			=> $shipping_method,
-							'token'						=> Tools::getToken('bpostshm'),
-						)));
+						self::$smarty->assign('url_post_bpack247_register', _MODULE_DIR_.'bpostshm/'._CONTROLLER_FILE_.'?'
+							.http_build_query(array(
+								'ajax'						=> true,
+								'post_bpack247_register' 	=> true,
+								'shipping_method'			=> $shipping_method,
+								'token'						=> Tools::getToken('bpostshm'),
+							)));
+						self::$smarty->assign('url_get_point_list', _MODULE_DIR_.'bpostshm/'._CONTROLLER_FILE_.'?'
+							.http_build_query(array(
+								'content_only'		=> true,
+								'shipping_method'	=> $shipping_method,
+								'step'				=> 2,
+								'token'				=> Tools::getToken('bpostshm'),
+							)));
 
-						self::$smarty->assign('url_get_point_list', $this->context->link->getModuleLink('bpostshm', 'lightbox', array(
-							'content_only'		=> true,
-							'shipping_method'	=> $shipping_method,
-							'step'				=> 2,
-							'token'				=> Tools::getToken('bpostshm'),
-						)));
-
-						self::$smarty->assign('url_get_bpack247_member', $this->context->link->getModuleLink('bpostshm', 'lightbox', array(
+						self::$smarty->assign('url_get_bpack247_member', _MODULE_DIR_.'bpostshm/'._CONTROLLER_FILE_.'?'
+							.http_build_query(array(
 							'ajax'					=> true,
 							'get_bpack247_member'	=> true,
 							'shipping_method'		=> $shipping_method,
 							'token'					=> Tools::getToken('bpostshm'),
 						)));
 
-						$this->addJqueryPlugin('fancybox');
 						$this->setTemplate('lightbox-at-247.tpl');
 						break;
 
 					case 2:
-						self::$smarty->assign('module_dir', _MODULE_DIR_.$this->module->name.'/');
+						self::$smarty->assign('module_dir', _MODULE_DIR_.'bpostshm/');
 						self::$smarty->assign('shipping_method', $shipping_method, true);
 
 						if (!$customer = $cart_bpost->bpack247_customer)
@@ -289,26 +319,29 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 						}
 
 						self::$smarty->assign('servicePoints', $service_points, true);
-						self::$smarty->assign('url_get_nearest_service_points', $this->context->link->getModuleLink('bpostshm', 'lightbox', array(
-							'ajax'							=> true,
-							'get_nearest_service_points' 	=> true,
-							'shipping_method'				=> $shipping_method,
-							'token'							=> Tools::getToken('bpostshm'),
-						)));
-						self::$smarty->assign('url_get_service_point_hours', $this->context->link->getModuleLink('bpostshm', 'lightbox', array(
-							'ajax'						=> true,
-							'get_service_point_hours' 	=> true,
-							'shipping_method'			=> $shipping_method,
-							'token'						=> Tools::getToken('bpostshm'),
-						)));
-						self::$smarty->assign('url_set_service_point', $this->context->link->getModuleLink('bpostshm', 'lightbox', array(
-							'ajax'				=> true,
-							'set_service_point' => true,
-							'shipping_method'	=> $shipping_method,
-							'token'				=> Tools::getToken('bpostshm'),
-						)));
 
-						$this->addJqueryPlugin('scrollTo');
+						self::$smarty->assign('url_get_nearest_service_points', _MODULE_DIR_.'bpostshm/'._CONTROLLER_FILE_.'?'
+							.http_build_query(array(
+								'ajax'							=> true,
+								'get_nearest_service_points' 	=> true,
+								'shipping_method'				=> $shipping_method,
+								'token'							=> Tools::getToken('bpostshm'),
+							)));
+						self::$smarty->assign('url_get_service_point_hours', _MODULE_DIR_.'bpostshm/'._CONTROLLER_FILE_.'?'
+							.http_build_query(array(
+								'ajax'						=> true,
+								'get_service_point_hours' 	=> true,
+								'shipping_method'			=> $shipping_method,
+								'token'						=> Tools::getToken('bpostshm'),
+							)));
+						self::$smarty->assign('url_set_service_point', _MODULE_DIR_.'bpostshm/'._CONTROLLER_FILE_.'?'
+							.http_build_query(array(
+								'ajax'				=> true,
+								'set_service_point' => true,
+								'shipping_method'	=> $shipping_method,
+								'token'				=> Tools::getToken('bpostshm'),
+							)));
+
 						$this->setTemplate('lightbox-point-list.tpl');
 						break;
 				}
@@ -316,10 +349,41 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 		}
 	}
 
-	private function jsonEncode($content)
+	public function displayContent()
 	{
-		header('Content-Type: application/json');
-		die(Tools::jsonEncode($content));
+		parent::displayContent();
+
+		self::$smarty->display($this->tpl);
+	}
+
+	public function displayHeader()
+	{
+		if (!Tools::getValue('ajax', false))
+			echo '
+				<script src="'._MODULE_DIR_.'bpostshm/views/js/bpostshm.js" type="text/javascript"></script>
+				<script src="'._MODULE_DIR_.'bpostshm/views/js/srgdebug.js" type="text/javascript"></script>
+				<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript"></script>
+				<script src="//cdnjs.cloudflare.com/ajax/libs/jquery-scrollTo/1.4.11/jquery.scrollTo.min.js" type="text/javascript"></script>
+				<script src="//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.pack.js" type="text/javascript"></script>
+				<script src="https://maps.googleapis.com/maps/api/js?v=3.16&key='.Service::GMAPS_API_KEY.'&sensor=false&language=fr"
+					type="text/javascript"></script>
+				<link href="'._THEME_CSS_DIR_.'global.css" type="text/css" rel="stylesheet" />
+				<link href="'._MODULE_DIR_.'bpostshm/views/css/lightbox.css" type="text/css" rel="stylesheet" />
+				<link href="//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.css" type="text/css" rel="stylesheet" />';
+	}
+
+	public function setMedia()
+	{
+		parent::setMedia();
+
+		Tools::addCSS((_PS_SSL_ENABLED_ ? 'https://' : 'http://').'//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.css', 'screen');
+		Tools::addCSS(__PS_BASE_URI__.'/modules/bpostshm/views/css/lightbox.css');
+
+		Tools::addJS((_PS_SSL_ENABLED_ ? 'https://' : 'http://').'//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js');
+		Tools::addJS(__PS_BASE_URI__.'/modules/bpostshm/views/js/bpostshm.js');
+		Tools::addJS(__PS_BASE_URI__.'/modules/bpostshm/views/js/srgdebug.js');
+		Tools::addJS((_PS_SSL_ENABLED_ ? 'https://' : 'http://').'//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.pack.js');
+		Tools::addJS('https://maps.googleapis.com/maps/api/js?v=3.16&key='.Service::GMAPS_API_KEY.'&sensor=false&language=fr');
 	}
 
 	private function validateStore($member)
@@ -327,13 +391,15 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 		$json_member = (string)Tools::jsonEncode($member);
 		if (!isset($member['Error']))
 			try {
+				$context = Context::getContext();
+				$service = new Service($context);
 				if (!isset($cart_bpost))
-					$cart_bpost = PsCartBpost::getByPsCartID((int)$this->context->cart->id);
+					$cart_bpost = PsCartBpost::getByPsCartID((int)$context->cart->id);
 
 				$cart_bpost->bpack247_customer = $json_member;
 				$cart_bpost->update();
 				
-			} catch (Exception $e) {
+			} catch (\Exception $e) {
 				$json_member = Tools::jsonEncode(array('Error' => $e->getMessage()));
 			}
 
@@ -346,14 +412,22 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 		die($json);
 	}
 
-	public function setMedia()
+	private function jsonEncode($content)
 	{
-		parent::setMedia();
+		header('Content-Type: application/json');
+		die(Tools::jsonEncode($content));
+	}
 
-		$this->addCSS(__PS_BASE_URI__.'modules/'.$this->module->name.'/views/css/lightbox.css');
-		$this->addJS(__PS_BASE_URI__.'modules/'.$this->module->name.'/views/js/bpostshm.js');
-		$this->addJS(__PS_BASE_URI__.'modules/'.$this->module->name.'/views/js/srgdebug.js');
-		$this->addJS('https://maps.googleapis.com/maps/api/js?v=3.16&key='.Service::GMAPS_API_KEY.'&sensor=false&language='
-			.$this->context->language->iso_code);
+	private function setTemplate($tpl)
+	{
+		$this->tpl = _PS_MODULE_DIR_.'bpostshm/views/templates/front/'.$tpl;
 	}
 }
+
+$controller = new Lightbox();
+$controller->init();
+$controller->preProcess();
+$controller->displayHeader();
+$controller->process();
+$controller->displayContent();
+

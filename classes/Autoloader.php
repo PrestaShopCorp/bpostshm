@@ -108,7 +108,7 @@ class Autoloader
 	public function generateIndex()
 	{
 		$classes = $this->getClassesFromDir(_PS_MODULE_DIR_.'bpostshm/classes/lib/');
-		if (!Service::isPrestashopFresherThan14())
+		if (!Service::isPrestashop15plus())
 		{
 			$classes = array_merge($classes, $this->getClassesFromDir(_PS_CLASS_DIR_));
 			$classes = array_merge($classes, $this->getClassesFromDir(_PS_TOOL_DIR_.'smarty/sysplugins/'));

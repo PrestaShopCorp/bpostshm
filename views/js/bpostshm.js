@@ -97,7 +97,8 @@ BpostShm = {
 				var $poi = $(this).closest('li');
 
 				$.post(BpostShm.services.set_service_point, {
-					service_point_id:	$poi.data('servicepointid')
+					service_point_id:	$poi.data('servicepointid'),
+					sp_type:			$poi.data('sptype')
 				}, function(response) {
 					try {
 						if (parent.$('#form').length)
@@ -197,7 +198,8 @@ BpostShm = {
 							return BpostShm.appendHours(BpostShm.cache.service_point_hours[ $poi.data('servicepointid') ], $poi);
 
 						$.get(BpostShm.services.get_service_point_hours, {
-							service_point_id: $poi.data('servicepointid')
+							service_point_id: 	$poi.data('servicepointid'),
+							sp_type:  			$poi.data('sptype')
 						}, function(response) {
 							if (response)
 							{
@@ -233,6 +235,8 @@ BpostShm = {
 				$poi_tmp
 					.data('servicepointid', row.id)
 					.attr('data-servicepointid', row.id)
+					.data('sptype', row.type)
+					.attr('data-sptype', row.type)
 					.find('a')
 						.attr('title', row.office)
 						// Bind marker animation
