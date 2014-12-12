@@ -12,7 +12,6 @@
  */
 
 require_once($_GET['root_dir'].'/config/config.inc.php');
-// require_once(_PS_ROOT_DIR_.'/config/config.inc.php');
 require_once(_PS_MODULE_DIR_.'bpostshm/classes/Service.php');
 
 class ServicePointController extends FrontController
@@ -50,8 +49,11 @@ class ServicePointController extends FrontController
 	{
 		parent::process();
 
+		$shop_id = Tools::getValue('shop_id');
+		if (!$this->is_ps14 && isset($shop_id))
+			Shop::setContext(Shop::CONTEXT_SHOP, (int)$shop_id);
+
 		$service = new Service($this->context);
-		//$service = Service::getInstance($this->context);
 
 		// Looking for AJAX requests
 		if (Tools::getValue('get_available_countries'))
@@ -73,7 +75,6 @@ class ServicePointController extends FrontController
 		if (!isset($token) || $token !== $gen_token)
 		{
 			$this->errors[] = Tools::displayError('You do not have permission to view this.');
-			//Tools::redirect('/');
 			$this->terminate( array( 'Error' => 'Permission denied' ) );
 		}
 	}

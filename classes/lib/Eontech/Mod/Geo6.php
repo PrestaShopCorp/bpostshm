@@ -82,7 +82,9 @@ class EontechModGeo6
 		$options = array();
 		$options[CURLOPT_URL] = $this->buildUrl($method, $parameters);
 		$options[CURLOPT_USERAGENT] = $this->getUserAgent();
-		$options[CURLOPT_FOLLOWLOCATION] = true;
+		//$options[CURLOPT_FOLLOWLOCATION] = true;
+		$open_basedir = ini_get('open_basedir');
+		$options[CURLOPT_FOLLOWLOCATION] = (bool)empty($open_basedir);
 		$options[CURLOPT_SSL_VERIFYPEER] = false;
 		$options[CURLOPT_SSL_VERIFYHOST] = false;
 		$options[CURLOPT_RETURNTRANSFER] = true;

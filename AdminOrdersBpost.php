@@ -34,6 +34,7 @@ class AdminOrdersBpost extends AdminTab
 
 	/* bpost orders are displayed into Orders > bpost depending on their PS order state */
 	private $ps_order_states = array(2, 3, 4, 5, 9, 12);
+	private $ps_order_state_rejects = array(1, 6, 7, 8, 10, 11);
 
 	private $tracking_url = 'http://track.bpost.be/etr/light/performSearch.do';
 	private $tracking_params = array(
@@ -88,8 +89,7 @@ class AdminOrdersBpost extends AdminTab
 
 		$this->_where = '
 		AND obl.status IN("'.implode('", "', $this->statuses).'")
-		AND a.current_state IN('.implode(', ', $this->ps_order_states).', '
-			.$this->bpost_treated_state.')
+		AND a.current_state NOT IN('.implode(', ', $this->ps_order_state_rejects).')
 		AND DATEDIFF(NOW(), a.date_add) <= 14
 		';
 

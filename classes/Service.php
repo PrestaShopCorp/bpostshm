@@ -228,12 +228,13 @@ class Service
 	 * ****** if retour, does it have a service point (@bpost or @247)
 	 * @return array 'sender' & 'receiver'
 	 */
-	public function getReceiverAndSender($ps_order, $is_retour = false, $has_service_point = false)
+	public function getReceiverAndSender($ps_order, $is_retour = false/*, $has_service_point = false*/)
 	{
 		$customer = new Customer((int)$ps_order->id_customer);
 		$delivery_address = new Address($ps_order->id_address_delivery, $this->context->language->id);
 		$invoice_address = new Address($ps_order->id_address_invoice, $this->context->language->id);
 
+		$name_pattern = '/[^\pL0-9-_\s]+/u';
 		$shippers = array(
 			'client' => array(
 				'address1' 	=> $delivery_address->address1,
@@ -251,7 +252,7 @@ class Service
 				'city' 		=> Configuration::get('PS_SHOP_CITY'),
 				'email' 	=> Configuration::get('PS_SHOP_EMAIL'),
 				'id_country'=> Configuration::get('PS_SHOP_COUNTRY_ID'),
-				'name'		=> Configuration::get('PS_SHOP_NAME'),
+				'name'		=> preg_replace($name_pattern, '', (string)Configuration::get('PS_SHOP_NAME')),
 				'phone'		=> Configuration::get('PS_SHOP_PHONE'),
 				'postcode' 	=> Configuration::get('PS_SHOP_CODE'),
 			),
@@ -266,15 +267,15 @@ class Service
 		{
 			$sender = $shippers['client'];
 			$receiver = $shippers['shop'];
-			if ((bool)$has_service_point)
-			{
-				$sender['address1'] = $invoice_address->address1;
-				$sender['address2'] = $invoice_address->address2;
-				$sender['city'] = $invoice_address->city;
-				$sender['postcode'] = $invoice_address->postcode;
-				$sender['id_country'] = $invoice_address->id_country;
-				$sender['phone'] = !empty($invoice_address->phone) ? $invoice_address->phone : $invoice_address->phone_mobile;
-			}
+			// if ((bool)$has_service_point)
+			// {
+			// 	$sender['address1'] = $invoice_address->address1;
+			// 	$sender['address2'] = $invoice_address->address2;
+			// 	$sender['city'] = $invoice_address->city;
+			// 	$sender['postcode'] = $invoice_address->postcode;
+			// 	$sender['id_country'] = $invoice_address->id_country;
+			// 	$sender['phone'] = !empty($invoice_address->phone) ? $invoice_address->phone : $invoice_address->phone_mobile;
+			// }
 		}
 
 		// create $bpost_sender
@@ -479,7 +480,7 @@ class Service
 			$sp_type = (int)$cart->sp_type;
 		}
 
-		$shippers = $this->getReceiverAndSender($ps_order, $is_retour, $has_service_point);
+		$shippers = $this->getReceiverAndSender($ps_order, $is_retour/*, $has_service_point*/);
 		$sender = $shippers['sender'];
 		$receiver = $shippers['receiver'];
 
@@ -1033,6 +1034,8 @@ class Service
 	{
 		$params['ps14'] = !self::isPrestashop15plus();
 		$params['root_dir'] = _PS_ROOT_DIR_;
+		if (self::isPrestashop15plus())
+			$params['shop_id'] = $this->context->shop->id;
 		return _MODULE_DIR_.$module.'/controllers/front/'.$controller.'.php?'.http_build_query($params);
 	}
 
