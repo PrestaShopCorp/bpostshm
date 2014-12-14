@@ -6,6 +6,7 @@
 * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
 *}
 <script type="text/javascript">
+	// <![CDATA[ 
 	var fancyboxParams,
 		id_carrier			= {$id_carrier|intval|default:0},
 		opc 				= {if $opc}true{else}false{/if},
@@ -97,11 +98,17 @@
 			$container;
 
 		href = href.replace(/(shipping_method=).*?(&)/,'$1' + shipping_method + '$2');
-
+		$is_mobile = $('html.ui-mobile').length;
+			
 		if (version < 1.5)
 			$container = $carrier.find('.carrier_infos');
 		else
-			$container = $carrier.find('.delivery_option_logo').next('td');
+		{
+			if ($is_mobile)
+				$container = $carrier;
+			else
+				$container = $carrier.find('.delivery_option_logo').next('td');
+		}
 
 		if (version >= 1.6)
 			$container.append('<br />');
@@ -113,6 +120,10 @@
 			myButton($button_, l_s['Change delivery point']);
 
 		$button_.data('href', href);
+		if ($is_mobile)
+			$button_.attr('class', 'ui-btn ui-btn-inner ui-btn-up-c ui-shadow');
+			// $button_.attr('style', 'background: #18c;color: #eff;padding: 4px 6px;margin:0 auto;');
+
 		$container.append('<br />', $button_);
 
 		$('[name="processCarrier"]').attr('disabled', true).css('opacity', .3);
@@ -193,4 +204,5 @@
 			onLoad = false;
 		}
 	});
+	// ]]>
 </script>
