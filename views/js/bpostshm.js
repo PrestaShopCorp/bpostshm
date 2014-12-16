@@ -11,6 +11,7 @@
  * @license   http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
+//<![CDATA[
 BpostShm = {
 	cache: 	{
 		nearest_service_points:	{},
@@ -27,10 +28,13 @@ BpostShm = {
 		set_service_point:			''
 	},
 	shipping_method:	'',
-	init: function(points, shipping_method)
+	default_station_id: '',
+	is_busy:			false,  
+	init: function(points, shipping_method, default_station_id)
 	{
 		this.points 			= points;
 		this.shipping_method 	= shipping_method;
+		this.default_station_id = default_station_id;
 
 		var mapParams = {
 			mapTypeId:	google.maps.MapTypeId.ROADMAP,
@@ -41,6 +45,7 @@ BpostShm = {
 			mapParams.center = new google.maps.LatLng( this.points.coords[0][0], this.points.coords[0][1] );
 
 		this.map = new google.maps.Map(document.getElementById('map-canvas'), mapParams);
+		this.geocoder = new google.maps.Geocoder();
 
 		this.bindEventListeners();
 
@@ -59,8 +64,23 @@ BpostShm = {
 
 		this.updatePointList();
 		this.updateGMapMarkers();
+//
+		var bounds = new google.maps.LatLngBounds();
+		$.each(this.points.coords, function(i, coord) {
+			latLng = new google.maps.LatLng(coord[0], coord[1]);
+			bounds.extend(latLng);
+		});
 
-		this.map.panTo( new google.maps.LatLng(this.points.coords[0][0], this.points.coords[0][1]) );
+		_map = this.map;
+		_map.panToBounds(bounds);
+		if (this.points.coords.length > 1)	
+			setTimeout(function() {
+				_map.fitBounds(bounds);
+			}, 600);
+//
+		// if (this.shipping_method < 4)
+		// 	this.map.panTo( new google.maps.LatLng(this.points.coords[0][0], this.points.coords[0][1]) );
+		
 		return;
 	},
 	bindEventListeners: function()
@@ -136,7 +156,7 @@ BpostShm = {
 								gift_message: 	giftMessage,
 								id_carrier:		parseInt(parent.$('[name="id_carrier"], .delivery_option_radio').filter(':checked').val(), 10),
 								method:			'updateCarrierAndGetPayments',
-								passthrough:	true,
+								// passthrough:	true,
 								rand:			new Date().getTime(),
 								recyclable: 	recyclablePackage
 							}, function(response) {
@@ -171,14 +191,15 @@ BpostShm = {
 			});
 
 		$('#poi li').live('click', function(e) {
-			if ($(e.target).is('.button'))
+			if ($(e.target).is('.button') || BpostShm.is_busy)
 				return;
-			else if ($(e.target).is('a'))
+			
+			if ($(e.target).is('a'))
 			{
 				e.preventDefault();
 				e.stopPropagation();
 			}
-
+			
 			// Retrieve and display OR hide hours
 			var $poi 	= $(this),
 				$hours 	= $poi.find('.hours');
@@ -218,6 +239,76 @@ BpostShm = {
 
 			$('#poi').scrollTo($poi);
 		});
+// GoogleMaps Events
+		google.maps.event.addListener(this.map, 'tilesloaded', function()
+		{
+			var default_station_id = BpostShm.default_station_id;
+
+			if ('' !== default_station_id)
+			{
+				BpostShm.default_station_id = '';
+				elm = $("#poi li[data-servicepointid='"+default_station_id+"'] a");
+				name_elm = $('span.name')[0];
+				title_elm = elm.find(name_elm);
+				$title = title_elm.text() + ' @';
+				title_elm.text($title);
+
+				setTimeout(function() {
+					elm.trigger('click');
+				}, 500);
+			}
+		});
+
+		google.maps.event.addListener(this.map, 'dragstart', function()
+		{
+			var map = BpostShm.map;
+			BpostShm.start_center = map.getCenter();
+		});
+		
+		google.maps.event.addListener(this.map, 'dragend', function()
+		{
+			var map = BpostShm.map,
+				geocoder = BpostShm.geocoder,
+				latlng = map.getCenter();
+			
+			geocoder.geocode({'latLng': latlng}, function(results, status) {
+				// debugger;
+				if (status == google.maps.GeocoderStatus.OK) {
+      				post_code = '';
+      				city = '';
+      				not_belgium = true;
+      				no_postcode = true;
+      				$.each(results, function(i, result) {
+      					$.each(result.address_components, function(ia, address_part) {
+      						// if ('administrative_area_level_1' === address_part.types[0])
+	      					// 		city = address_part.short_name;
+
+	      					if (not_belgium)
+      							not_belgium = ('BE' !== address_part.short_name);
+      						else {
+	      						if ('postal_code' === address_part.types[0]) {
+	      							post_code = address_part.short_name;
+	      							no_postcode = ('' === post_code);
+	      						}
+	      					}
+      						
+      						return no_postcode;
+      					});
+
+      					return not_belgium;
+      				});
+
+      				if (!no_postcode) {
+      					$('#city').val(city);
+      					$('#postcode').val(post_code);
+      					$('input[name=searchSubmit]').trigger('click');
+      					// trace(post_code);
+      				}
+      			}
+			});
+			// trace('drag ended');
+		});
+// 
 	},
 	updatePointList: function()
 	{
@@ -241,16 +332,7 @@ BpostShm = {
 						.attr('title', row.office)
 						// Bind marker animation
 						.click(function() {
-						 	var marker 		= BpostShm.markers[i],
-								animation 	= google.maps.Animation.BOUNCE;
-
-							if ('undefined' !== typeof marker && null !== marker.getAnimation())
-								animation = null;
-
-							$(BpostShm.markers).each(function() {
-								this.setAnimation(null);
-							});
-							marker.setAnimation(animation);
+							toggleBounce(i);
 						})
 						.end()
 					// Fill row with place information
@@ -276,19 +358,19 @@ BpostShm = {
 		{
 			this.removeMarkers();
 
-			$.each(this.points.coords, function(i, coords) {
+			$.each(this.points.coords, function(i, coord) {
 				setTimeout(function() {
-					BpostShm.addMarker(coords);
+					BpostShm.addMarker(coord);
 				}, i * 50);
 			});
 		}
 	},
-	addMarker: function(coords) {
+	addMarker: function(coord) {
 		var marker = new google.maps.Marker({
 			animation:	google.maps.Animation.DROP,
 			icon:		this.icon,
 			map:		BpostShm.map,
-			position:	new google.maps.LatLng( coords[0], coords[1] )
+			position:	new google.maps.LatLng( coord[0], coord[1] )
 		});
 
 		this.markers.push(marker);
@@ -304,7 +386,10 @@ BpostShm = {
 					break;
 
 			if (i < len)
+			{
 				$( $('#poi li').get(i) ).trigger('click');
+				toggleBounce(i);
+			}
 		});
 	},
 	removeMarkers: function() {
@@ -312,6 +397,7 @@ BpostShm = {
 		for (i = 0; i < this.markers.length; i++)
 			this.markers[i].setMap(null);
 		this.markers = [];
+
 	},
 	appendHours: function(response, $node)
 	{
@@ -352,20 +438,98 @@ BpostShm = {
 		$hours.append($button).insertAfter( $node.find('a') );
 		//$('#poi').scrollTo($node);
 	},
-	setDefaultStation: function(station_id)
+	mapDistance: function(new_center)
 	{
-		if ('' != station_id)
-		{
-			elm = $("#poi li[data-servicepointid='"+station_id+"'] a");
-			name_elm = $('span.name')[0];
-			title_elm = elm.find(name_elm);
-			$title = title_elm.text() + ' @';
-			title_elm.text($title);
+		if (0 == this.start_center.length)
+			return 0;
+
+		var map = BpostShm.map,
+			proj = map.getProjection(),
+			scale = map.getZoom();
+			//scale = Math.pow(2,map.getZoom());
 		
-			setTimeout(function() {
-				elm.trigger('click');
-			}, 2000);
-		}
-			
-	}
+		point_prev = proj.fromLatLngToPoint(BpostShm.start_center);
+		point_now = proj.fromLatLngToPoint(new_center);
+
+		/*
+		dist = Math.sqrt((
+				Math.pow(2, (point_now.x - point_prev.x) * scale) + 
+				Math.pow(2, (point_now.x - point_prev.x) * scale)
+				) / scale);
+		*/
+		dist = Math.sqrt(
+				Math.pow(2, (point_now.x - point_prev.x)) + 
+				Math.pow(2, (point_now.y - point_prev.y))
+				);
+
+		return dist; //Math.abs((dist - 1.4) * 10000); // * scale;
+	},
+	distanceMoved: function(new_center)
+	{
+		if (0 == this.start_center.length)
+			return 0.0;
+		var lat1 = this.start_center.lat(),
+			lng1 = this.start_center.lng(),
+			lat2 = new_center.lat(),
+			lng2 = new_center.lng();
+
+		var theta1 = toRadians(lat1),
+			theta2 = toRadians(lat2),
+			delta_theta_by2 = toRadians(lat2-lat1)/2,
+			delta_lambda_by2 = toRadians(lng2-lng1)/2;
+
+		var R = 6371, // km
+			a = Math.sin(delta_theta_by2) * Math.sin(delta_theta_by2) +
+		        Math.cos(theta1) * Math.cos(theta2) *
+		        Math.sin(delta_lambda_by2) * Math.sin(delta_lambda_by2);
+		var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+		return R * c;
+	},
+	// setDefaultStation: function(station_id)
+	// {
+	// 	if ('' != station_id)
+	// 	{
+	// 		elm = $("#poi li[data-servicepointid='"+station_id+"'] a");
+	// 		name_elm = $('span.name')[0];
+	// 		title_elm = elm.find(name_elm);
+	// 		$title = title_elm.text() + ' @';
+	// 		title_elm.text($title);
+		
+	// 		elm.trigger('click');
+	// 		// setTimeout(function() {
+	// 		// 	elm.trigger('click');
+	// 		// }, 2000);
+	// 	}		
+	// }
 };
+
+function toRadians(num)
+{
+	return !isNaN(num) ? num * Math.PI / 180 : 0.0;
+}
+
+function toggleBounce(i)
+{
+ 	var marker 		= BpostShm.markers[i],
+		animation 	= google.maps.Animation.BOUNCE;
+
+	if ('undefined' !== typeof marker && null !== marker.getAnimation())
+		animation = null;
+
+	$(BpostShm.markers).each(function() {
+		this.setAnimation(null);
+	});
+	marker.setAnimation(animation);
+}
+
+function trace($msg)
+{
+	if ('undefined' === $msg)
+		$msg = 'empty';
+	if ($('#tracie').length === 0)
+		$('#search-form').append('<span id="tracie" style=""></span>');
+	
+	$('#tracie').text($msg);
+}
+//]]>

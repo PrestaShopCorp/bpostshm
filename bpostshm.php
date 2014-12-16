@@ -1240,6 +1240,11 @@ AND
 	 */
 	public function hookNewOrder($params)
 	{
+		$bpost_carriers = $this->getIdCarriers();
+		$id_carrier = (int)$params['order']->id_carrier;
+		if (!in_array($id_carrier, $bpost_carriers))
+			return;
+
 		$service = Service::getInstance($this->context);
 		$service->prepareBpostOrder((int)$params['order']->id);
 	}

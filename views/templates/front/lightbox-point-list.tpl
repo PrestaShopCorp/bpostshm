@@ -50,25 +50,29 @@
 				get_service_point_hours:	'{$url_get_service_point_hours|escape:'javascript'}',
 				set_service_point:			'{$url_set_service_point|escape:'javascript'}'
 			};
-			BpostShm.init( {$servicePoints|json_encode}, {$shipping_method|intval} );
+			BpostShm.init(
+				{$servicePoints|json_encode}, 
+				{$shipping_method|intval} 
+				{if !empty($defaultStation)}
+					, '{$defaultStation|strval}'
+				{/if}
+				);
 
 			$(window).resize(function() {
 				google.maps.event.trigger(BpostShm.map, 'resize');
 			});
 			google.maps.event.trigger(BpostShm.map, 'resize');
-
-			{if !empty($defaultStation)}
-				BpostShm.setDefaultStation('{$defaultStation|strval}');
-			{/if}
 		});
 
 		$(function() {
 			$(document)
 				.ajaxStart(function() {
+					BpostShm.is_busy = true;
 					$('.loader').css('display', 'inline-block');
 				})
 				.ajaxComplete(function() {
 					$('.loader').hide();
+					BpostShm.is_busy = false;
 				});
 		});
 	</script>
