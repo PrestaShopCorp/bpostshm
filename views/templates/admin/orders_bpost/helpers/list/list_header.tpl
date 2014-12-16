@@ -101,7 +101,7 @@
 				</tr>
 			{/if}
 			<tr>
-				<td id="adminbpostorders"{if $simple_header} style="border:none;"{/if}>
+				<td id="adminordersbpost"{if $simple_header} style="border:none;"{/if}>
 					<table
 					{if $table_id} id={$table_id|escape}{/if}
 					class="table {if $table_dnd}tableDnD{/if} {$list_id|escape}"
@@ -479,6 +479,11 @@
 											</div>
 											<script>
 												$(function() {
+													if ('undefined' === typeof window.parseDate) {
+														window.parseDate = function(date) {
+															return $.datepicker.parseDate("yy-mm-dd", date);
+														}
+													}
 													var dateStart = parseDate($("#{$params.id_date|escape}_0").val());
 													var dateEnd = parseDate($("#{$params.id_date|escape}_1").val());
 													$("#local_{$params.id_date|escape}_0").datepicker({

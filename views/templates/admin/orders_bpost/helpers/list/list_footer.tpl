@@ -261,7 +261,7 @@
 
 					if ({$version|floatval} < 1.6)
 					{
-						$parent = $('#adminbpostorders');
+						$parent = $('#adminordersbpost');
 						$parent.prepend(
 							$('<ul id="idTabs" />').append(
 									'<li><a href="#tab1">Open</a></li>',

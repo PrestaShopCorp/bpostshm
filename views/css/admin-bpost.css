@@ -73,9 +73,9 @@ option:disabled {
   #bpost-settings form.v1-4 .control-label-bw {
     width: 200px; }
 
-#adminbpostorders #idTabs li {
+#adminordersbpost #idTabs li {
   display: inline-block; }
-#adminbpostorders #idTabs a {
+#adminordersbpost #idTabs a {
   background-color: #f8f8f8;
   border-color: #ccc;
   border-style: solid;
@@ -86,10 +86,10 @@ option:disabled {
   line-height: 32px;
   margin-right: 3px;
   padding: 0 15px; }
-  #adminbpostorders #idTabs a.selected {
+  #adminordersbpost #idTabs a.selected {
     background-color: #49b2ff;
     color: #fff; }
-#adminbpostorders .block_hidden_only_for_screen {
+#adminordersbpost .block_hidden_only_for_screen {
   display: none; }
 
 #order_actions a {

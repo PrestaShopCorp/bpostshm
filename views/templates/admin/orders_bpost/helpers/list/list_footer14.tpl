@@ -51,7 +51,7 @@
 
 				$class = $table.attr('class') + ' order_bpost';
 				$table.attr('class', $class);
-				$table.closest('td').attr('id', 'adminbpostorders');
+				$table.closest('td').attr('id', 'adminordersbpost');
 				
 				$table.find('td.order_state').each(function(i, td) {
 					var $td = $(td);
@@ -83,7 +83,7 @@
 						$table_treated.append(tr);
 					});
 
-					$parent = $('#adminbpostorders');
+					$parent = $('#adminordersbpost');
 					$parent.prepend(
 						$('<ul id="idTabs" />').append(
 								'<li><a href="#tab1">Open</a></li>',

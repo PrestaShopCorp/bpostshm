@@ -29,10 +29,11 @@ BpostShm = {
 	},
 	shipping_method:	'',
 	default_station_id: '',
-	is_busy:			false,  
+	is_busy:			false,
+	manual_search: 		false, 
 	init: function(points, shipping_method, default_station_id)
 	{
-		this.points 			= points;
+		//this.points 			= points;
 		this.shipping_method 	= shipping_method;
 		this.default_station_id = default_station_id;
 
@@ -41,18 +42,17 @@ BpostShm = {
 			zoom:		12
 		};
 
-		if (this.points.list && this.points.list.length && this.points.coords.length)
-			mapParams.center = new google.maps.LatLng( this.points.coords[0][0], this.points.coords[0][1] );
+		$has_points = points.list && points.list.length && points.coords.length;
+		if ($has_points)
+			mapParams.center = new google.maps.LatLng( points.coords[0][0], points.coords[0][1] );
 
 		this.map = new google.maps.Map(document.getElementById('map-canvas'), mapParams);
 		this.geocoder = new google.maps.Geocoder();
 
 		this.bindEventListeners();
 
-		if (!this.points.list || !this.points.list.length || !this.points.coords.length)
-			return;
-
-		this.update();
+		if ($has_points)
+			this.update(points);
 	},
 	update: function(points)
 	{
@@ -60,7 +60,8 @@ BpostShm = {
 			this.points = points;
 
 		if (!this.points.list.length || !this.points.coords.length)
-			return $('#searchSubmit').after( $('<span class="error">' + this.lang['No results found'] + '</span>') );
+			//return $('#searchSubmit').after( $('<span class="error">' + this.lang['No results found'] + '</span>') );
+			return trace(this.lang['No results found']);
 
 		this.updatePointList();
 		this.updateGMapMarkers();
@@ -92,8 +93,12 @@ BpostShm = {
 			var postcode	= $('#postcode').val(),
 				city		= $('#city').val();
 
-			if ('undefined' !== typeof BpostShm.cache.nearest_service_points[postcode + '_' + city])
-				return BpostShm.update(BpostShm.cache.nearest_service_points[postcode + '_' + city]);
+			$is_manual_search = BpostShm.manual_search;
+			BpostShm.manual_search = false;
+			trace('');
+
+			if ('undefined' !== typeof BpostShm.cache.nearest_service_points[postcode])
+				return BpostShm.update(BpostShm.cache.nearest_service_points[postcode]);
 
 			$.get(BpostShm.services.get_nearest_service_points, {
 				postcode:	postcode,
@@ -101,14 +106,19 @@ BpostShm = {
 			}, function(response) {
 				if ('undefined' !== typeof response.coords)
 				{
-					BpostShm.cache.nearest_service_points[postcode + '_' + city] = response;
+					BpostShm.cache.nearest_service_points[postcode] = response;
 					BpostShm.update(response);
 				}
+				else
+					if ($is_manual_search)
+						trace(BpostShm.lang['No results found']);
+
 			});
 		});
 
 		var $searchInputs = $('#postcode, #city');
 		$searchInputs.live('keydown', function() {
+			BpostShm.manual_search = true;
 			$searchInputs.filter(':not(#' + this.id + ')').val('');
 		});
 
@@ -525,11 +535,11 @@ function toggleBounce(i)
 
 function trace($msg)
 {
-	if ('undefined' === $msg)
-		$msg = 'empty';
-	if ($('#tracie').length === 0)
-		$('#search-form').append('<span id="tracie" style=""></span>');
+	if ('undefined' === $msg) $msg = 'Ready';
 	
-	$('#tracie').text($msg);
+	if ($('#tracie').length === 0)
+		$('#search-form').append('<span id="tracie" style="color: silver;margin-left: 5px;"></span>');
+	
+	return $('#tracie').text($msg);
 }
 //]]>
