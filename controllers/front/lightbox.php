@@ -69,7 +69,7 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 		{
 			$rcn = Tools::getValue('rcn');
 			$member = $service->getBpack247Member($rcn, 'Number, Street, Town, Postalcode, PackstationID, DeliveryCode');
-			$this->validateStore($member);
+			$this->validateStore($member, $cart_bpost);
 		}
 		elseif (Tools::getValue('post_bpack247_register'))
 		{
@@ -109,7 +109,7 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 //$this->jsonEncode($customer);
 
 			$member = $service->createBpack247Member($customer, 'Number, Street, Postalcode, DeliveryCode');
-			$this->validateStore($member);
+			$this->validateStore($member, $cart_bpost);
 		}
 
 		// Building display page
@@ -322,17 +322,17 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 		die(Tools::jsonEncode($content));
 	}
 
-	private function validateStore($member)
+	private function validateStore($member, $cart_bpost = null)
 	{
 		$json_member = (string)Tools::jsonEncode($member);
-		if (!isset($member['Error']))
+		if (!isset($member['Error']) && isset($cart_bpost))
 			try {
-				if (!isset($cart_bpost))
-					$cart_bpost = PsCartBpost::getByPsCartID((int)$this->context->cart->id);
+				// if (!isset($cart_bpost))
+					// $cart_bpost = PsCartBpost::getByPsCartID((int)$this->context->cart->id);
 
 				$cart_bpost->bpack247_customer = $json_member;
 				$cart_bpost->update();
-				
+
 			} catch (Exception $e) {
 				$json_member = Tools::jsonEncode(array('Error' => $e->getMessage()));
 			}

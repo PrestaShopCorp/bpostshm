@@ -50,7 +50,6 @@ class Service
 			spl_autoload_register(array(Autoloader::getInstance(), 'loadPS14'));
 
 		$this->context = $context;
-		//$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
 
 		$this->bpost = new EontechBpostService(
 			Configuration::get('BPOST_ACCOUNT_ID'),
@@ -97,7 +96,7 @@ class Service
 			return Configuration::updateValue($key, $value);
 	}
 
-	public function getOrderIDFromReference($reference = '')
+	public static function getOrderIDFromReference($reference = '')
 	{
 		$return = false;
 
@@ -115,7 +114,7 @@ class Service
 	 */
 	public static function generateReference()
 	{
-		return strtoupper(Tools::passwdGen(9, 'NO_NUMERIC'));
+		return Tools::strtoupper(Tools::passwdGen(9, 'NO_NUMERIC'));
 	}
 
 	public static function isInternational($shipping_method)
@@ -228,7 +227,7 @@ class Service
 	 * ****** if retour, does it have a service point (@bpost or @247)
 	 * @return array 'sender' & 'receiver'
 	 */
-	public function getReceiverAndSender($ps_order, $is_retour = false/*, $has_service_point = false*/)
+	public function getReceiverAndSender($ps_order, $is_retour = false)
 	{
 		$customer = new Customer((int)$ps_order->id_customer);
 		$delivery_address = new Address($ps_order->id_address_delivery, $this->context->language->id);
@@ -267,15 +266,6 @@ class Service
 		{
 			$sender = $shippers['client'];
 			$receiver = $shippers['shop'];
-			// if ((bool)$has_service_point)
-			// {
-			// 	$sender['address1'] = $invoice_address->address1;
-			// 	$sender['address2'] = $invoice_address->address2;
-			// 	$sender['city'] = $invoice_address->city;
-			// 	$sender['postcode'] = $invoice_address->postcode;
-			// 	$sender['id_country'] = $invoice_address->id_country;
-			// 	$sender['phone'] = !empty($invoice_address->phone) ? $invoice_address->phone : $invoice_address->phone_mobile;
-			// }
 		}
 
 		// create $bpost_sender
@@ -371,7 +361,7 @@ class Service
 		// $recipient = $receiver->getName().' '.$address->getStreetName().' '.$address->getNumber().' '
 		// 	.$address->getPostalCode().' '.$address->getLocality();
 		$recipient = $receiver->getName().', '.$address->getStreetName().' '.$address->getNumber().' '
-			.$address->getPostalCode().' '.$address->getLocality().' ('.strtoupper($address->getCountryCode()).')';
+			.$address->getPostalCode().' '.$address->getLocality().' ('.Tools::strtoupper($address->getCountryCode()).')';
 
 		$shm = $this->module->getShmFromCarrierID($ps_order->id_carrier);
 		$delivery_method = $this->module->shipping_methods[$shm]['slug'];
@@ -480,7 +470,7 @@ class Service
 			$sp_type = (int)$cart->sp_type;
 		}
 
-		$shippers = $this->getReceiverAndSender($ps_order, $is_retour/*, $has_service_point*/);
+		$shippers = $this->getReceiverAndSender($ps_order, $is_retour);
 		$sender = $shippers['sender'];
 		$receiver = $shippers['receiver'];
 
@@ -561,7 +551,7 @@ class Service
 
 				// language must default to EN if not in allowed values
 				$lang_iso = $this->context->language->iso_code;
-				$lang_iso = in_array(strtoupper($lang_iso), array('EN', 'NL', 'FR', 'DE',)) ? $lang_iso : 'EN';
+				$lang_iso = in_array(Tools::strtoupper($lang_iso), array('EN', 'NL', 'FR', 'DE',)) ? $lang_iso : 'EN';
 				$option = new EontechModBpostOrderBoxOptionMessaging(
 					'keepMeInformed',
 					$lang_iso,
@@ -641,6 +631,11 @@ class Service
 			$pdf_manager->setActiveFolder($reference);
 
 			$order_bpost = PsOrderBpost::getByReference($reference);
+			// Shop context is set per PS order (Ps 1.5+) before entry in AdminOrdersBpost.
+			// no need to set manually
+			// if (self::isPrestashop15plus())
+			// 	Shop::setContext(Shop::CONTEXT_SHOP, (int)$order_bpost->id_shop);
+
 			$order_bpost_status = $order_bpost->status;
 			$shm = $order_bpost->shm;
 			$is_intl = self::isInternational($shm);
@@ -964,7 +959,7 @@ class Service
 		$list = '';
 		if ($options_list = Configuration::get('BPOST_DELIVERY_OPTIONS_LIST'))
 		{
-			$options_list = json_decode($options_list, true);
+			$options_list = Tools::jsonDecode($options_list, true);
 			if (isset($options_list[$delivery_method]))
 				$list = $options_list[$delivery_method];
 

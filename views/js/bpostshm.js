@@ -265,7 +265,7 @@ BpostShm = {
 
 				setTimeout(function() {
 					elm.trigger('click');
-				}, 500);
+				}, 1500);
 			}
 		});
 

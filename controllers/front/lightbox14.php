@@ -86,7 +86,7 @@ class Lightbox extends FrontController
 		{
 			$rcn = Tools::getValue('rcn');
 			$member = $service->getBpack247Member($rcn, 'Number, Street, Town, Postalcode, PackstationID, DeliveryCode');
-			$this->validateStore($member);
+			$this->validateStore($member, $cart_bpost);
 		}
 		elseif (Tools::getValue('post_bpack247_register'))
 		{
@@ -132,7 +132,7 @@ class Lightbox extends FrontController
 //$this->jsonEncode($customer);
 
 			$member = $service->createBpack247Member($customer, 'Number, Street, Postalcode, DeliveryCode');
-			$this->validateStore($member);
+			$this->validateStore($member, $cart_bpost);
 		}
 
 		// Building display page
@@ -145,10 +145,10 @@ class Lightbox extends FrontController
 				self::$smarty->assign('shipping_method', $shipping_method, true);
 
 				$delivery_address = new Address($context->cart->id_address_delivery, $context->language->id);
-				
+
 				self::$smarty->assign('city', $delivery_address->city, true);
 				self::$smarty->assign('postcode', $delivery_address->postcode, true);
-				
+
 				$search_params = array(
 					'street' 	=> '',
 					'nr' 		=> '',
@@ -386,19 +386,19 @@ class Lightbox extends FrontController
 		Tools::addJS('https://maps.googleapis.com/maps/api/js?v=3.16&key='.Service::GMAPS_API_KEY.'&sensor=false&language=fr');
 	}
 
-	private function validateStore($member)
+	private function validateStore($member, $cart_bpost = null)
 	{
 		$json_member = (string)Tools::jsonEncode($member);
 		if (!isset($member['Error']))
 			try {
-				$context = Context::getContext();
-				$service = new Service($context);
-				if (!isset($cart_bpost))
-					$cart_bpost = PsCartBpost::getByPsCartID((int)$context->cart->id);
+				// $context = Context::getContext();
+				// $service = new Service($context);
+				// if (!isset($cart_bpost))
+				// 	$cart_bpost = PsCartBpost::getByPsCartID((int)$context->cart->id);
 
 				$cart_bpost->bpack247_customer = $json_member;
 				$cart_bpost->update();
-				
+
 			} catch (\Exception $e) {
 				$json_member = Tools::jsonEncode(array('Error' => $e->getMessage()));
 			}

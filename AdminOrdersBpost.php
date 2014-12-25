@@ -337,7 +337,7 @@ class AdminOrdersBpost extends AdminTab
 		$order_bpost = PsOrderBpost::getByReference($reference);
 
 		// are we allowed ? if labels are PRINTED
-		if (empty($order_state['id']) || !($order_state['set_b4_printed'] xor (bool)$order_bpost->countPrinted()))
+		if (empty($order_state['id']) || !($order_state['set_b4_printed'] ^ (bool)$order_bpost->countPrinted()))
 		{
 
 			$this->_errors[] = str_replace(
@@ -351,7 +351,7 @@ class AdminOrdersBpost extends AdminTab
 		$order_bpost->current_state = (int)$order_state['id'];
 		$order_bpost->save();
 
-		$ps_order = new Order((int)$this->service->getOrderIDFromReference($reference));
+		$ps_order = new Order((int)Service::getOrderIDFromReference($reference));
 
 		// Create new OrderHistory
 		$history = new OrderHistory();
@@ -399,7 +399,7 @@ class AdminOrdersBpost extends AdminTab
 		$params['customerReference'] = $reference;
 		$tracking_url .= '?'.http_build_query($params);
 
-		$ps_order = new Order((int)$this->service->getOrderIDFromReference($reference));
+		$ps_order = new Order((int)Service::getOrderIDFromReference($reference));
 		$content = $this->l('Your order').' '.$ps_order->id.' '.$this->l('can now be tracked here :')
 			.' <a href="'.$tracking_url.'">'.$tracking_url.'</a>';
 
@@ -816,7 +816,7 @@ class AdminOrdersBpost extends AdminTab
 			'target' => '_blank',
 		);
 
-		$ps_order = new Order((int)$this->service->getOrderIDFromReference($reference));
+		$ps_order = new Order((int)Service::getOrderIDFromReference($reference));
 		$tpl_vars['href'] = 'index.php?tab=AdminOrders&id_order='.(int)$ps_order->id.'&vieworder&token='.Tools::getAdminTokenLite('AdminOrders');
 		// $tpl_vars['href'] = Tools::safeOutput(Tools::substr(self::$current_index, 0, -5)
 		// 	.'&id_order='.(int)$ps_order->id
@@ -857,9 +857,6 @@ class AdminOrdersBpost extends AdminTab
 
 		$_cacheLang['View'] = $this->l('View');
 
-		// echo '
-		// 	<a href="'.$currentIndex.'&'.$this->identifier.'='.$id.'&view'.$this->table.'&token='.($token ? $token : $this->token).'">
-		// 	<img src="../img/admin/details.gif" alt="'.$_cacheLang['View'].'" title="'.$_cacheLang['View'].'" /></a>';
 		$reference = $id;
 		$actions = $this->getActions($id, $token);
 
@@ -934,7 +931,7 @@ class AdminOrdersBpost extends AdminTab
 			$isCms = true;
 		$id_cat = Tools::getValue('id_'.($isCms ? 'cms_' : '').'category');
 
-		if (!isset($token) OR empty($token))
+		if (!isset($token) || empty($token))
 			$token = $this->token;
 
 		/* Determine total page number */
@@ -980,7 +977,7 @@ class AdminOrdersBpost extends AdminTab
 						</span>
 					';
 		}
-		echo'
+		echo '
 					<span style="float: right;">
 						<input type="submit" name="submitReset'.$this->table.'" value="'.$this->l('Reset').'" class="button" />
 						<input type="submit" id="submitFilterButton_'.$this->table.'" name="submitFilter" value="'.$this->l('Filter').'" class="button" />
@@ -992,7 +989,7 @@ class AdminOrdersBpost extends AdminTab
 				<td>';
 
 		/* Display column names and arrows for ordering (ASC, DESC) */
-		if (array_key_exists($this->identifier,$this->identifiersDnd) AND $this->_orderBy == 'position')
+		if (array_key_exists($this->identifier, $this->identifiersDnd) && $this->_orderBy == 'position')
 		{
 			echo '
 			<script type="text/javascript" src="../js/jquery/jquery.tablednd_0_5.js"></script>
@@ -1004,7 +1001,7 @@ class AdminOrdersBpost extends AdminTab
 			<script type="text/javascript" src="../js/admin-dnd.js"></script>
 			';
 		}
-		echo '<table'.(array_key_exists($this->identifier,$this->identifiersDnd) ? ' id="'.(((int)(Tools::getValue($this->identifiersDnd[$this->identifier], 1))) ? substr($this->identifier,3,strlen($this->identifier)) : '').'"' : '' ).' class="table'.((array_key_exists($this->identifier,$this->identifiersDnd) AND ($this->_listTotal >= 2 && $this->_orderBy != 'position 'AND $this->_orderWay != 'DESC')) ? ' tableDnD'  : '' ).'" cellpadding="0" cellspacing="0">
+		echo '<table'.(array_key_exists($this->identifier, $this->identifiersDnd) ? ' id="'.(((int)(Tools::getValue($this->identifiersDnd[$this->identifier], 1))) ? substr($this->identifier, 3, strlen($this->identifier)) : '').'"' : '' ).' class="table'.((array_key_exists($this->identifier, $this->identifiersDnd) && ($this->_listTotal >= 2 && $this->_orderBy != 'position ' && $this->_orderWay != 'DESC')) ? ' tableDnD'  : '' ).'" cellpadding="0" cellspacing="0">
 			<thead>
 				<tr class="nodrag nodrop">
 					<th>';
@@ -1014,23 +1011,23 @@ class AdminOrdersBpost extends AdminTab
 		foreach ($this->fieldsDisplay as $key => $params)
 		{
 			echo '	<th '.(isset($params['widthColumn']) ? 'style="width: '.$params['widthColumn'].'px"' : '').'>'.$params['title'];
-			if (!isset($params['orderby']) OR $params['orderby'])
+			if (!isset($params['orderby']) || $params['orderby'])
 			{
 				// Cleaning links
 				if (Tools::getValue($this->table.'Orderby') && Tools::getValue($this->table.'Orderway'))
 					$currentIndex = preg_replace('/&'.$this->table.'Orderby=([a-z _]*)&'.$this->table.'Orderway=([a-z]*)/i', '', $currentIndex);
 				if ($this->_listTotal >= 2)
-				{															
+				{
 					echo '	<br />
 							<a href="'.$currentIndex.'&'.$this->identifier.'='.(int)$id_cat.'&'.$this->table.'Orderby='.urlencode($key).'&'.$this->table.'Orderway=desc&token='.$token.'"><img border="0" src="../img/admin/down'.((isset($this->_orderBy) && ($key == $this->_orderBy) && ($this->_orderWay == 'DESC')) ? '_d' : '').'.gif" /></a>
 							<a href="'.$currentIndex.'&'.$this->identifier.'='.(int)$id_cat.'&'.$this->table.'Orderby='.urlencode($key).'&'.$this->table.'Orderway=asc&token='.$token.'"><img border="0" src="../img/admin/up'.((isset($this->_orderBy) && ($key == $this->_orderBy) && ($this->_orderWay == 'ASC')) ? '_d' : '').'.gif" /></a>';
-				}														
+				}
 			}
 			echo '	</th>';
 		}
 
 		/* Check if object can be modified, deleted or detailed */
-		if ($this->edit OR $this->delete OR ($this->view AND $this->view !== 'noActionColumn'))
+		if ($this->edit || $this->delete || ($this->view && $this->view !== 'noActionColumn'))
 			echo '	<th style="width: 52px;text-align: center;">'.$this->l('Actions').'</th>';
 		echo '	</tr>
 				<tr class="nodrag nodrop" style="height: 35px;">
@@ -1051,7 +1048,7 @@ class AdminOrdersBpost extends AdminTab
 				$params['type'] = 'text';
 
 			$value = Tools::getValue($this->table.'Filter_'.(array_key_exists('filter_key', $params) ? $params['filter_key'] : $key));
-			if (isset($params['search']) AND !$params['search'])
+			if (isset($params['search']) && !$params['search'])
 			{
 				// echo '--</td>';
 				echo '</td>';
@@ -1064,7 +1061,7 @@ class AdminOrdersBpost extends AdminTab
 					<select name="'.$this->table.'Filter_'.$key.'">
 						<option value="">--</option>
 						<option value="1"'.($value == 1 ? ' selected="selected"' : '').'>'.$this->l('Yes').'</option>
-						<option value="0"'.(($value == 0 AND $value != '') ? ' selected="selected"' : '').'>'.$this->l('No').'</option>
+						<option value="0"'.(($value == 0 && $value != '') ? ' selected="selected"' : '').'>'.$this->l('No').'</option>
 					</select>';
 					break;
 
@@ -1072,7 +1069,7 @@ class AdminOrdersBpost extends AdminTab
 				case 'datetime':
 					if (is_string($value))
 						$value = unserialize($value);
-					if (!Validate::isCleanHtml($value[0]) OR !Validate::isCleanHtml($value[1]))
+					if (!Validate::isCleanHtml($value[0]) || !Validate::isCleanHtml($value[1]))
 						$value = '';
 					$name = $this->table.'Filter_'.(isset($params['filter_key']) ? $params['filter_key'] : $key);
 					$nameId = str_replace('!', '__', $name);
@@ -1086,10 +1083,10 @@ class AdminOrdersBpost extends AdminTab
 					if (isset($params['filter_key']))
 					{
 						echo '<select onchange="$(\'#submitFilter'.$this->table.'\').focus();$(\'#submitFilter'.$this->table.'\').click();" name="'.$this->table.'Filter_'.$params['filter_key'].'" '.(isset($params['width']) ? 'style="width: '.$params['width'].'px"' : '').'>
-								<option value=""'.(($value == 0 AND $value != '') ? ' selected="selected"' : '').'>--</option>';
-						if (isset($params['select']) AND is_array($params['select']))
+								<option value=""'.(($value == 0 && $value != '') ? ' selected="selected"' : '').'>--</option>';
+						if (isset($params['select']) && is_array($params['select']))
 							foreach ($params['select'] as $optionValue => $optionDisplay)
-								echo '<option value="'.$optionValue.'"'.((isset($_POST[$this->table.'Filter_'.$params['filter_key']]) AND Tools::getValue($this->table.'Filter_'.$params['filter_key']) == $optionValue AND Tools::getValue($this->table.'Filter_'.$params['filter_key']) != '') ? ' selected="selected"' : '').'>'.$optionDisplay.'</option>';
+								echo '<option value="'.$optionValue.'"'.((isset($_POST[$this->table.'Filter_'.$params['filter_key']]) && Tools::getValue($this->table.'Filter_'.$params['filter_key']) == $optionValue && Tools::getValue($this->table.'Filter_'.$params['filter_key']) != '') ? ' selected="selected"' : '').'>'.$optionDisplay.'</option>';
 						echo '</select>';
 						break;
 					}
@@ -1103,7 +1100,7 @@ class AdminOrdersBpost extends AdminTab
 			echo '</td>';
 		}
 
-		if ($this->edit OR $this->delete OR ($this->view AND $this->view !== 'noActionColumn'))
+		if ($this->edit || $this->delete || ($this->view && $this->view !== 'noActionColumn'))
 			echo '<td class="center">--</td>';
 
 		echo '</tr>
@@ -1128,7 +1125,7 @@ class AdminOrdersBpost extends AdminTab
 		$id_category = 1; // default categ
 
 		$irow = 0;
-		if ($this->_list AND isset($this->fieldsDisplay['position']))
+		if ($this->_list && isset($this->fieldsDisplay['position']))
 		{
 			$positions = array_map(create_function('$elem', 'return (int)($elem[\'position\']);'), $this->_list);
 			sort($positions);
@@ -1142,9 +1139,9 @@ class AdminOrdersBpost extends AdminTab
 			foreach ($this->_list as $tr)
 			{
 				$id = $tr[$this->identifier];
-				echo '<tr'.(array_key_exists($this->identifier,$this->identifiersDnd) ? ' id="tr_'.(($id_category = (int)(Tools::getValue('id_'.($isCms ? 'cms_' : '').'category', '1'))) ? $id_category : '').'_'.$id.'_'.$tr['position'].'"' : '').($irow++ % 2 ? ' class="alt_row"' : '').' '.((isset($tr['color']) AND $this->colorOnBackground) ? 'style="background-color: '.$tr['color'].'"' : '').'>
+				echo '<tr'.(array_key_exists($this->identifier, $this->identifiersDnd) ? ' id="tr_'.(($id_category = (int)(Tools::getValue('id_'.($isCms ? 'cms_' : '').'category', '1'))) ? $id_category : '').'_'.$id.'_'.$tr['position'].'"' : '').($irow++ % 2 ? ' class="alt_row"' : '').' '.((isset($tr['color']) && $this->colorOnBackground) ? 'style="background-color: '.$tr['color'].'"' : '').'>
 							<td class="center">';
-				if ($this->delete AND (!isset($this->_listSkipDelete) OR !in_array($id, $this->_listSkipDelete)))
+				if ($this->delete && (!isset($this->_listSkipDelete) || !in_array($id, $this->_listSkipDelete)))
 					echo '<input type="checkbox" name="'.$this->table.'Box[]" value="'.$id.'" class="noborder" />';
 				echo '</td>';
 				foreach ($this->fieldsDisplay as $key => $params)
@@ -1155,28 +1152,28 @@ class AdminOrdersBpost extends AdminTab
 					$class = '';
 					$class .= isset($params['align']) ? $params['align'] : '';
 					$class .= isset($params['class']) ? ' '.$params['class'] : '';
-			
+
 					echo '
-					<td '.(isset($params['position']) ? ' id="td_'.(isset($id_category) AND $id_category ? $id_category : 0).'_'.$id.'"' : '').
-					' class="'.((!isset($this->noLink) OR !$this->noLink) ? 'pointer' : '').
-					((isset($params['position']) AND $this->_orderBy == 'position')? ' dragHandle' : '').
+					<td '.(isset($params['position']) ? ' id="td_'.(isset($id_category) && $id_category ? $id_category : 0).'_'.$id.'"' : '').
+					' class="'.((!isset($this->noLink) || !$this->noLink) ? 'pointer' : '').
+					((isset($params['position']) && $this->_orderBy == 'position')? ' dragHandle' : '').
 					//(isset($params['align']) ? ' '.$params['align'] : '').'" ';
 					(!empty($class) ? ' '.$class : '').'" ';
 					// Serge end
-					if (!isset($params['position']) AND (!isset($this->noLink) OR !$this->noLink))
+					if (!isset($params['position']) && (!isset($this->noLink) || !$this->noLink))
 						echo ' onclick="document.location = \''.$currentIndex.'&'.$this->identifier.'='.$id.($this->view? '&view' : '&update').$this->table.'&token='.($token != null ? $token : $this->token).'\'">'.(isset($params['prefix']) ? $params['prefix'] : '');
 					else
 						echo '>';
-					if (isset($params['active']) AND isset($tr[$key]))
+					if (isset($params['active']) && isset($tr[$key]))
 						$this->_displayEnableLink($token, $id, $tr[$key], $params['active'], Tools::getValue('id_category'), Tools::getValue('id_product'));
-					elseif (isset($params['activeVisu']) AND isset($tr[$key]))
+					elseif (isset($params['activeVisu']) && isset($tr[$key]))
 						echo '<img src="../img/admin/'.($tr[$key] ? 'enabled.gif' : 'disabled.gif').'"
 						alt="'.($tr[$key] ? $this->l('Enabled') : $this->l('Disabled')).'" title="'.($tr[$key] ? $this->l('Enabled') : $this->l('Disabled')).'" />';
 					elseif (isset($params['position']))
 					{
-						if ($this->_orderBy == 'position' AND $this->_orderWay != 'DESC')
+						if ($this->_orderBy == 'position' && $this->_orderWay != 'DESC')
 						{
-							echo '<a'.(!($tr[$key] != $positions[sizeof($positions) - 1]) ? ' style="display: none;"' : '').' href="'.$currentIndex.
+							echo '<a'.(!($tr[$key] != $positions[count($positions) - 1]) ? ' style="display: none;"' : '').' href="'.$currentIndex.
 									'&'.$keyToGet.'='.(int)($id_category).'&'.$this->identifiersDnd[$this->identifier].'='.$id.'
 									&way=1&position='.(int)($tr['position'] + 1).'&token='.($token != null ? $token : $this->token).'">
 									<img src="../img/admin/'.($this->_orderWay == 'ASC' ? 'down' : 'up').'.gif"
@@ -1186,7 +1183,8 @@ class AdminOrdersBpost extends AdminTab
 									'&'.$keyToGet.'='.(int)($id_category).'&'.$this->identifiersDnd[$this->identifier].'='.$id.'
 									&way=0&position='.(int)($tr['position'] - 1).'&token='.($token != null ? $token : $this->token).'">
 									<img src="../img/admin/'.($this->_orderWay == 'ASC' ? 'up' : 'down').'.gif"
-									alt="'.$this->l('Up').'" title="'.$this->l('Up').'" /></a>';						}
+									alt="'.$this->l('Up').'" title="'.$this->l('Up').'" /></a>';
+						}
 						else
 							echo (int)($tr[$key] + 1);
 					}
@@ -1199,20 +1197,21 @@ class AdminOrdersBpost extends AdminTab
 						{
 							$image = new Image((int)$tr['id_image']);
 							$path_to_image = _PS_IMG_DIR_.$params['image'].'/'.$image->getExistingImgPath().'.'.$this->imageType;
-						}else
+						}
+						else
 							$path_to_image = _PS_IMG_DIR_.$params['image'].'/'.$item_id.(isset($tr['id_image']) ? '-'.(int)($tr['id_image']) : '').'.'.$this->imageType;
 
 						echo cacheImage($path_to_image, $this->table.'_mini_'.$item_id.'.'.$this->imageType, 45, $this->imageType);
 					}
-					elseif (isset($params['icon']) AND (isset($params['icon'][$tr[$key]]) OR isset($params['icon']['default'])))
+					elseif (isset($params['icon']) && (isset($params['icon'][$tr[$key]]) || isset($params['icon']['default'])))
 						echo '<img src="../img/admin/'.(isset($params['icon'][$tr[$key]]) ? $params['icon'][$tr[$key]] : $params['icon']['default'].'" alt="'.$tr[$key]).'" title="'.$tr[$key].'" />';
 					elseif (isset($params['price']))
 						echo Tools::displayPrice($tr[$key], (isset($params['currency']) ? Currency::getCurrencyInstance((int)($tr['id_currency'])) : $currency), false);
 					elseif (isset($params['float']))
 						echo rtrim(rtrim($tr[$key], '0'), '.');
-					elseif (isset($params['type']) AND $params['type'] == 'date')
+					elseif (isset($params['type']) && $params['type'] == 'date')
 						echo Tools::displayDate($tr[$key], (int)$cookie->id_lang);
-					elseif (isset($params['type']) AND $params['type'] == 'datetime')
+					elseif (isset($params['type']) && $params['type'] == 'datetime')
 						echo Tools::displayDate($tr[$key], (int)$cookie->id_lang, true);
 					elseif (isset($tr[$key]))
 					{
@@ -1226,14 +1225,14 @@ class AdminOrdersBpost extends AdminTab
 					'</td>';
 				}
 
-				if ($this->edit OR $this->delete OR ($this->view AND $this->view !== 'noActionColumn'))
+				if ($this->edit || $this->delete || ($this->view && $this->view !== 'noActionColumn'))
 				{
 					echo '<td class="center" style="white-space: nowrap;">';
 					if ($this->view)
 						$this->_displayViewLink($token, $id);
 					if ($this->edit)
 						$this->_displayEditLink($token, $id);
-					if ($this->delete AND (!isset($this->_listSkipDelete) OR !in_array($id, $this->_listSkipDelete)))
+					if ($this->delete && (!isset($this->_listSkipDelete) || !in_array($id, $this->_listSkipDelete)))
 						$this->_displayDeleteLink($token, $id);
 					if ($this->duplicate)
 						$this->_displayDuplicate($token, $id);
@@ -1244,38 +1243,4 @@ class AdminOrdersBpost extends AdminTab
 		}
 	}
 
-
-	/* End Experimental */
-	/* Experiment was a Success */
-
-	// public function vieworder_bpost()
-	// {
-	// 	$reference = Tools::getValue('reference');
-	// 	$token = Tools::getValue('token');
-	// 	$actions = array();
-
-	// 	if ($add_label = $this->displayAddLabelLink($token, $reference))
-	// 		$actions[] = $add_label;
-	// 	if ($print_labels = $this->displayPrintLabelsLink($token, $reference))
-	// 		$actions[] = $print_labels;
-	// 	if ($mark_treated = $this->displayMarkTreatedLink($token, $reference))
-	// 		$actions[] = $mark_treated;
-	// 	if ($send_email = $this->displaySendTTEmailLink($token, $reference))
-	// 		$actions[] = $send_email;
-	// 	if ($create_retour = $this->displayCreateRetourLink($token, $reference))
-	// 		$actions[] = $create_retour;
-	// 	if ($view_order = $this->displayViewLink($token, $reference))
-	// 		$actions[] = $view_order;
-	// 	if ($cancel_order = $this->displaycancelLink($token, $reference))
-	// 		$actions[] = $cancel_order;
-
-	// 	$this->context->smarty->assign(
-	// 		array(
-	// 			'actions' => $actions,
-	// 			'reference' => $reference,
-	// 			'url_list' => Tools::safeOutput(self::$current_index.'&token='.($token != null ? $token : $this->token)),
-	// 		)
-	// 	);
-	// 	$this->context->smarty->display(_PS_MODULE_DIR_.'bpostshm/views/templates/admin/orders_bpost/view14.tpl');
-	// }	
 }

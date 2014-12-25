@@ -47,7 +47,7 @@ class BpostShm extends CarrierModule
 		$this->name = 'bpostshm';
 		$this->need_instance = 0;
 		$this->tab = 'shipping_logistics';
-		$this->version = '1.11';
+		$this->version = '1.12';
 
 		$this->displayName = $this->l('bpost Shipping Manager - bpost customers only');
 		$this->description = $this->l('IMPORTANT: bpostshm module description');
@@ -280,7 +280,7 @@ class BpostShm extends CarrierModule
 					)))
 				{
 					$id_zone_be = false;
-					$zone_labels = array('België', 'Belgique', 'Belgium');
+					$zone_labels = array('België', 'Belgie', 'Belgique', 'Belgium');
 					foreach ($zone_labels as $zone_label)
 						if ($id_zone = Zone::getIdByName($zone_label))
 						{
@@ -448,7 +448,7 @@ class BpostShm extends CarrierModule
 			$sql .= 'PRIMARY KEY (`'.$table['primary_key'].'`)';
 		else
 			// remove final ',' -1 if no EOL char added
-			$sql = substr($sql, 0, -2);
+			$sql = Tools::substr($sql, 0, -2);
 
 		$sql .= ' );';
 
@@ -507,7 +507,7 @@ AND
 				$after = 'AFTER `'.$key.'`';
 			}
 			// remove final ',' -1 if no EOL char added
-			$sql = substr($sql, 0, -2);
+			$sql = Tools::substr($sql, 0, -2);
 
 			// add missing columns
 			$db->execute($sql);
@@ -594,7 +594,6 @@ AND
 	private function postValidation()
 	{
 		$errors = array();
-		//$context_shop_id = (isset($this->context->shop) && !is_null($this->context->shop->id) ? $this->context->shop->id : 1);
 
 		// Check PrestaShop contact info, they will be used as shipper address
 		if (!Configuration::get('PS_SHOP_ADDR1')
@@ -829,7 +828,7 @@ AND
 		$this->smarty->assign('display_international_delivery', $display_international_delivery, true);
 		// delivery options
 		if (isset($delivery_options_list))
-			$delivery_options_list = json_decode($delivery_options_list, true);
+			$delivery_options_list = Tools::jsonDecode($delivery_options_list, true);
 
 		$delivery_options = array(
 			'home' => array(

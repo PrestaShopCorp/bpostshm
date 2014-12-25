@@ -113,14 +113,17 @@ class PsOrderBpost extends ObjectModel
 
 		$return = parent::add($null_values, $autodate);
 
-		// must set Prestashop 1.5+
-		// id_shop, id_shop_group manually to take hold !
-		if (version_compare(_PS_VERSION_, '1.5', '>='))
+		// must manually set Prestashop 1.5+
+		// id_shop, id_shop_group to take hold !
+		if (self::isPs15Plus())
 		{
-			$sql = 'UPDATE `'._DB_PREFIX_.self::$definition['table'].'`
-			SET `id_shop` = '.(int)Context::getContext()->shop->id.',
-			`id_shop_group` = '.(int)Shop::getContextShopGroupID().'
-			WHERE `id_order_bpost` = '.(int)$this->id;
+			// Context is not dependable ! Only ps_orders values are safe.
+			$id_order = (int)Tools::substr($this->reference, 7);
+			$sql = 'UPDATE `'._DB_PREFIX_.self::$definition['table'].'` ob, `'._DB_PREFIX_.'orders` o
+			SET ob.`id_shop` = o.`id_shop`,
+				ob.`id_shop_group` = o.`id_shop_group`
+			WHERE ob.`id_order_bpost` = '.(int)$this->id.'
+			AND o.`id_order` = '.(int)$id_order;
 
 			$return = $return && Db::getInstance()->execute($sql);
 		}
@@ -172,6 +175,15 @@ class PsOrderBpost extends ObjectModel
 	}
 
 	/**
+	 * [isPs15Plus helper static function
+	 * @return boolean True if Prestashop is 1.5+
+	 */
+	private static function isPs15Plus()
+	{
+		return (bool)version_compare(_PS_VERSION_, '1.5', '>=');
+	}
+
+	/**
 	 * add bpost label using reference, is_retour
 	 * 
 	 * @param bool 	$is_retour
@@ -179,10 +191,19 @@ class PsOrderBpost extends ObjectModel
 	 */
 	public function addLabel($is_retour = false, $status = 'PENDING')
 	{
+		if (!(bool)$this->id)
+			return false;
+
+		// Configuration context is not reliable
+		// if (self::isPs15Plus())
+		// 	Shop::setContext(Shop::CONTEXT_SHOP, (int)$this->id_shop);
+
+		$auto_retour = (bool)Configuration::get('BPOST_AUTO_RETOUR_LABEL');
+
 		$order_label = new PsOrderBpostLabel();
 		$order_label->id_order_bpost = $this->id;
 		$order_label->is_retour = (bool)$is_retour;
-		$order_label->has_retour = (bool)Configuration::get('BPOST_AUTO_RETOUR_LABEL');
+		$order_label->has_retour = (bool)$auto_retour;
 		$order_label->status = (string)$status;
 		return $order_label->save();
 	}

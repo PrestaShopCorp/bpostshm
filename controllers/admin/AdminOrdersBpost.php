@@ -57,7 +57,8 @@ class AdminOrdersBpost extends ModuleAdminController
 		$this->bootstrap = true;
 		$this->show_filters = true;
 		$this->module = new BpostShm();
-		$this->service = Service::getInstance($this->context);
+		// service needs to be shop context dependant.
+		// $this->service = Service::getInstance($this->context);
 
 		$this->actions = array(
 			'addLabel',
@@ -108,7 +109,6 @@ class AdminOrdersBpost extends ModuleAdminController
 		AND DATEDIFF(NOW(), a.date_add) <= 14
 		';
 
-		//$id_bpost_carriers = array_keys($this->service->delivery_methods_list);
 		$id_bpost_carriers = array_values($this->module->getIdCarriers());
 		if ($references = Db::getInstance()->executeS('
 			SELECT id_reference FROM `'._DB_PREFIX_.'carrier` WHERE id_carrier IN ('.implode(', ', $id_bpost_carriers).')'))
@@ -186,6 +186,8 @@ class AdminOrdersBpost extends ModuleAdminController
 		$this->shopLinkType = 'shop';
 		$this->shopShareDatas = Shop::SHARE_ORDER;
 
+		// Just for Autoload
+		Service::getInstance($this->context);
 		parent::__construct();
 	}
 
@@ -199,7 +201,8 @@ class AdminOrdersBpost extends ModuleAdminController
 
 		$this->getLanguages();
 		$this->initToolbar();
-		$this->initTabModuleList();
+		if (method_exists($this, 'initTabModuleList'))  // method not in earlier PS 1.5 < .6.2
+			$this->initTabModuleList();
 
 		if ($this->display == 'view')
 		{
@@ -219,28 +222,31 @@ class AdminOrdersBpost extends ModuleAdminController
 	{
 		parent::initProcess();
 
-		if (empty($this->errors))
+		$reference = (string)Tools::getValue('reference');
+		if (empty($this->errors) && !empty($reference))
 		{
-			$reference 	= (string)Tools::getValue('reference');
 			$response = array();
+			// service needs to be shop context dependant
+			$this->setRowContext($reference);
+			$service = new Service($this->context);
 
 			if (Tools::getIsset('addLabel'.$this->table))
 			{
-				if (!$response = $this->service->addLabel($reference))
+				if (!$response = $service->addLabel($reference))
 					$response['errors'] = 'Unable to add Label to order ['.$reference.'] Please check logs for errors.';
 
 				$this->jsonEncode($response);
 			}
 			elseif (Tools::getIsset('createRetour'.$this->table))
 			{
-				if (!$response = $this->service->addLabel($reference, true))
+				if (!$response = $service->addLabel($reference, true))
 					$response['errors'] = 'Unable to add Retour Label to order ['.$reference.'] Please check logs for errors.';
 
 				$this->jsonEncode($response);
 			}
 			elseif (Tools::getIsset('printLabels'.$this->table))
 			{
-				$links = $this->service->printLabels($reference);
+				$links = $service->printLabels($reference);
 				if (isset($links['Error']))
 					$response['errors'] = $links['Error'];
 				else
@@ -335,7 +341,7 @@ class AdminOrdersBpost extends ModuleAdminController
 				'%when%'
 				),
 			array(
-				strtolower($this->l($state_name)),
+				Tools::strtolower($this->l($state_name)),
 				$when
 				), 
 			$error);
@@ -356,7 +362,8 @@ class AdminOrdersBpost extends ModuleAdminController
 		$order_bpost = PsOrderBpost::getByReference($reference);
 
 		// are we allowed ? if labels are PRINTED
-		if (empty($order_state['id']) || !($order_state['set_b4_printed'] xor (bool)$order_bpost->countPrinted()))
+		//if (empty($order_state['id']) || !($order_state['set_b4_printed'] xor (bool)$order_bpost->countPrinted()))
+		if (empty($order_state['id']) || !($order_state['set_b4_printed'] ^ (bool)$order_bpost->countPrinted()))
 		{
 
 			$this->_errors[] = str_replace(
@@ -370,7 +377,7 @@ class AdminOrdersBpost extends ModuleAdminController
 		$order_bpost->current_state = (int)$order_state['id'];
 		$order_bpost->save();
 
-		$ps_order = new Order((int)$this->service->getOrderIDFromReference($reference));
+		$ps_order = new Order((int)Service::getOrderIDFromReference($reference));
 
 		// Create new OrderHistory
 		$history = new OrderHistory();
@@ -420,7 +427,7 @@ class AdminOrdersBpost extends ModuleAdminController
 		$params['customerReference'] = $reference;
 		$tracking_url .= '?'.http_build_query($params);
 
-		$ps_order = new Order((int)$this->service->getOrderIDFromReference($reference));
+		$ps_order = new Order((int)Service::getOrderIDFromReference($reference));
 		$message = $this->l('Your order').' '.$ps_order->reference.' '.$this->l('can now be tracked here :')
 			.' <a href="'.$tracking_url.'">'.$tracking_url.'</a>';
 
@@ -570,7 +577,10 @@ class AdminOrdersBpost extends ModuleAdminController
 		$labels = array();
 		foreach ($this->boxes as $reference)
 		{
-			$links = $this->service->printLabels($reference);
+			$this->setRowContext($reference);
+			$service = new Service($this->context);
+
+			$links = $service->printLabels($reference);
 			if (isset($links['Error']))
 					$this->_errors[] = $links['Error'];
 				else
@@ -657,7 +667,8 @@ class AdminOrdersBpost extends ModuleAdminController
 		$delivery_method = $dm_options[0];
 		if (isset($dm_options[1]))
 		{
-			$dm_options = $this->service->getDeliveryOptions($dm_options[1]);
+			$service = Service::getInstance($this->context);
+			$dm_options = $service->getDeliveryOptions($dm_options[1]);
 			$opts = '<ul style="list-style:none;font-size:11px;line-height:14px;padding:0;">';
 			foreach ($dm_options as $key => $option)
 				$opts .= '<li>+ '.$option.'</li>';
@@ -774,6 +785,34 @@ class AdminOrdersBpost extends ModuleAdminController
 		// now we have it
 	}
 
+/*	protected function getShopContextService($reference = '')
+	{
+		if (empty($reference))
+			$id_shop = (int)$this->context->shop->id;
+
+		else
+		{
+			$order_bpost = PsOrderBpost::getByReference($reference);
+			$id_shop = (int)$order_bpost->id_shop;
+			if (!isset($this->_service[$id_shop]))
+				Shop::setContext(Shop::CONTEXT_SHOP, (int)$id_shop);
+		}
+
+		if (!isset($this->_service[$id_shop]))
+			$this->_service[$id_shop] = new Service($this->context);
+
+		return $this->_service[$id_shop];
+	}
+*/
+	protected function setRowContext($reference)
+	{
+		if (!Service::isPrestashop15plus())
+			return;
+
+		$order_bpost = PsOrderBpost::getByReference($reference);
+		Shop::setContext(Shop::CONTEXT_SHOP, (int)$order_bpost->id_shop);
+	}
+
 	/**
 	 * @param null|string $token
 	 * @param string $reference
@@ -784,8 +823,9 @@ class AdminOrdersBpost extends ModuleAdminController
 		if (empty($reference))
 			return;
 
-		// This is the 1st method called so store currentRow
+		// This is the 1st method called so store currentRow & set rowContext
 		$this->setCurrentRow($reference);
+		$this->setRowContext($reference);
 
 		$tpl_vars = array(
 			'action' => $this->l('Add label'),
@@ -922,7 +962,7 @@ class AdminOrdersBpost extends ModuleAdminController
 			'target' => '_blank',
 		);
 
-		$ps_order = new Order((int)$this->service->getOrderIDFromReference($reference));
+		$ps_order = new Order((int)Service::getOrderIDFromReference($reference));
 		$tpl_vars['href'] = 'index.php?tab=AdminOrders&vieworder&id_order='.(int)$ps_order->id.'&token='.Tools::getAdminTokenLite('AdminOrders');
 		//$tpl_vars['href'] = 'index.php?controller=AdminOrders&id_order='.(int)$ps_order->id.'&vieworder&token='.Tools::getAdminTokenLite('AdminOrders');
 
