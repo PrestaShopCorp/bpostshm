@@ -28,6 +28,8 @@ $_MODULE['<{bpostshm}prestashop>adminordersbpost_4089f64edb41519bb92d57efd1c38de
 $_MODULE['<{bpostshm}prestashop>adminordersbpost_a671411dbd4645094d8a9e0717fae643'] = 'Afficher commande';
 $_MODULE['<{bpostshm}prestashop>adminordersbpost_d99d59366cc238d329d9fc8c7376d40b'] = 'Annuler commande';
 $_MODULE['<{bpostshm}prestashop>adminordersbpost_60b26ef21ab9711da96bd778dcc40348'] = 'Seules les commandes en cours peuvent être annulées.';
+$_MODULE['<{bpostshm}prestashop>adminordersbpost_c3bf447eabe632720a3aa1a7ce401274'] = 'Ouvert';
+$_MODULE['<{bpostshm}prestashop>adminordersbpost_9d376222146c0bd6d595e90c218552bd'] = 'Traitée';
 $_MODULE['<{bpostshm}prestashop>bpostshm_47e0842625c4173937805ac0f3ad1def'] = 'bpost Shipping Manager - Réservé aux utilisateurs bpost';
 $_MODULE['<{bpostshm}prestashop>bpostshm_f0356eaa6b70fa09769c4020e737510c'] = 'Permet à vos clients de choisir leur méthode d\'expédition préférée : livraison à domicile ou au bureau, dans un point de retrait ou dans un distributeur de paquet.';
 $_MODULE['<{bpostshm}prestashop>bpostshm_6cefaa978ccec960693d10cefeb2c2bf'] = 'Livraison à domicile';

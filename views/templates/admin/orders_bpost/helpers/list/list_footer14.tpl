@@ -43,7 +43,9 @@
 			$(function() {
 				
 				/* Tabs */
-				var $treated_status = <?php echo (int)$treated_status; ?>;
+				var $treated_status = <?php echo (int)$treated_status; ?>,
+					$str_open = "<?php echo $str_tabs['open']; ?>",
+					$str_treated = "<?php echo $str_tabs['treated']; ?>",
 					//$table 	= $('table.order_bpost'),
 					$table = $('table.table'),
 					$thead  = $table.find('thead'),
@@ -86,8 +88,8 @@
 					$parent = $('#adminordersbpost');
 					$parent.prepend(
 						$('<ul id="idTabs" />').append(
-								'<li><a href="#tab1">Open</a></li>',
-								'<li><a href="#tab2">Treated</a></li>'
+								'<li><a href="#tab1">' + $str_open + '</a></li>',
+								'<li><a href="#tab2">' + $str_treated + '</a></li>'
 						),
 						$('<div id="tab1"/>').append($table),
 						$('<div id="tab2"/>').append($table_treated));

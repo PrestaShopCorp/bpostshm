@@ -61,6 +61,7 @@ class AdminOrdersBpost extends AdminTab
 		$iso_code = $this->context->language->iso_code;
 		$iso_code = in_array($iso_code, array('de', 'fr', 'nl', 'en')) ? $iso_code : 'en';
 		$this->tracking_params['oss_language'] = $iso_code;
+		$this->affectAdminTranslation($iso_code);
 
 		// cached current_row while building list
 		// always false after display for any action
@@ -252,6 +253,32 @@ class AdminOrdersBpost extends AdminTab
 
 				$this->jsonEncode($response);
 			}
+		}
+	}
+
+	/**
+	 * insert this controllers translation strings into
+	 * globally retrieved AdminTab translations
+	 * @author Serge <serge@stigmi.eu>
+	 * @param  string $iso_code
+	 * @return None
+	 */
+	private function affectAdminTranslation($iso_code = 'en')
+	{
+		global $_LANGADM;
+
+		$class_name = get_class($this);
+		$module = isset($this->module) ? $this->module : 'bpostshm';
+		$needle = Tools::strtolower($class_name).'_';
+		$lang_file = _PS_MODULE_DIR_.$module.'/'.$iso_code.'.php';
+		if (file_exists($lang_file))
+		{
+
+			require $lang_file;
+			foreach ($_MODULE as $key => $value)
+				if (strpos($key, $needle))
+					$_LANGADM[str_replace($needle, $class_name, strip_tags($key))] = $value;
+
 		}
 	}
 
@@ -913,6 +940,10 @@ class AdminOrdersBpost extends AdminTab
 
 		$treated_status = $this->bpost_treated_state;
 		$reload_href = self::$current_index.'&token='.Tools::getAdminTokenLite('AdminOrdersBpost');
+		$str_tabs = array(
+			'open' => $this->l('Open'),
+			'treated' => $this->l('Treated'),
+			);
 		require_once _PS_MODULE_DIR_.'bpostshm/views/templates/admin/orders_bpost/helpers/list/list_footer14.tpl';
 	}
 

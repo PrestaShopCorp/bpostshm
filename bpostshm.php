@@ -47,7 +47,7 @@ class BpostShm extends CarrierModule
 		$this->name = 'bpostshm';
 		$this->need_instance = 0;
 		$this->tab = 'shipping_logistics';
-		$this->version = '1.12';
+		$this->version = '1.14';
 
 		$this->displayName = $this->l('bpost Shipping Manager - bpost customers only');
 		$this->description = $this->l('IMPORTANT: bpostshm module description');
@@ -261,6 +261,97 @@ class BpostShm extends CarrierModule
 			$id_carrier = $stored_carrier_ids[$shipping_method];
 			$carrier = new Carrier($id_carrier);
 			$carrier->deleted = (int)false;
+			// $carrier->active = true;
+			$carrier->active = BpostShm::SHIPPING_METHOD_AT_HOME == $shipping_method ||
+							!Configuration::get('BPOST_HOME_DELIVERY_ONLY');
+
+			$carrier->external_module_name = $this->name;
+			$carrier->name = $lang_fields['name'];
+			$carrier->delay = $this->getTranslatedFields($lang_fields['delay']);
+			$carrier->need_range = true;
+			$carrier->shipping_external = true;
+			$carrier->shipping_handling = false;
+
+			if ($ret_tmp = $carrier->save())
+			{
+				$id_zone_be = false;
+				$zone_labels = array('België', 'Belgie', 'Belgique', 'Belgium');
+				foreach ($zone_labels as $zone_label)
+					if ($id_zone = Zone::getIdByName($zone_label))
+					{
+						$id_zone_be = (int)$id_zone;
+						break;
+					}
+
+				if (!$id_zone_be)
+				{
+					$zone = new Zone();
+					$zone->name = 'Belgium';
+					$zone->active = true;
+					$zone->save();
+					$id_zone_be = (int)$zone->id;
+				}
+
+				Service::updateGlobalValue('BPOST_ID_ZONE_BELGIUM', (int)$id_zone_be);
+
+				if ($id_country = Country::getByIso('BE'))
+				{
+					$country = new Country($id_country);
+					if ($country->id_zone != $id_zone_be)
+					{
+						$country->id_zone = (int)$id_zone_be;
+						$country->save();
+					}
+
+					if (!$carrier->getZone((int)$id_zone))
+						$carrier->addZone((int)$id_zone);
+
+				}
+
+				// Configuration::updateValue('BPOST_SHIP_METHOD_'.$shipping_method.'_ID_CARRIER', (int)$carrier->id);
+				Service::updateGlobalValue('BPOST_SHIP_METHOD_'.$shipping_method.'_ID_CARRIER', (int)$carrier->id);
+
+				// Enable carrier for every user groups
+				if (is_array($user_groups) && !empty($user_groups) && method_exists($carrier, 'setGroups'))
+					$carrier->setGroups($user_groups);
+
+				// Copy carrier logo
+				$this->setIcon(_PS_MODULE_DIR_.$this->name.'/views/img/logo-carrier.jpg', _PS_SHIP_IMG_DIR_.'/'.(int)$carrier->id.'.jpg');
+				$this->setIcon(
+					_PS_MODULE_DIR_.$this->name.'/views/img/logo-carrier.jpg',
+					_PS_TMP_IMG_DIR_.'/carrier_mini_'.(int)$carrier->id.'_'.$this->context->language->id.'.jpg'
+				);
+			}
+
+			$return = $return && $ret_tmp;
+		}
+
+		// Sort carriers by position rather than price
+		if ($return && false !== Configuration::get('PS_CARRIER_DEFAULT_SORT'))
+			Configuration::updateValue('PS_CARRIER_DEFAULT_SORT', Carrier::SORT_BY_POSITION);
+
+		return $return;
+	}
+
+/*
+	private function addReplaceCarriers()
+	{
+		$return = true;
+
+		$user_groups_tmp = Group::getGroups($this->context->language->id);
+		if (is_array($user_groups_tmp) && !empty($user_groups_tmp))
+		{
+			$user_groups = array();
+			foreach ($user_groups_tmp as $group)
+				$user_groups[] = $group['id_group'];
+		}
+
+		$stored_carrier_ids = $this->getIdCarriers();
+		foreach ($this->shipping_methods as $shipping_method => $lang_fields)
+		{
+			$id_carrier = $stored_carrier_ids[$shipping_method];
+			$carrier = new Carrier($id_carrier);
+			$carrier->deleted = (int)false;
 			$carrier->active = true;
 
 			$carrier->external_module_name = $this->name;
@@ -343,7 +434,7 @@ class BpostShm extends CarrierModule
 
 		return $return;
 	}
-
+ */
 	/**
 	 * [deleteCarriers mark carriers for deletion (carrier->deleted = true) if found]
 	 * [Remark: No need to remove carrier image icons]
@@ -697,7 +788,8 @@ AND
 			if (Configuration::get('BPOST_HOME_DELIVERY_ONLY') !== $display_home_delivery_only
 					&& is_numeric($display_home_delivery_only))
 			{
-				Configuration::updateValue('BPOST_HOME_DELIVERY_ONLY', (int)$display_home_delivery_only);
+				// Configuration::updateValue('BPOST_HOME_DELIVERY_ONLY', (int)$display_home_delivery_only);
+				Service::updateGlobalValue('BPOST_HOME_DELIVERY_ONLY', (int)$display_home_delivery_only);
 
 				foreach ($this->getIdCarriers() as $shipping_method => $id_carrier)
 				{
@@ -737,6 +829,8 @@ AND
 						$enabled_country_list = '';
 					else
 					{
+						/*
+						// Bad legacy code
 						$id_carriers = array(
 							(int)Configuration::get('BPOST_SHIP_METHOD_'.self::SHIPPING_METHOD_AT_HOME.'_ID_CARRIER'),
 						);
@@ -772,6 +866,32 @@ AND
 											$carrier->addZone((int)$id_zone);
 									}
 								}
+							}
+						*/
+						$id_carrier = (int)Configuration::get('BPOST_SHIP_METHOD_'.self::SHIPPING_METHOD_AT_HOME.'_ID_CARRIER');
+						$carrier = new Carrier((int)$id_carrier);
+						foreach ($enabled_country_list as $iso_code)
+							if ($id_country = Country::getByIso($iso_code))
+							{
+								$country = new Country((int)$id_country/*, 1*/);
+
+								if ($country_id_zone = Zone::getIdByName($country->name))
+									$id_zone = (int)$country_id_zone;
+								else
+								{
+									$zone = new Zone();
+									$zone->name = $country->name;
+									$zone->active = true;
+									$zone->save();
+									$id_zone = (int)$zone->id;
+									// update country zone
+									$country->id_zone = $id_zone;
+									$country->save();
+								}
+
+								if (!$carrier->getZone((int)$id_zone))
+									$carrier->addZone((int)$id_zone);
+
 							}
 
 						$enabled_country_list = implode('|', $enabled_country_list);
@@ -950,7 +1070,8 @@ AND
 		if (!empty($params['id_carrier']))
 		{
 			if ($shipping_method = array_search((int)$params['id_carrier'], $this->getIdCarriers()))
-				Configuration::updateValue('BPOST_SHIP_METHOD_'.$shipping_method.'_ID_CARRIER', (int)$params['carrier']->id);
+				// Configuration::updateValue('BPOST_SHIP_METHOD_'.$shipping_method.'_ID_CARRIER', (int)$params['carrier']->id);
+				Service::updateGlobalValue('BPOST_SHIP_METHOD_'.$shipping_method.'_ID_CARRIER', (int)$params['carrier']->id);
 		}
 	}
 

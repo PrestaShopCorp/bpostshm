@@ -122,6 +122,38 @@ class Service
 		return (bool)(BpostShm::SHIPPING_METHOD_AT_INTL == (int)$shipping_method);
 	}
 
+	public function getWeightGrams($weight = 0)
+	{
+		if (empty($weight))
+			$weight = 1;
+
+		$weight_unit = Tools::strtolower(Configuration::get('PS_WEIGHT_UNIT'));
+		switch ($weight_unit)
+		{
+			case 'kg':
+				$weight *= 1000;
+				break;
+
+			case 'g':
+				break;
+
+			case 'lbs':
+			case 'lb':
+				$weight *= 453.592;
+				break;
+
+			case 'oz':
+				$weight *= 28.34952;
+				break;
+
+			default:
+				$weight = 1000;
+				break;
+		}
+
+		return round($weight, 0, PHP_ROUND_HALF_UP);
+	}
+
 	/**
 	 * @param array $search_params
 	 * @param int $type
@@ -420,9 +452,7 @@ class Service
 					$bpost_order->addLine($line);
 					$weight += $product['product_weight'];
 				}
-			if (empty($weight))
-				$weight = 1;
-			$weight *= 1000;
+			$weight = (int)$this->getWeightGrams($weight);
 
 			$box = $this->createBox($reference, $shm, $ps_order, $weight);
 			$bpost_order->addBox($box);
@@ -671,10 +701,8 @@ class Service
 							$bpost_order->addLine($line);
 							$weight += $product['product_weight'];
 						}
-					if (empty($weight))
-						$weight = 1;
 
-					$weight *= 1000;
+					$weight = (int)$this->getWeightGrams($weight);
 
 				}
 

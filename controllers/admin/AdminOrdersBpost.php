@@ -48,6 +48,7 @@ class AdminOrdersBpost extends ModuleAdminController
 		$iso_code = $this->context->language->iso_code;
 		$iso_code = in_array($iso_code, array('de', 'fr', 'nl', 'en')) ? $iso_code : 'en';
 		$this->tracking_params['oss_language'] = $iso_code;
+		$this->affectAdminTranslation($iso_code);
 
 		// cached current_row while building list
 		// always false after display for any action
@@ -278,6 +279,46 @@ class AdminOrdersBpost extends ModuleAdminController
 
 				$this->jsonEncode($response);
 			}
+		}
+	}
+
+	/**
+	 * override PS controllers broken translation
+	 * @author Serge <serge@stigmi.eu>
+	 * @param  string  $string       string to translate
+	 * @return string                translated string if found or $string
+	 */
+	protected function l($string)
+	{
+		// 	$class = get_class($this) // always
+		//  $addslashes = false
+		// 	$htmlentities = false // always
+		return Translate::getAdminTranslation($string, get_class($this), false, false);
+	}
+
+	/**
+	 * insert this controllers translation strings into
+	 * globally retrieved AdminTab translations
+	 * @author Serge <serge@stigmi.eu>
+	 * @param  string $iso_code
+	 * @return None
+	 */
+	private function affectAdminTranslation($iso_code = 'en')
+	{
+		global $_LANGADM;
+
+		$class_name = get_class($this);
+		$module = isset($this->module) ? $this->module : 'bpostshm';
+		$needle = Tools::strtolower($class_name).'_';
+		$lang_file = _PS_MODULE_DIR_.$module.'/'.$iso_code.'.php';
+		if (file_exists($lang_file))
+		{
+
+			require $lang_file;
+			foreach ($_MODULE as $key => $value)
+				if (strpos($key, $needle))
+					$_LANGADM[str_replace($needle, $class_name, strip_tags($key))] = $value;
+
 		}
 	}
 
@@ -525,6 +566,11 @@ class AdminOrdersBpost extends ModuleAdminController
 			array(
 				'treated_status' =>
 					$this->bpost_treated_state,
+				'str_tabs' =>
+					array(
+						'open' => $this->l('Open'),
+						'treated' => $this->l('Treated'),
+						),
 				'reload_href' => 
 					self::$currentIndex.'&token='.Tools::getAdminTokenLite('AdminOrdersBpost'),
 				'url_get_label' =>
