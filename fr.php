@@ -23,8 +23,8 @@ $_MODULE['<{bpostshm}prestashop>adminordersbpost_c879cb3351593188d1178647eb2032f
 $_MODULE['<{bpostshm}prestashop>adminordersbpost_1a3fa55ecea60262edb1f66fbe5926c7'] = 'Créer retour';
 $_MODULE['<{bpostshm}prestashop>adminordersbpost_90a576217dfd4d71555b207036cd6959'] = 'Marquer traité';
 $_MODULE['<{bpostshm}prestashop>adminordersbpost_d42ef45ca566f23e8ee2f774e27ee8a4'] = 'Ces actions ne sont valables que pour les commandes imprimées.';
-$_MODULE['<{bpostshm}prestashop>adminordersbpost_c60954b1b319f0981da087e8103a3a7c'] = 'Order is already treated.';
-$_MODULE['<{bpostshm}prestashop>adminordersbpost_4089f64edb41519bb92d57efd1c38de0'] = 'Send Track & Trace e-mail';
+$_MODULE['<{bpostshm}prestashop>adminordersbpost_c60954b1b319f0981da087e8103a3a7c'] = 'La commande est déjà traitée.';
+$_MODULE['<{bpostshm}prestashop>adminordersbpost_4089f64edb41519bb92d57efd1c38de0'] = 'Envoyer email T&T';
 $_MODULE['<{bpostshm}prestashop>adminordersbpost_a671411dbd4645094d8a9e0717fae643'] = 'Afficher commande';
 $_MODULE['<{bpostshm}prestashop>adminordersbpost_d99d59366cc238d329d9fc8c7376d40b'] = 'Annuler commande';
 $_MODULE['<{bpostshm}prestashop>adminordersbpost_60b26ef21ab9711da96bd778dcc40348'] = 'Seules les commandes en cours peuvent être annulées.';

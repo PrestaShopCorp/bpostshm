@@ -288,12 +288,12 @@ class AdminOrdersBpost extends ModuleAdminController
 	 * @param  string  $string       string to translate
 	 * @return string                translated string if found or $string
 	 */
-	protected function l($string)
+	protected function l($string, $class = 'AdminTab', $addslashes = false, $htmlentities = true)
 	{
-		// 	$class = get_class($this) // always
+		$class = get_class($this); // always
 		//  $addslashes = false
-		// 	$htmlentities = false // always
-		return Translate::getAdminTranslation($string, get_class($this), false, false);
+		$htmlentities = false; // always
+		return Translate::getAdminTranslation($string, $class, $addslashes, $htmlentities);
 	}
 
 	/**
