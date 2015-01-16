@@ -1,4 +1,12 @@
 <?php
+/**
+* order_bpost table encapsulation class
+*  
+* @author    Serge <serge@stigmi.eu>
+* @version   0.5.0
+* @copyright Copyright (c), Eontech.net. All rights reserved.
+* @license   BSD License
+*/
 
 class PsOrderBpost extends ObjectModel
 {

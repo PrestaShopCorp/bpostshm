@@ -345,7 +345,7 @@ class AdminOrdersBpost extends AdminTab
 			array(
 				strtolower($this->l($state_name)),
 				$when
-				), 
+				),
 			$error);
 
 		return $order_state;
@@ -618,7 +618,8 @@ class AdminOrdersBpost extends AdminTab
 		// {
 		// 	$reference = $fields_list['reference'];
 		// 	$current_state = (int)$fields_list['current_state'];
-		// 	$current_status = ((int)Configuration::get('BPOST_ORDER_STATE_TREATED') === $current_state) ? $this->service->getOrderStatus($reference) : $status;
+		// 	$current_status = ((int)Configuration::get('BPOST_ORDER_STATE_TREATED') === $current_state) ?
+		// 		$this->service->getOrderStatus($reference) : $status;
 		// }
 
 		return $current_status;

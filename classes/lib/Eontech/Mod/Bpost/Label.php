@@ -3,7 +3,7 @@
  * bPost Label class
  *
  * @author    Tijs Verkoyen <php-bpost@verkoyen.eu>
- * @author  Serge <serge@stigmi.eu>
+ * modified  Serge <serge@stigmi.eu>
  *          Needed to modify this to allow multiple barcodes per label
  * @version   3.0.0
  * @copyright Copyright (c), Tijs Verkoyen. All rights reserved.

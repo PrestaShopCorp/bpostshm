@@ -1,10 +1,8 @@
 <?php
-
 /**
-* Barcode Collection manager class
-* Prestashop module helper
+* Barcode Collection manager class Prestashop module helper
 *  
-* @author  Serge <serge@stigmi.eu>
+* @author    Serge <serge@stigmi.eu>
 * @version   0.5.0
 * @copyright Copyright (c), Eontech.net. All rights reserved.
 * @license   BSD License

@@ -1076,7 +1076,7 @@ class Service
 
 		} catch (Exception $e) {
 			return array('Error' => (401 === (int)$e->getCode()) ? 'Invalid Account ID / Passphrase' : $e->getMessage());
-			
+
 		}
 
 		return $this->explodeCountryList($product_countries_list);

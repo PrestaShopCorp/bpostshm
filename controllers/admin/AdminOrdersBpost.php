@@ -384,7 +384,7 @@ class AdminOrdersBpost extends ModuleAdminController
 			array(
 				Tools::strtolower($this->l($state_name)),
 				$when
-				), 
+				),
 			$error);
 
 		return $order_state;
@@ -571,7 +571,7 @@ class AdminOrdersBpost extends ModuleAdminController
 						'open' => $this->l('Open'),
 						'treated' => $this->l('Treated'),
 						),
-				'reload_href' => 
+				'reload_href' =>
 					self::$currentIndex.'&token='.Tools::getAdminTokenLite('AdminOrdersBpost'),
 				'url_get_label' =>
 					'index.php?tab=AdminOrders&addorder&token='.Tools::getAdminTokenLite('AdminOrders'),
@@ -656,48 +656,7 @@ class AdminOrdersBpost extends ModuleAdminController
 
 		return $response;
 	}
-/*	public function processbulkmarktreated()
-	{
-		$response = true;
 
-		if (empty($this->boxes) || !is_array($this->boxes))
-			$response = false;
-		else
-			foreach ($this->boxes as $reference)
-				$response &= $response && $this->markOrderTreated($reference);
-
-		return $response;
-	}
-
-	public function processbulkprintlabels()
-	{
-		$labels = array();
-
-		if (empty($this->boxes) || !is_array($this->boxes))
-			return false;
-		else
-			foreach ($this->boxes as $reference)
-				$labels[] = $this->service->printLabels($reference);
-
-		if (!empty($labels))
-			$this->context->smarty->assign('labels', $labels);
-
-		return true;
-	}
-
-	public function processbulksendttemail()
-	{
-		$response = true;
-
-		if (empty($this->boxes) || !is_array($this->boxes))
-			$response = false;
-		else
-			foreach ($this->boxes as $reference)
-				$response &= $response && $this->sendTTEmail($reference);
-
-		return $response;
-	}
-*/
 	/**
 	 * @param string $delivery_method as stored
 	 * @return string
@@ -743,7 +702,8 @@ class AdminOrdersBpost extends ModuleAdminController
 		// {
 		// 	$reference = $fields_list['reference'];
 		// 	$current_state = (int)$fields_list['current_state'];
-		// 	$current_status = ((int)Configuration::get('BPOST_ORDER_STATE_TREATED') === $current_state) ? $this->service->getOrderStatus($reference) : $status;
+		// 	$current_status = ((int)Configuration::get('BPOST_ORDER_STATE_TREATED') === $current_state) ?
+		// 		$this->service->getOrderStatus($reference) : $status;
 		// }
 
 		return $current_status;

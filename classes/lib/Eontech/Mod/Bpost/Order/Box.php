@@ -3,7 +3,7 @@
  * bPost Box class
  *
  * @author    Tijs Verkoyen <php-bpost@verkoyen.eu>
- * @author  Serge <serge@stigmi.eu>
+ * modefied Serge <serge@stigmi.eu>
  *          Needed to modify this to include optional barcode element
  * @version   3.0.0
  * @copyright Copyright (c), Tijs Verkoyen. All rights reserved.

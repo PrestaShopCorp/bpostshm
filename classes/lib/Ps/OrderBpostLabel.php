@@ -1,4 +1,12 @@
 <?php
+/**
+* cart_bpost_label table encapsulation class
+*  
+* @author    Serge <serge@stigmi.eu>
+* @version   0.5.0
+* @copyright Copyright (c), Eontech.net. All rights reserved.
+* @license   BSD License
+*/
 
 class PsOrderBpostLabel extends ObjectModel
 {

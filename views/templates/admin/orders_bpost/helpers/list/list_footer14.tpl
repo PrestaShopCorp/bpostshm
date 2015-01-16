@@ -1,4 +1,12 @@
 <?php
+/**
+* list_footer jQuery implementation for Prestashop 1.4
+*  
+* @author    Serge <serge@stigmi.eu>
+* @version   0.5.0
+* @copyright Copyright (c), Eontech.net. All rights reserved.
+* @license   BSD License
+*/
 
 ?>
 	<script type="text/javascript">
