@@ -469,6 +469,7 @@ class AdminOrdersBpost extends ModuleAdminController
 		$tracking_url .= '?'.http_build_query($params);
 
 		$ps_order = new Order((int)Service::getOrderIDFromReference($reference));
+		// $ps_cart = new Cart((int)$ps_order->id_cart);
 		$message = $this->l('Your order').' '.$ps_order->reference.' '.$this->l('can now be tracked here :')
 			.' <a href="'.$tracking_url.'">'.$tracking_url.'</a>';
 

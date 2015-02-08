@@ -200,7 +200,7 @@ class BpostShm extends CarrierModule
 		if ((bool)Configuration::get('BPOST_USE_PS_LABELS'))
 			$this->installModuleTab(
 				'AdminOrdersBpost',
-				'bpost',
+				$this->l('Bpost Orders'),
 				Service::isPrestashop15plus() ? Tab::getIdFromClassName('AdminParentOrders') : Tab::getIdFromClassName('AdminOrders')
 			);
 
@@ -732,6 +732,7 @@ AND
 			Configuration::get('BPOST_DELIVERY_OPTIONS_LIST')
 		);
 		//
+		/*
 		$country_international_orders = Tools::getValue(
 			'country_international_orders',
 			Configuration::get('BPOST_INTERNATIONAL_ORDERS')
@@ -741,6 +742,7 @@ AND
 			Configuration::get('BPOST_ENABLED_COUNTRY_LIST')
 		);
 		//
+		*/
 		$label_use_ps_labels = Tools::getValue(
 			'label_use_ps_labels',
 			Configuration::get('BPOST_USE_PS_LABELS')
@@ -817,6 +819,7 @@ AND
 				Configuration::updateValue('BPOST_DELIVERY_OPTIONS_LIST', $delivery_options_list);
 
 		}
+		/*
 		elseif (Tools::isSubmit('submitCountrySettings'))
 		{
 			Configuration::updateValue('BPOST_INTERNATIONAL_ORDERS', $country_international_orders);
@@ -829,51 +832,12 @@ AND
 						$enabled_country_list = '';
 					else
 					{
-						/*
-						// Bad legacy code
-						$id_carriers = array(
-							(int)Configuration::get('BPOST_SHIP_METHOD_'.self::SHIPPING_METHOD_AT_HOME.'_ID_CARRIER'),
-						);
-
-						foreach ($enabled_country_list as $iso_code)
-							if ($id_country = Country::getByIso($iso_code))
-							{
-								$country = new Country((int)$id_country, 1);
-
-								if ($country_id_zone = Zone::getIdByName($country->name))
-									$id_zone = (int)$country_id_zone;
-								else
-								{
-									$zone = new Zone();
-									$zone->name = $country->name;
-									$zone->active = true;
-									$zone->save();
-									$id_zone = (int)$zone->id;
-								}
-
-								foreach ($id_carriers as $id_carrier)
-								{
-									$carrier = new Carrier((int)$id_carrier);
-									if (method_exists('Country', 'affectZoneToSelection'))
-									{
-										if ($country->affectZoneToSelection(array($id_country), $id_zone))
-											$carrier->addZone((int)$id_zone);
-									}
-									else
-									{
-										$country->id_zone = (int)$id_zone;
-										if ($country->save())
-											$carrier->addZone((int)$id_zone);
-									}
-								}
-							}
-						*/
 						$id_carrier = (int)Configuration::get('BPOST_SHIP_METHOD_'.self::SHIPPING_METHOD_AT_HOME.'_ID_CARRIER');
 						$carrier = new Carrier((int)$id_carrier);
 						foreach ($enabled_country_list as $iso_code)
 							if ($id_country = Country::getByIso($iso_code))
 							{
-								$country = new Country((int)$id_country/*, 1*/);
+								$country = new Country((int)$id_country, 1);
 
 								if ($country_id_zone = Zone::getIdByName($country->name))
 									$id_zone = (int)$country_id_zone;
@@ -904,6 +868,7 @@ AND
 			else
 				Configuration::updateValue('BPOST_ENABLED_COUNTRY_LIST', '');
 		}
+		*/
 		elseif (Tools::isSubmit('submitLabelSettings'))
 		{
 			if (Configuration::get('BPOST_USE_PS_LABELS') !== $label_use_ps_labels && is_numeric($label_use_ps_labels))
@@ -919,7 +884,7 @@ AND
 				*/
 				$this->installModuleTab(
 					'AdminOrdersBpost',
-					'bpost',
+					$this->l('Bpost Orders'),
 					Service::isPrestashop15plus() ? Tab::getIdFromClassName('AdminParentOrders') : Tab::getIdFromClassName('AdminOrders')
 				);
 			}
@@ -978,6 +943,9 @@ AND
 		}
 		$this->smarty->assign('delivery_options', $delivery_options, true);
 		//
+		// disbling country settings
+		$country_international_orders = false;
+
 		$this->smarty->assign('country_international_orders', $country_international_orders, true);
 		$service = Service::getInstance($this->context);
 		$product_countries = $service->getProductCountries();

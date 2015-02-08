@@ -247,92 +247,7 @@
 		</fieldset>	
 	</form>
 	<br />
-	{if !empty($account_id_account) && !empty($account_passphrase)}
-		<form class="form-horizontal{if $version < 1.5} v1-4{elseif $version < 1.6} v1-5{/if}" action="#" method="POST" autocomplete="off">
-			<fieldset class="panel">
-				{if $version < 1.6}<legend><img src="{$module_dir|escape}views/img/icons/bpost.png" alt="bpost" />{else}<div class="panel-heading">{/if}
-					{l s='Country settings' mod='bpostshm'}
-				{if $version < 1.6}</legend>{else}</div>{/if}
-				<div class="form-group">
-					<span class="control-label{if $version < 1.6}-bw{/if} col-lg-3">{l s='Zone configuration' mod='bpostshm'}</span>
-					<div class="margin-form col-lg-9">
-						<p class="radio">
-							<label for="country_international_orders_1">
-								<input type="radio" name="country_international_orders" id="country_international_orders_1" value="1"
-									{if empty($country_international_orders) || 1 == $country_international_orders} checked="checked"{/if} />
-								{l s='Configure carrier prices using existing PrestaShop zones' mod='bpostshm'}
-							</label>
-						</p>
-						<p class="radio">
-							<label for="country_international_orders_2">
-								<input type="radio" name="country_international_orders" id="country_international_orders_2" value="2"
-									{if !empty($country_international_orders) && 2 == $country_international_orders} checked="checked"{/if} />
-								{l s='Configure carrier prices by country, creating new zones' mod='bpostshm'}
-							</label>
-						</p>
-					</div>
-					<div class="margin-form col-lg-9 col-lg-offset-3">
-						<p class="preference_description help-block">
-							<a href="http://bpost.freshdesk.com/support/solutions/articles/4000033754" title="{l s='Click here' mod='bpostshm'}" target="_blank">
-							<!-- <a class="info-link" href="#desc-zone-config" title="{l s='Click here' mod='bpostshm'}"> -->
-							{l s='Click here' mod='bpostshm'}</a> {l s='to see how this list is created' mod='bpostshm'}
-						</p>
-						<p class="preference_description help-block" id="desc-zone-config" style="display:none;">
-							{l s='IMPORTANT: description zone-config' mod='bpostshm'}
-						</p>
-					</div>
-				</div>
-				<div class="clear"></div>
-				<div class="form-group">
-				<table class="select-multiple{if empty($country_international_orders) || 1 == $country_international_orders} hidden{/if}">
-					<tbody>
-						<tr>
-							<th width="45%"><i>{l s='Countries activated in the Shipping Manager' mod='bpostshm'}</i></th>
-							<th></th>
-							<th width="45%"><i>{l s='Zones to create' mod='bpostshm'}</i></th>
-						</tr>
-						<tr>
-							<td>
-								<select multiple="multiple" id="country-list">
-								{foreach $product_countries as $iso_code => $_country}
-									<option value="{$iso_code|escape}">{$_country|escape}</option>
-								{/foreach}
-								</select>
-							</td>
-							<td width="50" align="center">
-								<img id="add_country" src="{$module_dir|escape}views/img/icons/arrow-right.png" alt="{l s='Add' mod='bpostshm'}" />
-								<br />
-								<img id="remove_country" src="{$module_dir|escape}views/img/icons/arrow-left.png" alt="{l s='Remove' mod='bpostshm'}" />
-							</td>
-							<td>
-								<select name="enabled_country_list[]" multiple="multiple" id="enabled-country-list">
-								{foreach $enabled_countries as $iso_code => $_country}
-									<option value="{$iso_code|escape}">{$_country|escape}</option>
-								{/foreach}
-								</select>
-							</td>
-						</tr>
-						<tr>
-							<td colspan="3">
-								<img id="get_countries" src="{$module_dir|escape}views/img/ajax-refresh.gif" alt="{l s='Refresh' mod='bpostshm'}" />
-								&nbsp;&nbsp;{l s='Refresh left list' mod='bpostshm'}
-								<br><span id="tracie"></span>
-							</td>
-						</tr>
-					</tbody>
-				</table>
-				</div>
-				<br />
-				<div class="margin-form panel-footer">
-					<button class="button btn btn-default pull-right" type="submit" name="submitCountrySettings">
-						<i class="process-icon-save"></i>
-						{l s='Save settings' mod='bpostshm'}
-					</button>
-				</div>
-			</fieldset>
-		</form>
-		<br />
-	{/if}
+	<!-- Label settings -->
 	<form class="form-horizontal{if $version < 1.5} v1-4{elseif $version < 1.6} v1-5{/if}" action="#" method="POST" autocomplete="off">
 		<fieldset class="panel">
 			{if $version < 1.6}<legend><img src="{$module_dir|escape}views/img/icons/bpost.png" alt="bpost" />{else}<div class="panel-heading">{/if}
@@ -483,6 +398,115 @@
 			</div>
 		</fieldset>
 	</form>
+	<br />
+	<!-- Country information -->
+	{if !empty($account_id_account) && !empty($account_passphrase)}
+		<form class="form-horizontal{if $version < 1.5} v1-4{elseif $version < 1.6} v1-5{/if}" action="#" method="POST" autocomplete="off">
+			<fieldset class="panel">
+				{if $version < 1.6}<legend><img src="{$module_dir|escape}views/img/icons/bpost.png" alt="bpost" />{else}<div class="panel-heading">{/if}
+					{l s='Country information' mod='bpostshm'}
+				{if $version < 1.6}</legend>{else}</div>{/if}
+				<!-- <div class="form-group">
+					<span class="control-label{if $version < 1.6}-bw{/if} col-lg-3">{l s='Zone configuration' mod='bpostshm'}</span>
+					<div class="margin-form col-lg-9">
+						<p class="radio">
+							<label for="country_international_orders_1">
+								<input type="radio" name="country_international_orders" id="country_international_orders_1" value="1"
+									{if empty($country_international_orders) || 1 == $country_international_orders} checked="checked"{/if} />
+								{l s='Configure carrier prices using existing PrestaShop zones' mod='bpostshm'}
+							</label>
+						</p>
+						<p class="radio">
+							<label for="country_international_orders_2">
+								<input type="radio" name="country_international_orders" id="country_international_orders_2" value="2"
+									{if !empty($country_international_orders) && 2 == $country_international_orders} checked="checked"{/if} />
+								{l s='Configure carrier prices by country, creating new zones' mod='bpostshm'}
+							</label>
+						</p>
+					</div>
+					<div class="margin-form col-lg-9 col-lg-offset-3">
+						<p class="preference_description help-block">
+							<a href="http://bpost.freshdesk.com/support/solutions/articles/4000033754" title="{l s='Click here' mod='bpostshm'}" target="_blank">
+							
+							COMMENT THIS NEXT LINE IF SECTION IS VISIBLE
+							<a class="info-link" href="#desc-zone-config" title="{l s='Click here' mod='bpostshm'}">
+
+							{l s='Click here' mod='bpostshm'}</a> {l s='to see how this list is created' mod='bpostshm'}
+						</p>
+						<p class="preference_description help-block" id="desc-zone-config" style="display:none;">
+							{l s='IMPORTANT: description zone-config' mod='bpostshm'}
+						</p>
+					</div>
+				</div>
+				<div class="clear"></div> -->
+				<div style="padding:10px 36px 15px 200px;">
+					<p class="preference_description help-block" style="width:100%">
+						{l s='To be able to use bpost as a carrier to deliver your parcels, you need to match the PrestaShop countries you want to ship to (including Belgium) with the countries you are allowed to ship to according to your bpost contract.' mod='bpostshm'}
+					<br />
+						{l s='Below is the list of countries, currently available in your Shipping Manager set-up:' mod='bpostshm'}
+					</p>
+				</div>
+				<div class="form-group">
+				<!-- <table class="select-multiple{if empty($country_international_orders) || 1 == $country_international_orders} hidden{/if}"> -->
+				<table {if $version >= 1.5}class="select-multiple" {else}style="margin-left:200px;"{/if}>
+					<tbody>
+						<tr>
+							<th width="45%"><i>{l s='Countries activated in the Shipping Manager' mod='bpostshm'}</i></th>
+							<!-- <th></th> -->
+							<th width="55%">&nbsp;<!-- <i>{l s='Zones to create' mod='bpostshm'}</i> --></th>
+						</tr>
+						<tr>
+							<td>
+								<select multiple="multiple" id="country-list">
+								{foreach $product_countries as $iso_code => $_country}
+									<option value="{$iso_code|escape}">{$_country|escape}</option>
+								{/foreach}
+								</select>
+							</td>
+							<!-- <td width="50" align="center">
+								<img id="add_country" src="{$module_dir|escape}views/img/icons/arrow-right.png" alt="{l s='Add' mod='bpostshm'}" />
+								<br />
+								<img id="remove_country" src="{$module_dir|escape}views/img/icons/arrow-left.png" alt="{l s='Remove' mod='bpostshm'}" />
+							</td> -->
+							<td>
+								<!-- <select name="enabled_country_list[]" multiple="multiple" id="enabled-country-list">
+								{foreach $enabled_countries as $iso_code => $_country}
+									<option value="{$iso_code|escape}">{$_country|escape}</option>
+								{/foreach}
+								</select> -->
+								<div class="margin-form col-lg-9 col-lg-offset-3"{if $version < 1.5} style="padding:0;font-size:11px;"{/if}>
+									<p class="preference_description help-block">
+										{l s='Please be careful NOT to activate countries in PrestaShop that are not available in your Shipping Manager.' mod='bpostshm'}
+									</p>
+									<p class="preference_description help-block">
+										{l s='Please read more on how to configure PrestaShop zones and countries' mod='bpostshm'}
+										<a href="http://bpost.freshdesk.com/support/solutions/articles/4000044096" title="{l s='here' mod='bpostshm'}" target="_blank">
+										{l s=' here' mod='bpostshm'}</a>.
+									</p>
+								</div>
+							</td>
+						</tr>
+						<tr>
+							<td colspan="2">
+								<img id="get_countries" src="{$module_dir|escape}views/img/ajax-refresh.gif" alt="{l s='Refresh' mod='bpostshm'}" />
+								&nbsp;&nbsp;<!-- {l s='Refresh left list' mod='bpostshm'} -->{l s='Refresh list' mod='bpostshm'}
+								<br><span id="tracie"></span>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+				</div>
+				<br />
+				<!-- <div class="margin-form panel-footer">
+					<button class="button btn btn-default pull-right" type="submit" name="submitCountrySettings">
+						<i class="process-icon-save"></i>
+						{l s='Save settings' mod='bpostshm'}
+					</button>
+				</div> -->
+			</fieldset>
+		</form>
+		<br />
+	{/if}
 
 	<script type="text/javascript">
 	$(function() {

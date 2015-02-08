@@ -122,6 +122,19 @@ class Service
 		return (bool)(BpostShm::SHIPPING_METHOD_AT_INTL == (int)$shipping_method);
 	}
 
+	public static function getBpostring($str, $max = false)
+	{
+		$pattern = '/[^\pL0-9,-_\.\s\'\(\)\&]/u';
+		$str = preg_replace($pattern, '', trim($str));
+		$str = str_replace(array('/', '\\'), '', $str);
+		if (false === strpos($str, '&amp;'))
+			$str = str_replace('&', '&amp;', $str);
+
+		// Tools:: version fails miserably, so don't even...
+		// return Tools::substr($str, 0, $max);
+		return mb_substr($str, 0, $max ? $max : null);
+	}
+
 	public function getWeightGrams($weight = 0)
 	{
 		if (empty($weight))
@@ -253,13 +266,138 @@ class Service
 	}
 
 	/**
+	 * Rearrange address fields depending on Address2! because of stingy WS 40 char max fields
+	 * @author Serge <serge@stigmi.eu>
+	 * @param  string $person shop or client
+	 * @return EontechModBpostOrderAddress Bpost formatted address
+	 */
+	protected function getFormattedBpostAddress($person = '')
+	{
+		if (empty($person))
+			return false;
+
+		$line1 = $person['address1'];
+		$line2 = $person['address2'];
+		$iso_code = Tools::strtoupper(Country::getIsoById($person['id_country']));
+
+		preg_match('#([0-9]+)?[, ]*([\p{L}a-zA-Z -\']+)[, ]*([0-9]+)?#iu', $line1, $matches);
+		if (!empty($matches[1]) && is_numeric($matches[1]))
+			$nr = $matches[1];
+		elseif (!empty($matches[3]) && is_numeric($matches[3]))
+			$nr = $matches[3];
+		else
+			//$nr = (!empty($line2) && is_numeric($line2) ? $line2 : 0);
+			$nr = (!empty($line2) && is_numeric($line2) ? $line2 : ',');
+
+		$street = !empty($matches[2]) ? $matches[2] : $line1;
+		if ('BE' !== $iso_code && is_numeric($nr))
+		{
+			$street = $nr.' '.$street;
+			$nr = ',';
+		}
+		$address = new EontechModBpostOrderAddress();
+		$address->setNumber(Tools::substr($nr, 0, 8));
+		$address->setStreetName(self::getBpostring($street, 40));
+		$address->setPostalCode(self::getBpostring($person['postcode'], 32));
+		$address->setLocality(self::getBpostring($person['city'], 40));
+		$address->setCountryCode($iso_code);
+
+		return $address;
+	}
+
+	/**
 	 * @param Order $ps_order
 	 * @param bool $is_retour
-	 * @param $has_service_point (relevant when is_retour)
-	 * ****** if retour, does it have a service point (@bpost or @247)
-	 * @return array 'sender' & 'receiver'
+	 * @return array 'sender' & 'receiver' + formatted 'recipient'
 	 */
 	public function getReceiverAndSender($ps_order, $is_retour = false)
+	{
+		$customer = new Customer((int)$ps_order->id_customer);
+		$delivery_address = new Address($ps_order->id_address_delivery, $this->context->language->id);
+		$invoice_address = new Address($ps_order->id_address_invoice, $this->context->language->id);
+		$company = $delivery_address->company;
+		$client_line2 = trim($delivery_address->address2);
+
+		$shippers = array(
+			'client' => array(
+				'address1' 	=> $delivery_address->address1,
+				'address2' 	=> $client_line2,
+				'city' 		=> $delivery_address->city,
+				'email'		=> $customer->email,
+				'id_country'=> $delivery_address->id_country,
+				'name'		=> $invoice_address->firstname.' '.$invoice_address->lastname,
+				'phone'		=> !empty($delivery_address->phone) ? $delivery_address->phone : $delivery_address->phone_mobile,
+				'postcode' 	=> $delivery_address->postcode,
+			),
+			'shop' =>  array(
+				'address1' 	=> Configuration::get('PS_SHOP_ADDR1'),
+				'address2' 	=> Configuration::get('PS_SHOP_ADDR2'),
+				'city' 		=> Configuration::get('PS_SHOP_CITY'),
+				'email' 	=> Configuration::get('PS_SHOP_EMAIL'),
+				'id_country'=> Configuration::get('PS_SHOP_COUNTRY_ID'),
+				'name'		=> Configuration::get('PS_SHOP_NAME'),
+				'phone'		=> Configuration::get('PS_SHOP_PHONE'),
+				'postcode' 	=> Configuration::get('PS_SHOP_CODE'),
+			),
+		);
+
+		$recipient = $shippers['client']['name'];
+		if (!empty($client_line2))
+		{
+			$company = !empty($company) ? ' ('.self::getBpostring($company).')' : '';
+			$company = $shippers['client']['name'].$company;
+			$shippers['client']['name'] = $client_line2;
+			$recipient = $company;
+		}
+		$shippers['client']['company'] = $company;
+
+		$sender = $shippers['shop'];
+		$receiver = $shippers['client'];
+		if ($is_retour)
+		{
+			$sender = $shippers['client'];
+			$receiver = $shippers['shop'];
+		}
+
+		$bpost_sender = new EontechModBpostOrderSender();
+		$bpost_sender->setAddress($this->getFormattedBpostAddress($sender));
+		$bpost_sender->setName(self::getBpostring($sender['name'], 40));
+		if (!empty($sender['company']))
+			$bpost_sender->setCompany(self::getBpostring($sender['company'], 40));
+		$sender_phone = Tools::substr($sender['phone'], 0, 20);
+		if (!(empty($sender_phone)))
+			$bpost_sender->setPhoneNumber($sender_phone);
+		$bpost_sender->setEmailAddress(Tools::substr($sender['email'], 0, 50));
+
+		$bpost_receiver = new EontechModBpostOrderReceiver();
+		$address = $this->getFormattedBpostAddress($receiver);
+		$bpost_receiver->setAddress($address);
+		$bpost_receiver->setName(self::getBpostring($receiver['name'], 40));
+		if (!empty($receiver['company']))
+			$bpost_receiver->setCompany(self::getBpostring($receiver['company'], 40));
+		$receiver_phone = Tools::substr($receiver['phone'], 0, 20);
+		if (!(empty($receiver_phone)))
+			$bpost_receiver->setPhoneNumber($receiver_phone);
+		$bpost_receiver->setEmailAddress(Tools::substr($receiver['email'], 0, 50));
+
+		// recipient continued (* only when not retour *)
+		if (false === $is_retour)
+		{
+			$nb = $address->getNumber();
+			$nb_part = is_numeric($nb) ? ' '.$nb : '';
+			$street2 = empty($client_line2) ? '' : ', '.$bpost_receiver->getName();
+			$recipient .= ', '.$address->getStreetName().$nb_part.$street2
+				.' '.$address->getPostalCode().' '.$address->getLocality().' ('.Tools::strtoupper($address->getCountryCode()).')';
+		}
+
+		return array(
+			'receiver' => $bpost_receiver,
+			'sender' => $bpost_sender,
+			'recipient' => $recipient,
+		);
+	}
+
+	public function getReceiverAndSenderProperly($ps_order, $is_retour = false)
 	{
 		$customer = new Customer((int)$ps_order->id_customer);
 		$delivery_address = new Address($ps_order->id_address_delivery, $this->context->language->id);
@@ -388,12 +526,11 @@ class Service
 		$reference = Configuration::get('BPOST_ACCOUNT_ID').'_'.Tools::substr($ps_order->id, 0, 42).'_'.$ref;
 
 		$shippers = $this->getReceiverAndSender($ps_order);
-		$receiver = $shippers['receiver'];
-		$address = $receiver->getAddress();
-		// $recipient = $receiver->getName().' '.$address->getStreetName().' '.$address->getNumber().' '
-		// 	.$address->getPostalCode().' '.$address->getLocality();
-		$recipient = $receiver->getName().', '.$address->getStreetName().' '.$address->getNumber().' '
-			.$address->getPostalCode().' '.$address->getLocality().' ('.Tools::strtoupper($address->getCountryCode()).')';
+		// $receiver = $shippers['receiver'];
+		// $address = $receiver->getAddress();
+		// $recipient = $receiver->getName().', '.$address->getStreetName().' '.$address->getNumber().' '
+		// 	.$address->getPostalCode().' '.$address->getLocality().' ('.Tools::strtoupper($address->getCountryCode()).')';
+		$recipient = $shippers['recipient'];
 
 		$shm = $this->module->getShmFromCarrierID($ps_order->id_carrier);
 		$delivery_method = $this->module->shipping_methods[$shm]['slug'];
