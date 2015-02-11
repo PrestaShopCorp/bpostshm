@@ -11,7 +11,18 @@
  * @license   http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
-require_once($_GET['root_dir'].'/config/config.inc.php');
+const _CONFIG_FILE_ = '../../../../config/config.inc.php';
+const _CONFIG_FILE_DEV_ = '../../../../sites/bpost/sps14/config/config.inc.php';
+const _CONTROLLER_FILE_ = 'controllers/front/servicepoint.php';
+
+if (file_exists(_CONFIG_FILE_))
+	require_once(_CONFIG_FILE_);
+elseif (file_exists(_CONFIG_FILE_DEV_))
+	require_once(_CONFIG_FILE_DEV_);
+else
+	die('Cannot locate config');
+
+/* require_once($_GET['root_dir'].'/config/config.inc.php'); */
 require_once(_PS_MODULE_DIR_.'bpostshm/classes/Service.php');
 
 class ServicePointController extends FrontController
@@ -40,7 +51,8 @@ class ServicePointController extends FrontController
 
 		if (!isset($this->context))
 		{
-			$bpostshm = new BpostShm();
+			// $bpostshm = new BpostShm();
+			new BpostShm();
 			$this->context = Context::getContext();
 		}
 	}

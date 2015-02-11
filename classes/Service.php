@@ -119,7 +119,7 @@ class Service
 
 	public static function isInternational($shipping_method)
 	{
-		return (bool)(BpostShm::SHIPPING_METHOD_AT_INTL == (int)$shipping_method);
+		return BpostShm::SHIPPING_METHOD_AT_INTL == (int)$shipping_method;
 	}
 
 	public static function getBpostring($str, $max = false)
@@ -393,7 +393,7 @@ class Service
 		return array(
 			'receiver' => $bpost_receiver,
 			'sender' => $bpost_sender,
-			'recipient' => $recipient,
+			'recipient' => html_entity_decode($recipient),
 		);
 	}
 
@@ -858,7 +858,7 @@ class Service
 						$bpost_order->addBox($box[$is_retour]);
 					}
 
-					$response = $this->bpost->createOrReplaceOrder($bpost_order);
+					$this->bpost->createOrReplaceOrder($bpost_order);
 					// New way
 					$bcc = new EontechBarcodeCollection();
 					$bpost_labels_returned = $this->createLabelForOrder($reference, (bool)$has_retour);
@@ -1193,7 +1193,7 @@ class Service
 	public function getControllerLink($module, $controller, $params)
 	{
 		$params['ps14'] = !self::isPrestashop15plus();
-		$params['root_dir'] = _PS_ROOT_DIR_;
+		// $params['root_dir'] = _PS_ROOT_DIR_;
 		if (self::isPrestashop15plus())
 			$params['shop_id'] = $this->context->shop->id;
 		return _MODULE_DIR_.$module.'/controllers/front/'.$controller.'.php?'.http_build_query($params);

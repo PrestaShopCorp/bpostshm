@@ -187,7 +187,9 @@
 		
 		function reloadPage()
 		{
-			window.location.replace('{$reload_href}');
+			window.location.replace('{$reload_href|default:''}');
+			// All smarty escape attempts FAIL!!
+			// window.location.replace('{$reload_href|escape:url}');
 		}
 
 	{literal}
@@ -225,8 +227,8 @@
 		(function($) {
 			$(function() {
 				/* Tabs */
-				var $str_open = "{$str_tabs['open']}",
-					$str_treated = "{$str_tabs['treated']}",
+				var $str_open = "{$str_tabs['open']|escape}",
+					$str_treated = "{$str_tabs['treated']|escape}",
 					$table 	= $('table.order_bpost'),
 					$thead  = $table.find('thead'),
 					tr_list = [];

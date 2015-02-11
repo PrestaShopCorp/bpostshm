@@ -200,14 +200,14 @@
 			{$delivery_sections = array()}
 			{foreach $delivery_options as $name => $options}
 				{$delivery_sections[] = "$name"}
-				<div id="section-{$name}">
+				<div id="section-{$name|escape}">
 					<span class="control-label{if $version < 1.6}-bw{/if} col-lg-3">{l s=$options['title'] mod='bpostshm'}</span>
 					<div class="margin-form col-lg-9">
 						<p class="checkbox">
 						{foreach $options['full'] as $key => $opt}
 							{assign var="chk_id" value="$name-$key"}
-							<label for="{$chk_id}">
-								<input type="checkbox" name="{$chk_id}" id="{$chk_id}" value="{$key}" {if in_array($key, $options['list'])}checked="checked"{/if} />&nbsp;{$opt['title']}
+							<label for="{$chk_id|escape}">
+								<input type="checkbox" name="{$chk_id|escape}" id="{$chk_id|escape}" value="{$key|escape}" {if in_array($key, $options['list'])}checked="checked"{/if} />&nbsp;{$opt['title']}
 							</label>
 							<br />
 						{/foreach}	
@@ -216,7 +216,7 @@
 					<div class="margin-form col-lg-9 col-lg-offset-3">
 						<p class="preference_description help-block">
 						{foreach $options['full'] as $key => $opt}
-							<b>{$opt['title']}</b>: {$opt['info']}
+							<b>{$opt['title']|escape}</b>: {$opt['info']|escape}
 							<br />
 						{/foreach}
 						</p>

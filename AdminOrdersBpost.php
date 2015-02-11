@@ -273,7 +273,7 @@ class AdminOrdersBpost extends AdminTab
 		$lang_file = _PS_MODULE_DIR_.$module.'/'.$iso_code.'.php';
 		if (file_exists($lang_file))
 		{
-
+			$_MODULE = array();
 			require $lang_file;
 			foreach ($_MODULE as $key => $value)
 				if (strpos($key, $needle))
@@ -343,7 +343,7 @@ class AdminOrdersBpost extends AdminTab
 				'%when%'
 				),
 			array(
-				strtolower($this->l($state_name)),
+				Tools::strtolower($this->l($state_name)),
 				$when
 				),
 			$error);
@@ -591,7 +591,7 @@ class AdminOrdersBpost extends AdminTab
 		{
 			$dm_options = $this->service->getDeliveryOptions($dm_options[1]);
 			$opts = '<ul style="list-style:none;font-size:11px;line-height:14px;padding:0;">';
-			foreach ($dm_options as $key => $option)
+			foreach ($dm_options as $option)
 				$opts .= '<li>+ '.$option.'</li>';
 
 			$delivery_method .= $opts.'</ul>';
@@ -768,7 +768,7 @@ class AdminOrdersBpost extends AdminTab
 		if (empty($reference) || (bool)Configuration::get('BPOST_AUTO_RETOUR_LABEL'))
 			return;
 
-		$fields_list = $this->current_row;
+		// $fields_list = $this->current_row;
 		$tpl_vars = array(
 			'action' => $this->l('Create retour'),
 			'href' => Tools::safeOutput(self::$current_index.'&reference='.$reference.'&createRetour'.$this->table
@@ -845,10 +845,8 @@ class AdminOrdersBpost extends AdminTab
 		);
 
 		$ps_order = new Order((int)Service::getOrderIDFromReference($reference));
-		$tpl_vars['href'] = 'index.php?tab=AdminOrders&id_order='.(int)$ps_order->id.'&vieworder&token='.Tools::getAdminTokenLite('AdminOrders');
-		// $tpl_vars['href'] = Tools::safeOutput(Tools::substr(self::$current_index, 0, -5)
-		// 	.'&id_order='.(int)$ps_order->id
-		// 	.'&vieworder&token='.Tools::getAdminTokenLite('AdminOrders'));
+		$token = Tools::getAdminTokenLite('AdminOrders');
+		$tpl_vars['href'] = 'index.php?tab=AdminOrders&id_order='.(int)$ps_order->id.'&vieworder&token='.$token;
 
 		return $tpl_vars;
 	}
@@ -881,12 +879,13 @@ class AdminOrdersBpost extends AdminTab
 
 	protected function _displayViewLink($token = null, $id)
 	{
-		global $currentIndex;
-
+		// global $currentIndex;
+		$_cacheLang = array();
 		$_cacheLang['View'] = $this->l('View');
 
 		$reference = $id;
-		$actions = $this->getActions($id, $token);
+		// $actions = $this->getActions($id, $token);
+		$actions = $this->getActions($reference, $token);
 
 		echo '<select class="actions">
 				<option value="">-</option>';
@@ -939,6 +938,8 @@ class AdminOrdersBpost extends AdminTab
 	{
 		parent::displayListFooter($token);
 
+		// these variables act as 'smarty' assigned variables do in the template below!
+		// They are NOT unused!
 		$treated_status = $this->bpost_treated_state;
 		$reload_href = self::$current_index.'&token='.Tools::getAdminTokenLite('AdminOrdersBpost');
 		$str_tabs = array(
@@ -953,30 +954,34 @@ class AdminOrdersBpost extends AdminTab
 	 * Time for a proper 1.4 revamp :)
 	 * Display list header (filtering, pagination and column names)
 	 *
-	 * @global string $currentIndex Current URL in order to keep current Tab
+	 * string $current_index Current URL in order to keep current Tab
 	 */
 	public function displayListHeader($token = null)
 	{
-		global $currentIndex, $cookie;
-		$isCms = false;
+		$current_index = $this->current_index;
+		$cookie = $this->context->cookie;
+
+		$is_cms = false;
 		if (preg_match('/cms/Ui', $this->identifier))
-			$isCms = true;
-		$id_cat = Tools::getValue('id_'.($isCms ? 'cms_' : '').'category');
+			$is_cms = true;
+		$id_cat = Tools::getValue('id_'.($is_cms ? 'cms_' : '').'category');
 
 		if (!isset($token) || empty($token))
 			$token = $this->token;
 
 		/* Determine total page number */
-		$totalPages = ceil($this->_listTotal / Tools::getValue('pagination', (isset($cookie->{$this->table.'_pagination'}) ? $cookie->{$this->table.'_pagination'} : $this->_pagination[0])));
-		if (!$totalPages) $totalPages = 1;
+		$total_pages = ceil($this->_listTotal / Tools::getValue('pagination',
+			(isset($cookie->{$this->table.'_pagination'}) ? $cookie->{$this->table.'_pagination'} : $this->_pagination[0])));
+		if (!$total_pages)
+			$total_pages = 1;
 
 		echo '<a name="'.$this->table.'">&nbsp;</a>';
-		echo '<form method="post" action="'.$currentIndex;
+		echo '<form method="post" action="'.$current_index;
 		if (Tools::getIsset($this->identifier))
-			echo '&'.$this->identifier.'='.(int)(Tools::getValue($this->identifier));
+			echo '&'.$this->identifier.'='.(int)Tools::getValue($this->identifier);
 		echo '&token='.$token;
 		if (Tools::getIsset($this->table.'Orderby'))
-			echo '&'.$this->table.'Orderby='.urlencode($this->_orderBy).'&'.$this->table.'Orderway='.urlencode(strtolower($this->_orderWay));
+			echo '&'.$this->table.'Orderby='.urlencode($this->_orderBy).'&'.$this->table.'Orderway='.urlencode(Tools::strtolower($this->_orderWay));
 		echo '#'.$this->table.'" class="form">
 		<input type="hidden" id="submitFilter'.$this->table.'" name="submitFilter'.$this->table.'" value="0">
 		<table>
@@ -986,23 +991,29 @@ class AdminOrdersBpost extends AdminTab
 		if ($this->table != 'order_return_state')
 		{
 			/* Determine current page number */
-			$page = (int)(Tools::getValue('submitFilter'.$this->table));
+			$page = (int)Tools::getValue('submitFilter'.$this->table);
 			if (!$page) $page = 1;
 			if ($page > 1)
 				echo '
 							<input type="image" src="../img/admin/list-prev2.gif" onclick="getE(\'submitFilter'.$this->table.'\').value=1"/>
 							&nbsp; <input type="image" src="../img/admin/list-prev.gif" onclick="getE(\'submitFilter'.$this->table.'\').value='.($page - 1).'"/> ';
-			echo $this->l('Page').' <b>'.$page.'</b> / '.$totalPages;
-			if ($page < $totalPages)
+			echo $this->l('Page').' <b>'.$page.'</b> / '.$total_pages;
+			if ($page < $total_pages)
 				echo '
 							<input type="image" src="../img/admin/list-next.gif" onclick="getE(\'submitFilter'.$this->table.'\').value='.($page + 1).'"/>
-							 &nbsp;<input type="image" src="../img/admin/list-next2.gif" onclick="getE(\'submitFilter'.$this->table.'\').value='.$totalPages.'"/>';
+							 &nbsp;<input type="image" src="../img/admin/list-next2.gif" onclick="getE(\'submitFilter'.$this->table.'\').value='.$total_pages.'"/>';
 			echo '			| '.$this->l('Display').'
 							<select name="pagination">';
 			/* Choose number of results per page */
-			$selectedPagination = Tools::getValue('pagination', (isset($cookie->{$this->table.'_pagination'}) ? $cookie->{$this->table.'_pagination'} : null));
+			$selected_pagination = Tools::getValue('pagination', (isset($cookie->{$this->table.'_pagination'}) ?
+				$cookie->{$this->table.'_pagination'} : null));
 			foreach ($this->_pagination as $value)
-				echo '<option value="'.(int)($value).'"'.($selectedPagination == $value ? ' selected="selected"' : (($selectedPagination == null && $value == $this->_pagination[1]) ? ' selected="selected2"' : '')).'>'.(int)($value).'</option>';
+				echo '<option value="'.(int)$value.'"'
+					.($selected_pagination == $value ?
+						' selected="selected"' : (($selected_pagination == null && $value == $this->_pagination[1]) ? ' selected="selected2"' : ''))
+					.'>'
+					.(int)$value.'</option>';
+
 			echo '
 							</select>
 							/ '.(int)($this->_listTotal).' '.$this->l('result(s)').'
@@ -1033,7 +1044,13 @@ class AdminOrdersBpost extends AdminTab
 			<script type="text/javascript" src="../js/admin-dnd.js"></script>
 			';
 		}
-		echo '<table'.(array_key_exists($this->identifier, $this->identifiersDnd) ? ' id="'.(((int)(Tools::getValue($this->identifiersDnd[$this->identifier], 1))) ? substr($this->identifier, 3, strlen($this->identifier)) : '').'"' : '' ).' class="table'.((array_key_exists($this->identifier, $this->identifiersDnd) && ($this->_listTotal >= 2 && $this->_orderBy != 'position ' && $this->_orderWay != 'DESC')) ? ' tableDnD'  : '' ).'" cellpadding="0" cellspacing="0">
+		echo '<table'.(array_key_exists($this->identifier, $this->identifiersDnd) ? ' id="'
+			.(((int)Tools::getValue($this->identifiersDnd[$this->identifier], 1)) ? Tools::substr($this->identifier, 3, Tools::strlen($this->identifier)) : '')
+			.'"' : '' ).' class="table'
+			.((array_key_exists($this->identifier, $this->identifiersDnd) &&
+				($this->_listTotal >= 2 && $this->_orderBy != 'position ' &&
+				$this->_orderWay != 'DESC')) ? ' tableDnD'  : '' )
+			.'" cellpadding="0" cellspacing="0">
 			<thead>
 				<tr class="nodrag nodrop">
 					<th>';
@@ -1047,12 +1064,16 @@ class AdminOrdersBpost extends AdminTab
 			{
 				// Cleaning links
 				if (Tools::getValue($this->table.'Orderby') && Tools::getValue($this->table.'Orderway'))
-					$currentIndex = preg_replace('/&'.$this->table.'Orderby=([a-z _]*)&'.$this->table.'Orderway=([a-z]*)/i', '', $currentIndex);
+					$current_index = preg_replace('/&'.$this->table.'Orderby=([a-z _]*)&'.$this->table.'Orderway=([a-z]*)/i', '', $current_index);
 				if ($this->_listTotal >= 2)
 				{
 					echo '	<br />
-							<a href="'.$currentIndex.'&'.$this->identifier.'='.(int)$id_cat.'&'.$this->table.'Orderby='.urlencode($key).'&'.$this->table.'Orderway=desc&token='.$token.'"><img border="0" src="../img/admin/down'.((isset($this->_orderBy) && ($key == $this->_orderBy) && ($this->_orderWay == 'DESC')) ? '_d' : '').'.gif" /></a>
-							<a href="'.$currentIndex.'&'.$this->identifier.'='.(int)$id_cat.'&'.$this->table.'Orderby='.urlencode($key).'&'.$this->table.'Orderway=asc&token='.$token.'"><img border="0" src="../img/admin/up'.((isset($this->_orderBy) && ($key == $this->_orderBy) && ($this->_orderWay == 'ASC')) ? '_d' : '').'.gif" /></a>';
+							<a href="'.$current_index.'&'.$this->identifier.'='.(int)$id_cat.'&'.$this->table
+								.'Orderby='.urlencode($key).'&'.$this->table.'Orderway=desc&token='.$token.'"><img border="0" src="../img/admin/down'
+								.((isset($this->_orderBy) && ($key == $this->_orderBy) && ($this->_orderWay == 'DESC')) ? '_d' : '').'.gif" /></a>
+							<a href="'.$current_index.'&'.$this->identifier.'='.(int)$id_cat.'&'.$this->table
+								.'Orderby='.urlencode($key).'&'.$this->table.'Orderway=asc&token='.$token.'"><img border="0" src="../img/admin/up'
+								.((isset($this->_orderBy) && ($key == $this->_orderBy) && ($this->_orderWay == 'ASC')) ? '_d' : '').'.gif" /></a>';
 				}
 			}
 			echo '	</th>';
@@ -1069,12 +1090,12 @@ class AdminOrdersBpost extends AdminTab
 		echo '		</td>';
 
 		/* Javascript hack in order to catch ENTER keypress event */
-		$keyPress = 'onkeypress="formSubmit(event, \'submitFilterButton_'.$this->table.'\');"';
+		$key_press = 'onkeypress="formSubmit(event, \'submitFilterButton_'.$this->table.'\');"';
 
 		/* Filters (input, select, date or bool) */
 		foreach ($this->fieldsDisplay as $key => $params)
 		{
-			$width = (isset($params['width']) ? ' style="width: '.(int)($params['width']).'px;"' : '');
+			$width = (isset($params['width']) ? ' style="width: '.(int)$params['width'].'px;"' : '');
 			echo '<td'.(isset($params['align']) ? ' class="'.$params['align'].'"' : '').'>';
 			if (!isset($params['type']))
 				$params['type'] = 'text';
@@ -1104,21 +1125,28 @@ class AdminOrdersBpost extends AdminTab
 					if (!Validate::isCleanHtml($value[0]) || !Validate::isCleanHtml($value[1]))
 						$value = '';
 					$name = $this->table.'Filter_'.(isset($params['filter_key']) ? $params['filter_key'] : $key);
-					$nameId = str_replace('!', '__', $name);
-					includeDatepicker(array($nameId.'_0', $nameId.'_1'));
-					echo $this->l('From').' <input type="text" id="'.$nameId.'_0" name="'.$name.'[0]" value="'.(isset($value[0]) ? $value[0] : '').'"'.$width.' '.$keyPress.' /><br />
-					'.$this->l('To').' <input type="text" id="'.$nameId.'_1" name="'.$name.'[1]" value="'.(isset($value[1]) ? $value[1] : '').'"'.$width.' '.$keyPress.' />';
+					$name_id = str_replace('!', '__', $name);
+					includeDatepicker(array($name_id.'_0', $name_id.'_1'));
+					echo $this->l('From').' <input type="text" id="'.$name_id.'_0" name="'.$name.'[0]" value="'
+						.(isset($value[0]) ? $value[0] : '').'"'.$width.' '.$key_press.' /><br />'
+						.$this->l('To').' <input type="text" id="'.$name_id.'_1" name="'.$name.'[1]" value="'
+						.(isset($value[1]) ? $value[1] : '').'"'.$width.' '.$key_press.' />';
 					break;
 
 				case 'select':
 
 					if (isset($params['filter_key']))
 					{
-						echo '<select onchange="$(\'#submitFilter'.$this->table.'\').focus();$(\'#submitFilter'.$this->table.'\').click();" name="'.$this->table.'Filter_'.$params['filter_key'].'" '.(isset($params['width']) ? 'style="width: '.$params['width'].'px"' : '').'>
+						echo '<select onchange="$(\'#submitFilter'.$this->table.'\').focus();$(\'#submitFilter'
+							.$this->table.'\').click();" name="'.$this->table.'Filter_'.$params['filter_key'].'" '
+							.(isset($params['width']) ? 'style="width: '.$params['width'].'px"' : '').'>
 								<option value=""'.(($value == 0 && $value != '') ? ' selected="selected"' : '').'>--</option>';
 						if (isset($params['select']) && is_array($params['select']))
-							foreach ($params['select'] as $optionValue => $optionDisplay)
-								echo '<option value="'.$optionValue.'"'.((isset($_POST[$this->table.'Filter_'.$params['filter_key']]) && Tools::getValue($this->table.'Filter_'.$params['filter_key']) == $optionValue && Tools::getValue($this->table.'Filter_'.$params['filter_key']) != '') ? ' selected="selected"' : '').'>'.$optionDisplay.'</option>';
+							foreach ($params['select'] as $option_value => $option_display)
+								echo '<option value="'.$option_value.'"'.((Tools::getIsset(Tools::getValue($this->table.'Filter_'
+									.$params['filter_key'])) && Tools::getValue($this->table.'Filter_'
+									.$params['filter_key']) == $option_value && Tools::getValue($this->table.'Filter_'
+									.$params['filter_key']) != '') ? ' selected="selected"' : '').'>'.$option_display.'</option>';
 						echo '</select>';
 						break;
 					}
@@ -1127,7 +1155,9 @@ class AdminOrdersBpost extends AdminTab
 				default:
 					if (!Validate::isCleanHtml($value))
 							$value = '';
-					echo '<input type="text" name="'.$this->table.'Filter_'.(isset($params['filter_key']) ? $params['filter_key'] : $key).'" value="'.htmlentities($value, ENT_COMPAT, 'UTF-8').'"'.$width.' '.$keyPress.' />';
+					echo '<input type="text" name="'.$this->table.'Filter_'
+						.(isset($params['filter_key']) ? $params['filter_key'] : $key).'" value="'
+						.htmlentities($value, ENT_COMPAT, 'UTF-8').'"'.$width.' '.$key_press.' />';
 			}
 			echo '</td>';
 		}
@@ -1151,7 +1181,8 @@ class AdminOrdersBpost extends AdminTab
 		 * active : allow to toggle status
 		 */
 
-		global $currentIndex, $cookie;
+		$current_index = $this->current_index;
+		$cookie = $this->context->cookie;
 		$currency = new Currency(_PS_CURRENCY_DEFAULT_);
 
 		$id_category = 1; // default categ
@@ -1164,14 +1195,17 @@ class AdminOrdersBpost extends AdminTab
 		}
 		if ($this->_list)
 		{
-			$isCms = false;
+			$is_cms = false;
 			if (preg_match('/cms/Ui', $this->identifier))
-				$isCms = true;
-			$keyToGet = 'id_'.($isCms ? 'cms_' : '').'category'.(in_array($this->identifier, array('id_category', 'id_cms_category')) ? '_parent' : '');
+				$is_cms = true;
+			$key_to_get = 'id_'.($is_cms ? 'cms_' : '').'category'.(in_array($this->identifier, array('id_category', 'id_cms_category')) ? '_parent' : '');
 			foreach ($this->_list as $tr)
 			{
 				$id = $tr[$this->identifier];
-				echo '<tr'.(array_key_exists($this->identifier, $this->identifiersDnd) ? ' id="tr_'.(($id_category = (int)(Tools::getValue('id_'.($isCms ? 'cms_' : '').'category', '1'))) ? $id_category : '').'_'.$id.'_'.$tr['position'].'"' : '').($irow++ % 2 ? ' class="alt_row"' : '').' '.((isset($tr['color']) && $this->colorOnBackground) ? 'style="background-color: '.$tr['color'].'"' : '').'>
+				echo '<tr'.(array_key_exists($this->identifier, $this->identifiersDnd) ? ' id="tr_'
+					.(($id_category = (int)Tools::getValue('id_'.($is_cms ? 'cms_' : '').'category', '1')) ? $id_category : '')
+					.'_'.$id.'_'.$tr['position'].'"' : '').($irow++ % 2 ? ' class="alt_row"' : '').' '
+					.((isset($tr['color']) && $this->colorOnBackground) ? 'style="background-color: '.$tr['color'].'"' : '').'>
 							<td class="center">';
 				if ($this->delete && (!isset($this->_listSkipDelete) || !in_array($id, $this->_listSkipDelete)))
 					echo '<input type="checkbox" name="'.$this->table.'Box[]" value="'.$id.'" class="noborder" />';
@@ -1186,14 +1220,14 @@ class AdminOrdersBpost extends AdminTab
 					$class .= isset($params['class']) ? ' '.$params['class'] : '';
 
 					echo '
-					<td '.(isset($params['position']) ? ' id="td_'.(isset($id_category) && $id_category ? $id_category : 0).'_'.$id.'"' : '').
-					' class="'.((!isset($this->noLink) || !$this->noLink) ? 'pointer' : '').
-					((isset($params['position']) && $this->_orderBy == 'position')? ' dragHandle' : '').
-					//(isset($params['align']) ? ' '.$params['align'] : '').'" ';
-					(!empty($class) ? ' '.$class : '').'" ';
+					<td '.(isset($params['position']) ? ' id="td_'.(isset($id_category) && $id_category ? $id_category : 0).'_'.$id.'"' : '')
+						.' class="'.((!isset($this->noLink) || !$this->noLink) ? 'pointer' : '')
+						.((isset($params['position']) && $this->_orderBy == 'position')? ' dragHandle' : '')
+						.(!empty($class) ? ' '.$class : '').'" ';
 					// Serge end
 					if (!isset($params['position']) && (!isset($this->noLink) || !$this->noLink))
-						echo ' onclick="document.location = \''.$currentIndex.'&'.$this->identifier.'='.$id.($this->view? '&view' : '&update').$this->table.'&token='.($token != null ? $token : $this->token).'\'">'.(isset($params['prefix']) ? $params['prefix'] : '');
+						echo ' onclick="document.location = \''.$current_index.'&'.$this->identifier.'='.$id.($this->view? '&view' : '&update')
+							.$this->table.'&token='.($token != null ? $token : $this->token).'\'">'.(isset($params['prefix']) ? $params['prefix'] : '');
 					else
 						echo '>';
 					if (isset($params['active']) && isset($tr[$key]))
@@ -1205,20 +1239,20 @@ class AdminOrdersBpost extends AdminTab
 					{
 						if ($this->_orderBy == 'position' && $this->_orderWay != 'DESC')
 						{
-							echo '<a'.(!($tr[$key] != $positions[count($positions) - 1]) ? ' style="display: none;"' : '').' href="'.$currentIndex.
-									'&'.$keyToGet.'='.(int)($id_category).'&'.$this->identifiersDnd[$this->identifier].'='.$id.'
+							echo '<a'.(!($tr[$key] != $positions[count($positions) - 1]) ? ' style="display: none;"' : '').' href="'.$current_index.
+									'&'.$key_to_get.'='.(int)$id_category.'&'.$this->identifiersDnd[$this->identifier].'='.$id.'
 									&way=1&position='.(int)($tr['position'] + 1).'&token='.($token != null ? $token : $this->token).'">
 									<img src="../img/admin/'.($this->_orderWay == 'ASC' ? 'down' : 'up').'.gif"
 									alt="'.$this->l('Down').'" title="'.$this->l('Down').'" /></a>';
 
-							echo '<a'.(!($tr[$key] != $positions[0]) ? ' style="display: none;"' : '').' href="'.$currentIndex.
-									'&'.$keyToGet.'='.(int)($id_category).'&'.$this->identifiersDnd[$this->identifier].'='.$id.'
+							echo '<a'.(!($tr[$key] != $positions[0]) ? ' style="display: none;"' : '').' href="'.$current_index.
+									'&'.$key_to_get.'='.(int)$id_category.'&'.$this->identifiersDnd[$this->identifier].'='.$id.'
 									&way=0&position='.(int)($tr['position'] - 1).'&token='.($token != null ? $token : $this->token).'">
 									<img src="../img/admin/'.($this->_orderWay == 'ASC' ? 'up' : 'down').'.gif"
 									alt="'.$this->l('Up').'" title="'.$this->l('Up').'" /></a>';
 						}
 						else
-							echo (int)($tr[$key] + 1);
+							echo (int)$tr[$key] + 1;
 					}
 					elseif (isset($params['image']))
 					{
@@ -1231,14 +1265,15 @@ class AdminOrdersBpost extends AdminTab
 							$path_to_image = _PS_IMG_DIR_.$params['image'].'/'.$image->getExistingImgPath().'.'.$this->imageType;
 						}
 						else
-							$path_to_image = _PS_IMG_DIR_.$params['image'].'/'.$item_id.(isset($tr['id_image']) ? '-'.(int)($tr['id_image']) : '').'.'.$this->imageType;
+							$path_to_image = _PS_IMG_DIR_.$params['image'].'/'.$item_id.(isset($tr['id_image']) ? '-'.(int)$tr['id_image'] : '').'.'.$this->imageType;
 
 						echo cacheImage($path_to_image, $this->table.'_mini_'.$item_id.'.'.$this->imageType, 45, $this->imageType);
 					}
 					elseif (isset($params['icon']) && (isset($params['icon'][$tr[$key]]) || isset($params['icon']['default'])))
-						echo '<img src="../img/admin/'.(isset($params['icon'][$tr[$key]]) ? $params['icon'][$tr[$key]] : $params['icon']['default'].'" alt="'.$tr[$key]).'" title="'.$tr[$key].'" />';
+						echo '<img src="../img/admin/'.(isset($params['icon'][$tr[$key]]) ? $params['icon'][$tr[$key]] : $params['icon']['default']
+							.'" alt="'.$tr[$key]).'" title="'.$tr[$key].'" />';
 					elseif (isset($params['price']))
-						echo Tools::displayPrice($tr[$key], (isset($params['currency']) ? Currency::getCurrencyInstance((int)($tr['id_currency'])) : $currency), false);
+						echo Tools::displayPrice($tr[$key], (isset($params['currency']) ? Currency::getCurrencyInstance((int)$tr['id_currency']) : $currency), false);
 					elseif (isset($params['float']))
 						echo rtrim(rtrim($tr[$key], '0'), '.');
 					elseif (isset($params['type']) && $params['type'] == 'date')
@@ -1247,7 +1282,8 @@ class AdminOrdersBpost extends AdminTab
 						echo Tools::displayDate($tr[$key], (int)$cookie->id_lang, true);
 					elseif (isset($tr[$key]))
 					{
-						$echo = ($key == 'price' ? round($tr[$key], 2) : isset($params['maxlength']) ? Tools::substr($tr[$key], 0, $params['maxlength']).'...' : $tr[$key]);
+						$echo = ($key == 'price' ? round($tr[$key], 2) : isset($params['maxlength']) ? Tools::substr($tr[$key], 0, $params['maxlength'])
+							.'...' : $tr[$key]);
 						echo isset($params['callback']) ? call_user_func_array(array($this->className, $params['callback']), array($echo, $tr)) : $echo;
 					}
 					else

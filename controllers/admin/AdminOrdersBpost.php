@@ -313,7 +313,7 @@ class AdminOrdersBpost extends ModuleAdminController
 		$lang_file = _PS_MODULE_DIR_.$module.'/'.$iso_code.'.php';
 		if (file_exists($lang_file))
 		{
-
+			$_MODULE = array();
 			require $lang_file;
 			foreach ($_MODULE as $key => $value)
 				if (strpos($key, $needle))
@@ -676,7 +676,8 @@ class AdminOrdersBpost extends ModuleAdminController
 			$service = Service::getInstance($this->context);
 			$dm_options = $service->getDeliveryOptions($dm_options[1]);
 			$opts = '<ul style="list-style:none;font-size:11px;line-height:14px;padding:0;">';
-			foreach ($dm_options as $key => $option)
+			// foreach ($dm_options as $key => $option)
+			foreach ($dm_options as $option)
 				$opts .= '<li>+ '.$option.'</li>';
 
 			$delivery_method .= $opts.'</ul>';
@@ -887,7 +888,7 @@ class AdminOrdersBpost extends ModuleAdminController
 		if (empty($reference) || (bool)Configuration::get('BPOST_AUTO_RETOUR_LABEL'))
 			return;
 
-		$fields_list = $this->current_row;
+		// $fields_list = $this->current_row;
 		$tpl_vars = array(
 			'action' => $this->l('Create retour'),
 			'href' => Tools::safeOutput(self::$currentIndex.'&reference='.$reference.'&createRetour'.$this->table
@@ -970,8 +971,8 @@ class AdminOrdersBpost extends ModuleAdminController
 		);
 
 		$ps_order = new Order((int)Service::getOrderIDFromReference($reference));
-		$tpl_vars['href'] = 'index.php?tab=AdminOrders&vieworder&id_order='.(int)$ps_order->id.'&token='.Tools::getAdminTokenLite('AdminOrders');
-		//$tpl_vars['href'] = 'index.php?controller=AdminOrders&id_order='.(int)$ps_order->id.'&vieworder&token='.Tools::getAdminTokenLite('AdminOrders');
+		$token = Tools::getAdminTokenLite('AdminOrders');
+		$tpl_vars['href'] = 'index.php?tab=AdminOrders&vieworder&id_order='.(int)$ps_order->id.'&token='.$token;
 
 		$tpl = $this->createTemplate('helpers/list/list_action_option.tpl');
 		$tpl->assign($tpl_vars);

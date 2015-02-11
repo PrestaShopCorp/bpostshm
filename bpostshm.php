@@ -200,7 +200,8 @@ class BpostShm extends CarrierModule
 		if ((bool)Configuration::get('BPOST_USE_PS_LABELS'))
 			$this->installModuleTab(
 				'AdminOrdersBpost',
-				$this->l('Bpost Orders'),
+				// $this->l('Bpost Orders'),
+				'Bpost',
 				Service::isPrestashop15plus() ? Tab::getIdFromClassName('AdminParentOrders') : Tab::getIdFromClassName('AdminOrders')
 			);
 
@@ -666,7 +667,8 @@ AND
 	{
 		// Service instance is required for Autoload to function
 		// correctly in the Admin context ?!
-		$service = Service::getInstance($this->context);
+		// $service = Service::getInstance($this->context);
+		Service::getInstance($this->context);
 		$cart_bpost = PsCartBpost::getByPsCartID((int)$id_cart);
 
 		return $cart_bpost;
@@ -674,9 +676,7 @@ AND
 
 	private function getOrderBpost($id_order)
 	{
-		// Service instance is required for Autoload to function
-		// correctly in the Admin context ?!
-		$service = Service::getInstance($this->context);
+		Service::getInstance($this->context);
 		$order_bpost = PsOrderBpost::getByPsOrderID((int)$id_order);
 
 		return $order_bpost;
@@ -884,7 +884,8 @@ AND
 				*/
 				$this->installModuleTab(
 					'AdminOrdersBpost',
-					$this->l('Bpost Orders'),
+					// $this->l('Bpost Orders'),
+					'Bpost',
 					Service::isPrestashop15plus() ? Tab::getIdFromClassName('AdminParentOrders') : Tab::getIdFromClassName('AdminOrders')
 				);
 			}
@@ -953,7 +954,7 @@ AND
 			$errors[] = $this->l($product_countries['Error']);
 		else
 		{
-			$enabled_countries = $service->explodeCountryList($enabled_country_list);
+			$enabled_countries = array(); // $service->explodeCountryList($enabled_country_list);
 
 			$this->smarty->assign('product_countries', $product_countries, true);
 			$this->smarty->assign('enabled_countries', $enabled_countries, true);
@@ -1089,7 +1090,8 @@ AND
 		$id_zone_delivery = $params['address']->getZoneById((int)$cart->id_address_delivery);
 		$carriers = $this->getIdCarriers();
 		$our_carriers = false;
-		foreach ($carriers as $shm => $id_carrier_bpost)
+		// foreach ($carriers as $shm => $id_carrier_bpost)
+		foreach ($carriers as $id_carrier_bpost)
 			if ($our_carriers = $cart->isCarrierInRange($id_carrier_bpost, $id_zone_delivery))
 				break;
 
@@ -1180,7 +1182,7 @@ AND
 				{
 					$wrapping_fees = (float)Configuration::get('PS_GIFT_WRAPPING_PRICE');
 					$wrapping_fees_tax = new Tax((int)Configuration::get('PS_GIFT_WRAPPING_TAX'));
-					$wrapping_fees_tax_inc = $wrapping_fees * (1 + (((float)($wrapping_fees_tax->rate) / 100)));
+					$wrapping_fees_tax_inc = $wrapping_fees * (1 + (((float)$wrapping_fees_tax->rate / 100)));
 
 					$return['order_opc_adress'] = $this->context->smarty->fetch(_PS_THEME_DIR_.'order-address.tpl');
 					$return['carrier_list'] = $this->getCarrierList14($params);
@@ -1367,7 +1369,10 @@ AND
 	 */
 	public function getOrderShippingCost($params, $shipping_cost)
 	{
-		return $shipping_cost;
+		if (isset($params))
+			return $shipping_cost;
+
+		return false;
 	}
 
 	/**
@@ -1375,6 +1380,6 @@ AND
 	 */
 	public function getOrderShippingCostExternal($params)
 	{
-
+		return $this->getOrderShippingCost($params, 0);
 	}
 }
