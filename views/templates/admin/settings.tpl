@@ -400,7 +400,7 @@
 	</form>
 	<br />
 	<!-- Country information -->
-	{if !empty($account_id_account) && !empty($account_passphrase)}
+	{if empty($errors)}
 		<form class="form-horizontal{if $version < 1.5} v1-4{elseif $version < 1.6} v1-5{/if}" action="#" method="POST" autocomplete="off">
 			<fieldset class="panel">
 				{if $version < 1.6}<legend><img src="{$module_dir|escape}views/img/icons/bpost.png" alt="bpost" />{else}<div class="panel-heading">{/if}
@@ -474,7 +474,8 @@
 									<option value="{$iso_code|escape}">{$_country|escape}</option>
 								{/foreach}
 								</select> -->
-								<div class="margin-form col-lg-9 col-lg-offset-3"{if $version < 1.5} style="padding:0;font-size:11px;"{/if}>
+								<!-- <div class="margin-form col-lg-9 col-lg-offset-3"{if $version < 1.5} style="padding:0;font-size:11px;"{/if}> -->
+								<div style="color: #7f7f7f;font-size: 0.85em;padding: 0 0 1em 15px;">	
 									<p class="preference_description help-block">
 										{l s='Please be careful NOT to activate countries in PrestaShop that are not available in your Shipping Manager.' mod='bpostshm'}
 									</p>

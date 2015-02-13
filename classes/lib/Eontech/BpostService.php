@@ -11,26 +11,48 @@
 class EontechBpostService extends EontechModBpost
 {
 
+	/**
+	 * XML errors
+	 *
+	 * @var array
+	 */
+	private $xml_errors = array();
+
 	public function getProductCountries()
 	{
+		$msg_invalid = 'Invalid Account ID / Passphrase';
 		$acc_id = $this->getAccountId();
-		if (!isset($acc_id) || empty($acc_id))
-			throw new EontechModException('Invalid Account ID / Passphrase');
+		if (empty($acc_id))
+			throw new EontechModException($msg_invalid);
 
 		$url = '/productconfig';
 		$headers = array(
 			'Accept: application/vnd.bpost.shm-productConfiguration-v3+XML'
 		);
-		
-		$xml = $this->doCall(
-			$url,
-			null,
-			$headers
-		);
+
+		$prev_use = libxml_use_internal_errors(true);
+		try {
+			$xml = $this->doCall(
+				$url,
+				null,
+				$headers
+			);
+
+		} catch (EontechModException $e) {
+			libxml_clear_errors();
+			libxml_use_internal_errors($prev_use);
+			if (401 === (int)$e->getCode())
+				throw new EontechModException($msg_invalid);
+			else
+				throw $e;
+		}
+
+		libxml_clear_errors();
+		libxml_use_internal_errors($prev_use);
 
 		if (!isset($xml->deliveryMethod))
 			throw new EontechModException('No suitable delivery method');
-		
+
 		$product_countries = false;
 		foreach ($xml->deliveryMethod as $dm)
 			foreach ($dm->product as $product)
@@ -45,5 +67,13 @@ class EontechBpostService extends EontechModBpost
 				}
 
 		return empty($product_countries) ? false : $product_countries;
+	}
+
+	public function getXmlErrors()
+	{
+		if (is_array($this->xml_errors) && count($this->xml_errors))
+			return $this->xml_errors;
+
+		return false;
 	}
 }

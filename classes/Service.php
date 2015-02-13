@@ -1212,7 +1212,8 @@ class Service
 				$product_countries_list = implode('|', $product_countries);
 
 		} catch (Exception $e) {
-			return array('Error' => (401 === (int)$e->getCode()) ? 'Invalid Account ID / Passphrase' : $e->getMessage());
+			// return array('Error' => (401 === (int)$e->getCode()) ? 'Invalid Account ID / Passphrase' : $e->getMessage());
+			return array('Error' => $e->getMessage());
 
 		}
 

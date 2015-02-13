@@ -122,8 +122,10 @@ class BpostShm extends CarrierModule
 	public function install()
 	{
 		if (!extension_loaded('curl'))
-			exit;
-
+		{
+			$this->_errors[] = $this->l('This module requires CURL to work properly');
+			return false;
+		}
 		$return = true;
 
 		$return = $return && parent::install();
@@ -201,7 +203,7 @@ class BpostShm extends CarrierModule
 			$this->installModuleTab(
 				'AdminOrdersBpost',
 				// $this->l('Bpost Orders'),
-				'Bpost',
+				'bpost',
 				Service::isPrestashop15plus() ? Tab::getIdFromClassName('AdminParentOrders') : Tab::getIdFromClassName('AdminOrders')
 			);
 
@@ -708,7 +710,6 @@ AND
 			'account_id_account',
 			Configuration::get('BPOST_ACCOUNT_ID')
 		);
-
 		$passphrase = Tools::getValue(
 			'account_passphrase',
 			Configuration::get('BPOST_ACCOUNT_PASSPHRASE')
@@ -771,7 +772,11 @@ AND
 		*/
 		if (Tools::isSubmit('submitAccountSettings'))
 		{
+			/*
 			if (Configuration::get('BPOST_ACCOUNT_ID') !== $id_account && is_numeric($id_account))
+				Configuration::updateValue('BPOST_ACCOUNT_ID', (int)$id_account);
+			*/
+			if ((Configuration::get('BPOST_ACCOUNT_ID') !== $id_account && is_numeric($id_account)) || empty($id_account))
 				Configuration::updateValue('BPOST_ACCOUNT_ID', (int)$id_account);
 			if (Configuration::get('BPOST_ACCOUNT_PASSPHRASE') !== $passphrase)
 				Configuration::updateValue('BPOST_ACCOUNT_PASSPHRASE', $passphrase);
@@ -885,7 +890,7 @@ AND
 				$this->installModuleTab(
 					'AdminOrdersBpost',
 					// $this->l('Bpost Orders'),
-					'Bpost',
+					'bpost',
 					Service::isPrestashop15plus() ? Tab::getIdFromClassName('AdminParentOrders') : Tab::getIdFromClassName('AdminOrders')
 				);
 			}
@@ -946,19 +951,24 @@ AND
 		//
 		// disbling country settings
 		$country_international_orders = false;
-
+		//
 		$this->smarty->assign('country_international_orders', $country_international_orders, true);
+		$enabled_countries = array();
 		$service = Service::getInstance($this->context);
 		$product_countries = $service->getProductCountries();
 		if (isset($product_countries['Error']))
 			$errors[] = $this->l($product_countries['Error']);
+		/*
 		else
 		{
-			$enabled_countries = array(); // $service->explodeCountryList($enabled_country_list);
+			// $enabled_countries = $service->explodeCountryList($enabled_country_list);
 
-			$this->smarty->assign('product_countries', $product_countries, true);
-			$this->smarty->assign('enabled_countries', $enabled_countries, true);
+			// $this->smarty->assign('product_countries', $product_countries, true);
+			// $this->smarty->assign('enabled_countries', $enabled_countries, true);
 		}
+		*/
+		$this->smarty->assign('product_countries', $product_countries, true);
+		$this->smarty->assign('enabled_countries', $enabled_countries, true);
 
 		$this->smarty->assign('label_use_ps_labels', $label_use_ps_labels, true);
 		$this->smarty->assign('label_pdf_format', $label_pdf_format, true);
