@@ -53,7 +53,7 @@ class EontechBarcodeCollection extends EontechBaseObject
 
 	public function isEmpty()
 	{
-		return (bool)(0 === $this->count());
+		return 0 === $this->count();
 	}
 
 	public function getNext($is_return = false, $is_intl = false)
@@ -61,7 +61,7 @@ class EontechBarcodeCollection extends EontechBaseObject
 		$return = '';
 
 		if (!$this->isEmpty())
-		{	
+		{
 			$req_type = ($is_return ? self::TYPE_RETURN : self::TYPE_NORMAL) + ($is_intl ? self::TYPE_INTL : self::TYPE_NORMAL);
 			foreach ($this->_barcodes as $key => $barcode)
 			{
@@ -99,7 +99,7 @@ class EontechBarcodeCollection extends EontechBaseObject
 		if (13 == $len)
 			$type |= self::TYPE_INTL;
 		elseif (24 == $len)
-			switch(substr($barcode, -3))
+			switch (substr($barcode, -3))
 			{
 				case '134':
 					$type |= self::TYPE_INTL;

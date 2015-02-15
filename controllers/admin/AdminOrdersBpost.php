@@ -95,15 +95,6 @@ class AdminOrdersBpost extends ModuleAdminController
 		LEFT JOIN `'._DB_PREFIX_.'carrier` c ON (c.`id_carrier` = oc.`id_carrier`)
 		';
 
-		/*
-		$this->_where = '
-		AND obl.status IN("'.implode('", "', $this->statuses).'")
-		AND a.current_state IN('.implode(', ', $this->ps_order_states).', '
-			.$this->bpost_treated_state.')
-		AND DATEDIFF(NOW(), a.date_add) <= 14
-		';
-		*/
-
 		$this->_where = '
 		AND obl.status IN("'.implode('", "', $this->statuses).'")
 		AND a.current_state NOT IN('.implode(', ', $this->ps_order_state_rejects).')
@@ -501,10 +492,6 @@ class AdminOrdersBpost extends ModuleAdminController
 			$customer_message->id_employee = (int)$this->context->employee->id;
 			$customer_message->message = $message;
 			$customer_message->private = false;
-			// Serge 30 Nov 2014
-			// message will fail without these two additional info
-			// $customer_message->ip_address = (string)ip2long($_SERVER['REMOTE_ADDR']);
-			// $customer_message->user_agent = (string)$_SERVER['HTTP_USER_AGENT'];
 
 			try {
 				if (!$customer_message->add())
@@ -700,14 +687,6 @@ class AdminOrdersBpost extends ModuleAdminController
 		$current_status = $status;
 		$current_status .= $count_printed ? ' ('.$count_printed.')' : '';
 
-		// if ((bool)Configuration::get('BPOST_LABEL_TT_UPDATE_ON_OPEN'))
-		// {
-		// 	$reference = $fields_list['reference'];
-		// 	$current_state = (int)$fields_list['current_state'];
-		// 	$current_status = ((int)Configuration::get('BPOST_ORDER_STATE_TREATED') === $current_state) ?
-		// 		$this->service->getOrderStatus($reference) : $status;
-		// }
-
 		return $current_status;
 	}
 
@@ -793,25 +772,6 @@ class AdminOrdersBpost extends ModuleAdminController
 		// now we have it
 	}
 
-/*	protected function getShopContextService($reference = '')
-	{
-		if (empty($reference))
-			$id_shop = (int)$this->context->shop->id;
-
-		else
-		{
-			$order_bpost = PsOrderBpost::getByReference($reference);
-			$id_shop = (int)$order_bpost->id_shop;
-			if (!isset($this->_service[$id_shop]))
-				Shop::setContext(Shop::CONTEXT_SHOP, (int)$id_shop);
-		}
-
-		if (!isset($this->_service[$id_shop]))
-			$this->_service[$id_shop] = new Service($this->context);
-
-		return $this->_service[$id_shop];
-	}
-*/
 	protected function setRowContext($reference)
 	{
 		if (!Service::isPrestashop15plus())
@@ -840,16 +800,6 @@ class AdminOrdersBpost extends ModuleAdminController
 			'href' => Tools::safeOutput(self::$currentIndex.'&reference='.$reference.'&addLabel'.$this->table
 				.'&token='.($token != null ? $token : $this->token)),
 		);
-
-		/*
-		// Disable if retours auto-generation is OFF
-		if (!(bool)Configuration::get('BPOST_AUTO_RETOUR_LABEL_'.$context_shop_id))
-		{
-			$pdf_dir = _PS_MODULE_DIR_.'bpostshm/pdf/'.$reference.'/retours';
-			// disable if labels are not PRINTED
-			if (is_dir($pdf_dir))
-				$tpl_vars['disabled'] = $this->l('A retour has already been created.');
-		}*/
 
 		$tpl = $this->createTemplate('helpers/list/list_action_option.tpl');
 		$tpl->assign($tpl_vars);
@@ -888,7 +838,6 @@ class AdminOrdersBpost extends ModuleAdminController
 		if (empty($reference) || (bool)Configuration::get('BPOST_AUTO_RETOUR_LABEL'))
 			return;
 
-		// $fields_list = $this->current_row;
 		$tpl_vars = array(
 			'action' => $this->l('Create retour'),
 			'href' => Tools::safeOutput(self::$currentIndex.'&reference='.$reference.'&createRetour'.$this->table

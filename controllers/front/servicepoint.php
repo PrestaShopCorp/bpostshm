@@ -22,7 +22,6 @@ elseif (file_exists(_CONFIG_FILE_DEV_))
 else
 	die('Cannot locate config');
 
-/* require_once($_GET['root_dir'].'/config/config.inc.php'); */
 require_once(_PS_MODULE_DIR_.'bpostshm/classes/Service.php');
 
 class ServicePointController extends FrontController

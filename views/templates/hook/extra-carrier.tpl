@@ -122,8 +122,7 @@
 		$button_.data('href', href);
 		if ($is_mobile)
 			$button_.attr('class', 'ui-btn ui-btn-inner ui-btn-up-c ui-shadow');
-			// $button_.attr('style', 'background: #18c;color: #eff;padding: 4px 6px;margin:0 auto;');
-
+			
 		$container.append('<br />', $button_);
 
 		$('[name="processCarrier"]').attr('disabled', true).css('opacity', .3);

@@ -308,14 +308,6 @@
 
 				}
 
-				// var $first_row = $table.find('tbody tr:eq(0)'),
-				// 	$first_row_haystack = $first_row.children('td'),
-				// 	$first_row_needle = $first_row.children('td.order_state'),
-				// 	position = $first_row_haystack.index($first_row_needle);
-
-				// $('tr, colgroup', 'table.order_bpost').each(function() {
-				// 	$(this).children(':eq('+position+')').not('.list-empty').remove();
-				// });
 				/* /Tabs */
 
 				/* Actions */
@@ -324,17 +316,9 @@
 						if (this.value)
 						{
 							if ('undefined' !== typeof $(this).children(':selected').data('target')) {
-								// used for 'Open order'
-								// if (fancy_pop)
-								// 	srgBox.open(this.value, function () {
-								// 		window.location.reload();
-								// 		return;
-								// 	});
-								// else 
-									window.open(this.value);
-									//window.location.reload();
-									reloadPage();
-									return;
+								window.open(this.value);
+								reloadPage();
+								return;
 							}
 
 							$.get(this.value, { }, function(response) {
@@ -348,7 +332,6 @@
 											errors += error;
 									});
 									srgBox.displayError(errors, function() {
-										//window.location.reload();
 										reloadPage();
 									});
 										return;
@@ -366,12 +349,10 @@
 
 									});
 									srgBox.open('', function () {
-										//window.location.reload();
 										reloadPage();
 									});
 
 									if (!fancy_pop)
-										//window.location.reload();
 										reloadPage();
 									
 									return;
@@ -448,7 +429,6 @@
 										window.open(link);
 								});
 								srgBox.open();
-								//window.location.reload();
 								reloadPage();
 								return;
 							}

@@ -100,12 +100,6 @@ class BpostShm extends CarrierModule
 				'title' => $this->l('Insurance'),
 				'info' => $this->l('Insurance to insure your goods to a maximum of 500,00 euro.'),
 				),
-			/*
-			470 => array(
-				'title' => $this->l('Saturday Delivery'),
-				'info' => $this->l(''),
-				),
-			*/
 			540 => array(
 				'title' => $this->l('Insurance basic'),
 				'info' => $this->l('Insurance to insure your goods to a maximum of 500,00 euro.'),
@@ -640,18 +634,6 @@ AND
 			'delivery_options_list',
 			Configuration::get('BPOST_DELIVERY_OPTIONS_LIST')
 		);
-		//
-		/*
-		$country_international_orders = Tools::getValue(
-			'country_international_orders',
-			Configuration::get('BPOST_INTERNATIONAL_ORDERS')
-		);
-		$enabled_country_list = Tools::getValue(
-			'enabled_country_list',
-			Configuration::get('BPOST_ENABLED_COUNTRY_LIST')
-		);
-		//
-		*/
 		$label_use_ps_labels = Tools::getValue(
 			'label_use_ps_labels',
 			Configuration::get('BPOST_USE_PS_LABELS')
@@ -680,10 +662,6 @@ AND
 		*/
 		if (Tools::isSubmit('submitAccountSettings'))
 		{
-			/*
-			if (Configuration::get('BPOST_ACCOUNT_ID') !== $id_account && is_numeric($id_account))
-				Configuration::updateValue('BPOST_ACCOUNT_ID', (int)$id_account);
-			*/
 			if ((Configuration::get('BPOST_ACCOUNT_ID') !== $id_account && is_numeric($id_account)) || empty($id_account))
 				Configuration::updateValue('BPOST_ACCOUNT_ID', (int)$id_account);
 			if (Configuration::get('BPOST_ACCOUNT_PASSPHRASE') !== $passphrase)
@@ -703,7 +681,6 @@ AND
 			if (Configuration::get('BPOST_HOME_DELIVERY_ONLY') !== $display_home_delivery_only
 					&& is_numeric($display_home_delivery_only))
 			{
-				// Configuration::updateValue('BPOST_HOME_DELIVERY_ONLY', (int)$display_home_delivery_only);
 				Service::updateGlobalValue('BPOST_HOME_DELIVERY_ONLY', (int)$display_home_delivery_only);
 
 				foreach ($this->getIdCarriers() as $shipping_method => $id_carrier)
@@ -731,56 +708,6 @@ AND
 				Configuration::updateValue('BPOST_DELIVERY_OPTIONS_LIST', $delivery_options_list);
 
 		}
-		/*
-		elseif (Tools::isSubmit('submitCountrySettings'))
-		{
-			Configuration::updateValue('BPOST_INTERNATIONAL_ORDERS', $country_international_orders);
-
-			if (2 == $country_international_orders)
-			{
-				if (is_array($enabled_country_list))
-				{
-					if (1 === count($enabled_country_list) && 'REMOVE' === $enabled_country_list[0])
-						$enabled_country_list = '';
-					else
-					{
-						$id_carrier = (int)Configuration::get('BPOST_SHIP_METHOD_'.self::SHIPPING_METHOD_AT_HOME.'_ID_CARRIER');
-						$carrier = new Carrier((int)$id_carrier);
-						foreach ($enabled_country_list as $iso_code)
-							if ($id_country = Country::getByIso($iso_code))
-							{
-								$country = new Country((int)$id_country, 1);
-
-								if ($country_id_zone = Zone::getIdByName($country->name))
-									$id_zone = (int)$country_id_zone;
-								else
-								{
-									$zone = new Zone();
-									$zone->name = $country->name;
-									$zone->active = true;
-									$zone->save();
-									$id_zone = (int)$zone->id;
-									// update country zone
-									$country->id_zone = $id_zone;
-									$country->save();
-								}
-
-								if (!$carrier->getZone((int)$id_zone))
-									$carrier->addZone((int)$id_zone);
-
-							}
-
-						$enabled_country_list = implode('|', $enabled_country_list);
-					}
-				}
-
-				if (Configuration::get('BPOST_ENABLED_COUNTRY_LIST') !== $enabled_country_list)
-					Configuration::updateValue('BPOST_ENABLED_COUNTRY_LIST', $enabled_country_list);
-			}
-			else
-				Configuration::updateValue('BPOST_ENABLED_COUNTRY_LIST', '');
-		}
-		*/
 		elseif (Tools::isSubmit('submitLabelSettings'))
 		{
 			if (Configuration::get('BPOST_USE_PS_LABELS') !== $label_use_ps_labels && is_numeric($label_use_ps_labels))
@@ -865,15 +792,7 @@ AND
 		$product_countries = $service->getProductCountries();
 		if (isset($product_countries['Error']))
 			$errors[] = $this->l($product_countries['Error']);
-		/*
-		else
-		{
-			// $enabled_countries = $service->explodeCountryList($enabled_country_list);
 
-			// $this->smarty->assign('product_countries', $product_countries, true);
-			// $this->smarty->assign('enabled_countries', $enabled_countries, true);
-		}
-		*/
 		$this->smarty->assign('product_countries', $product_countries, true);
 		$this->smarty->assign('enabled_countries', $enabled_countries, true);
 
@@ -1050,9 +969,7 @@ AND
 	 */
 	public function hookPaymentTop($params)
 	{
-		// return $this->hookActionCarrierProcess($params);
 		return $this->hookProcessCarrier($params);
-		// return '';
 	}
 
 	/**
@@ -1071,7 +988,6 @@ AND
 			$cart_bpost = $this->getCartBpost((int)$cart->id);
 			if (!$cart_bpost->validServicePointForSHM((int)$shm))
 			{
-				//if (!$this->context->customer->isLogged())
 				if (!$this->context->cookie->logged)
 					$warning = '<p class="warning">'.Tools::displayError('Please sign in to see payment methods.').'</p>';
 				elseif (!$this->context->cookie->checkedTOS && Configuration::get('PS_CONDITIONS'))

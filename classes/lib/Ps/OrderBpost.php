@@ -266,17 +266,6 @@ class PsOrderBpost extends ObjectModel
 
 			}
 
-		// $order_labels = new Collection('PsOrderBpostLabel');
-		// $order_labels->sqlWhere('id_order_bpost = '.$this->id.' AND barcode IS NULL');
-		// // $order_labels->orderBy('is_retour', 'ASC');
-		// $order_labels->sqlOrderBy('id_order_bpost_label ASC, is_retour ASC');
-		// $all_labels = $order_labels->getResults();
-		// if ($separate)
-		// 	foreach ($all_labels as $label)
-		// 		$new_labels[(int)$label->has_retour][] = $label;
-		// else
-		// 	$new_labels = $all_labels;
-
 		return $new_labels;
 	}
 

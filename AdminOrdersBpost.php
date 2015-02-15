@@ -94,29 +94,6 @@ class AdminOrdersBpost extends AdminTab
 		AND DATEDIFF(NOW(), a.date_add) <= 14
 		';
 
-		// SRG 23-09-14: Changed SQL to correctly simulate ^ps1.5 orders.current_state
-/*		$this->_join = '
-		LEFT JOIN `'._DB_PREFIX_.'orders` o ON (o.`id_order` = SUBSTRING(a.`reference`, 8))
-		LEFT JOIN `'._DB_PREFIX_.'carrier` c ON (c.`id_carrier` = o.`id_carrier`)
-		LEFT JOIN (
-			SELECT oh.`id_order`, oh.`id_order_state` as current_state
-			FROM `'._DB_PREFIX_.'order_history` oh
-			INNER JOIN (
-				SELECT max(`id_order_history`) as max_id, `id_order`
-				FROM `'._DB_PREFIX_.'order_history`
-				GROUP BY (`id_order`)
-			) oh2
-				ON 	oh.`id_order` = oh2.`id_order`
-				AND oh2.max_id = oh.`id_order_history`
-		) ocs ON ocs.`id_order` = o.`id_order`';
-
-		$this->_where = '
-		AND a.status IN("'.implode('", "', $this->statuses).'")
-		AND DATEDIFF(NOW(), a.date_add) <= 14
-		AND ocs.current_state IN('.implode(', ', $this->ps_order_states).', '
-			.$this->bpost_treated_state.')';
-*/
-
 		$id_bpost_carriers = array_values($this->module->getIdCarriers());
 		if ($references = Db::getInstance()->executeS('
 			SELECT id_reference FROM `'._DB_PREFIX_.'carrier` WHERE id_carrier IN ('.implode(', ', $id_bpost_carriers).')'))
@@ -523,7 +500,6 @@ class AdminOrdersBpost extends AdminTab
 		$context->cookie->{$this->table.'_pagination'} = 50;
 		$context->cookie->update();
 
-		// SRG 22-09-2014: Temporary sorting fix
 		if (Tools::getValue($this->table.'Orderby'))
 			$order_by = Tools::getValue($this->table.'Orderby');
 		if (Tools::getValue($this->table.'Orderway'))
@@ -613,14 +589,6 @@ class AdminOrdersBpost extends AdminTab
 		$count_printed = (int)$fields_list['count_printed'];
 		$current_status = $status;
 		$current_status .= $count_printed ? ' ('.$count_printed.')' : '';
-
-		// if ((bool)Configuration::get('BPOST_LABEL_TT_UPDATE_ON_OPEN'))
-		// {
-		// 	$reference = $fields_list['reference'];
-		// 	$current_state = (int)$fields_list['current_state'];
-		// 	$current_status = ((int)Configuration::get('BPOST_ORDER_STATE_TREATED') === $current_state) ?
-		// 		$this->service->getOrderStatus($reference) : $status;
-		// }
 
 		return $current_status;
 	}
@@ -725,16 +693,6 @@ class AdminOrdersBpost extends AdminTab
 					.'&token='.($token != null ? $token : $this->token)),
 		);
 
-		/*
-		// Disable if retours auto-generation is OFF
-		if (!(bool)Configuration::get('BPOST_AUTO_RETOUR_LABEL_'.$context_shop_id))
-		{
-			$pdf_dir = _PS_MODULE_DIR_.'bpostshm/pdf/'.$reference.'/retours';
-			// disable if labels are not PRINTED
-			if (is_dir($pdf_dir))
-				$tpl_vars['disabled'] = $this->l('A retour has already been created.');
-		}*/
-
 		return $tpl_vars;
 	}
 
@@ -768,7 +726,6 @@ class AdminOrdersBpost extends AdminTab
 		if (empty($reference) || (bool)Configuration::get('BPOST_AUTO_RETOUR_LABEL'))
 			return;
 
-		// $fields_list = $this->current_row;
 		$tpl_vars = array(
 			'action' => $this->l('Create retour'),
 			'href' => Tools::safeOutput(self::$current_index.'&reference='.$reference.'&createRetour'.$this->table
@@ -879,12 +836,10 @@ class AdminOrdersBpost extends AdminTab
 
 	protected function _displayViewLink($token = null, $id)
 	{
-		// global $currentIndex;
 		$_cacheLang = array();
 		$_cacheLang['View'] = $this->l('View');
 
 		$reference = $id;
-		// $actions = $this->getActions($id, $token);
 		$actions = $this->getActions($reference, $token);
 
 		echo '<select class="actions">

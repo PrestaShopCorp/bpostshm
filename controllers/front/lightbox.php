@@ -46,7 +46,6 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 			if ($city)
 				$search_params['zone'] .= (string)$city;
 
-			//$service_points = $service->getNearestServicePoint($search_params, $shipping_method);
 			$service_points = (BpostShm::SHIPPING_METHOD_AT_SHOP == $shipping_method) ?
 				$service->getNearestServicePoint($search_params) :
 				$service->getNearestServicePoint($search_params, $shipping_method);
@@ -104,9 +103,6 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 				$customer['MobileNumber'] = (int)$mobile_number;
 			if ($preferred_language = (string)Tools::getValue('preferred_language'))
 				$customer['PreferredLanguage'] = $preferred_language;
-
-//$customer['Error'] = 'Registering: is this correct?';
-//$this->jsonEncode($customer);
 
 			$member = $service->createBpack247Member($customer, 'Number, Street, Postalcode, DeliveryCode');
 			$this->validateStore($member, $cart_bpost);
@@ -179,7 +175,6 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 						self::$smarty->assign('firstname', $delivery_address->firstname, true);
 						self::$smarty->assign('lastname', $delivery_address->lastname, true);
 
-						//preg_match('#([0-9]+)?[, ]*([\p{L}a-zA-Z -]+)[, ]*([0-9]+)?#iu', $delivery_address->address1, $matches);
 						preg_match('#([0-9]+)?[, ]*([\p{L}a-zA-Z -\']+)[, ]*([0-9]+)?#iu', $delivery_address->address1, $matches);
 						if (!empty($matches[1]) && is_numeric($matches[1]))
 							$nr = $matches[1];
@@ -327,9 +322,6 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 		$json_member = (string)Tools::jsonEncode($member);
 		if (!isset($member['Error']) && isset($cart_bpost))
 			try {
-				// if (!isset($cart_bpost))
-					// $cart_bpost = PsCartBpost::getByPsCartID((int)$this->context->cart->id);
-
 				$cart_bpost->bpack247_customer = $json_member;
 				$cart_bpost->update();
 

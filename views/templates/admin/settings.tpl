@@ -77,8 +77,6 @@
 					{if $version >= 1.6}<p><span class="label label-danger red">{l s='Important' mod='bpostshm'}</span></p>{/if}
 					<p>
 						{l s='You need a user account from bpost to use this module. Call 02/201 11 11.' mod='bpostshm'}
-						<!-- <br />
-						{l s='Only here to test? Key in 999033 as account ID and DEMO_SHM as passphrase.' mod='bpostshm'} -->
 					</p>
 				</div>
 			</div>
@@ -618,7 +616,6 @@
 				});
 			else
 				$('#enabled-country-list').html('<option selected value="REMOVE">(empty)</option>');
-				//eclist.remove().end().append('<option selected value="REMOVE">(empty)</option>') ;
 		});
 
 		// Delivery options submit
@@ -635,11 +632,9 @@
 				});
 				if ('' !== checked_opts)
 					checked_opts = checked_opts.substr(1);
-					//$('input[name="delopt_list_'+this+'"]').val(checked_opts.substr(1));
 				delopts['__'+this] = checked_opts;
 			});
 			json_options = JSON.stringify(delopts).replace(/__/g, '');
-			//$.fancybox.open(json_options, {});
 			$('input[name="delivery_options_list"]').val(json_options);
 {/literal}
 		});

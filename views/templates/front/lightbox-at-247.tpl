@@ -84,12 +84,6 @@
 						<input type="text" name="town" id="town" value="{$locality|default:''}" required="required" />
 						<sup>*</sup>
 					</div>
-					<!-- <div class="row clearfix">
-						<label for="date-of-birth">{l s='Birthday' mod='bpostshm'}</label>
-						<input type="text" name="date_of_birth" id="date-of-birth" value="{$birthday|default:''}" placeholder="{l s='dd/mm/yyyy' mod='bpostshm'}" required="required" />
-						<sup>*</sup>
-						<span class="infos">{l s='dd/mm/yyyy' mod='bpostshm'}</span>
-					</div> -->
 					<div class="row clearfix">
 						<label for="date-of-birth">{l s='Birthday' mod='bpostshm'}</label>
 						<input type="text" name="date_of_birth" id="date-of-birth" value="{$birthday|default:''}" placeholder="{l s='yyyy-mm-dd' mod='bpostshm'}" />
@@ -116,9 +110,6 @@
 					</div>
 					<div class="row last">
 						<input type="checkbox" name="cgv" id="cgv" value="1" required="required" />
-
-						<!-- <label for="cgv">{l s='I accept the' mod='bpostshm'} <a href="{l s='https://www.bpack247.be/en/general-terms-conditions.aspx' mod='bpostshm'}" title="{l s='Terms and conditions' mod='bpostshm'}" target="_blank">{{l s='Terms and conditions' mod='bpostshm'}|lower}</a></label> -->
-
 						<label for="cgv">{l s='I accept the' mod='bpostshm'} <a id="terms" href="" title="{l s='Terms and conditions' mod='bpostshm'}">{{l s='Terms and conditions' mod='bpostshm'}|lower}</a></label>
 						<sup>*</sup>
 						<br /><br />

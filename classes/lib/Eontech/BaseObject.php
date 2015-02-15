@@ -46,14 +46,14 @@ class EontechBaseObject
 		if ($this->_include_method)
 		{
 			$trace = debug_backtrace();
-			$method = '::'.$trace[1]['function']; 
+			$method = '::'.$trace[1]['function'];
 		}
 		$error = get_class($this).$method.' '.$msg;
 
 		$this->_errors[] = $error;
 		$this->_error_code = $severity;
 
-		if ($this->_raise_exceptions) 
+		if ($this->_raise_exceptions)
 			throw new Exception($error, $severity);
 	}
 }

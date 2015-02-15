@@ -526,10 +526,6 @@ class Service
 		$reference = Configuration::get('BPOST_ACCOUNT_ID').'_'.Tools::substr($ps_order->id, 0, 42).'_'.$ref;
 
 		$shippers = $this->getReceiverAndSender($ps_order);
-		// $receiver = $shippers['receiver'];
-		// $address = $receiver->getAddress();
-		// $recipient = $receiver->getName().', '.$address->getStreetName().' '.$address->getNumber().' '
-		// 	.$address->getPostalCode().' '.$address->getLocality().' ('.Tools::strtoupper($address->getCountryCode()).')';
 		$recipient = $shippers['recipient'];
 
 		$shm = $this->module->getShmFromCarrierID($ps_order->id_carrier);
@@ -1193,7 +1189,6 @@ class Service
 	public function getControllerLink($module, $controller, $params)
 	{
 		$params['ps14'] = !self::isPrestashop15plus();
-		// $params['root_dir'] = _PS_ROOT_DIR_;
 		if (self::isPrestashop15plus())
 			$params['shop_id'] = $this->context->shop->id;
 		return _MODULE_DIR_.$module.'/controllers/front/'.$controller.'.php?'.http_build_query($params);
@@ -1212,7 +1207,6 @@ class Service
 				$product_countries_list = implode('|', $product_countries);
 
 		} catch (Exception $e) {
-			// return array('Error' => (401 === (int)$e->getCode()) ? 'Invalid Account ID / Passphrase' : $e->getMessage());
 			return array('Error' => $e->getMessage());
 
 		}

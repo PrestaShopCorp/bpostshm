@@ -42,7 +42,7 @@ class EontechPdfManager extends EontechBaseObject
 
 		$this->_links = array();
 		$pdf_files = glob($this->_active_dir.'/*.pdf');
-		foreach($pdf_files as $file)
+		foreach ($pdf_files as $file)
 			$this->_links[] = $this->_active_url.$this->prependSeparator(basename($file));
 
 	}
@@ -64,12 +64,12 @@ class EontechPdfManager extends EontechBaseObject
 		}
 		else
 			$this->setError('Error opening pdf file for writing', self::ERR_ACCESS);
-		
+
 	}
 
 	protected function prependSeparator($dir)
 	{
-		return  DIRECTORY_SEPARATOR == Tools::substr($dir, 0, 1) ? $dir : DIRECTORY_SEPARATOR.$dir;
+		return DIRECTORY_SEPARATOR == Tools::substr($dir, 0, 1) ? $dir : DIRECTORY_SEPARATOR.$dir;
 	}
 
 	protected function getPath($base_dir, $sub_dirs = '')
@@ -110,7 +110,7 @@ class EontechPdfManager extends EontechBaseObject
 
 	public function getLinks()
 	{
-		return  $this->_links;
+		return $this->_links;
 	}
 
 	protected function setError($msg, $severity = self::ERR_INITIALIZE)
