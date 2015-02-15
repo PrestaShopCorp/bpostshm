@@ -132,7 +132,7 @@ class Service
 
 		// Tools:: version fails miserably, so don't even...
 		// return Tools::substr($str, 0, $max);
-		return mb_substr($str, 0, $max ? $max : null);
+		return mb_substr($str, 0, $max ? $max : mb_strlen($str));
 	}
 
 	public function getWeightGrams($weight = 0)
@@ -315,7 +315,7 @@ class Service
 		$customer = new Customer((int)$ps_order->id_customer);
 		$delivery_address = new Address($ps_order->id_address_delivery, $this->context->language->id);
 		$invoice_address = new Address($ps_order->id_address_invoice, $this->context->language->id);
-		$company = $delivery_address->company;
+		$company = trim($delivery_address->company);
 		$client_line2 = trim($delivery_address->address2);
 
 		$shippers = array(
