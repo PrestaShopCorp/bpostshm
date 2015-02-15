@@ -221,7 +221,7 @@ class BpostShm extends CarrierModule
 		$return = true;
 
 		$cache_dir = defined('_PS_CACHE_DIR_') ? _PS_CACHE_DIR_ : _PS_ROOT_DIR_.'/cache/';
-		if (file_exists($cache_dir.'class_bpost_index.php'))
+		if (Tools::file_exists_cache($cache_dir.'class_bpost_index.php'))
 			$return = $return && unlink($cache_dir.'class_bpost_index.php');
 
 		$return = $return && $this->unregisterHook('backOfficeHeader');
@@ -255,7 +255,7 @@ class BpostShm extends CarrierModule
 		{
 			$user_groups = array();
 			foreach ($user_groups_tmp as $group)
-				$user_groups[] = $group['id_group'];
+				$user_groups[] = (int)$group['id_group'];
 		}
 
 		$stored_carrier_ids = $this->getIdCarriers();
@@ -263,13 +263,16 @@ class BpostShm extends CarrierModule
 		{
 			$id_carrier = $stored_carrier_ids[$shipping_method];
 			$carrier = new Carrier($id_carrier);
+			if (!Validate::isLoadedObject($carrier))
+				return false;
+
 			$carrier->deleted = (int)false;
 			// $carrier->active = true;
 			$carrier->active = BpostShm::SHIPPING_METHOD_AT_HOME == $shipping_method ||
 							!Configuration::get('BPOST_HOME_DELIVERY_ONLY');
 
 			$carrier->external_module_name = $this->name;
-			$carrier->name = $lang_fields['name'];
+			$carrier->name = (string)$lang_fields['name'];
 			$carrier->delay = $this->getTranslatedFields($lang_fields['delay']);
 			$carrier->need_range = true;
 			$carrier->shipping_external = true;
@@ -311,7 +314,6 @@ class BpostShm extends CarrierModule
 
 				}
 
-				// Configuration::updateValue('BPOST_SHIP_METHOD_'.$shipping_method.'_ID_CARRIER', (int)$carrier->id);
 				Service::updateGlobalValue('BPOST_SHIP_METHOD_'.$shipping_method.'_ID_CARRIER', (int)$carrier->id);
 
 				// Enable carrier for every user groups
@@ -336,108 +338,6 @@ class BpostShm extends CarrierModule
 		return $return;
 	}
 
-/*
-	private function addReplaceCarriers()
-	{
-		$return = true;
-
-		$user_groups_tmp = Group::getGroups($this->context->language->id);
-		if (is_array($user_groups_tmp) && !empty($user_groups_tmp))
-		{
-			$user_groups = array();
-			foreach ($user_groups_tmp as $group)
-				$user_groups[] = $group['id_group'];
-		}
-
-		$stored_carrier_ids = $this->getIdCarriers();
-		foreach ($this->shipping_methods as $shipping_method => $lang_fields)
-		{
-			$id_carrier = $stored_carrier_ids[$shipping_method];
-			$carrier = new Carrier($id_carrier);
-			$carrier->deleted = (int)false;
-			$carrier->active = true;
-
-			$carrier->external_module_name = $this->name;
-			$carrier->name = $lang_fields['name'];
-			$carrier->delay = $this->getTranslatedFields($lang_fields['delay']);
-			$carrier->need_range = true;
-			$carrier->shipping_external = true;
-			$carrier->shipping_handling = false;
-
-			if ($ret_tmp = $carrier->save())
-			{
-				// Affect carrier zones
-				if (in_array($shipping_method, array(
-						self::SHIPPING_METHOD_AT_HOME,
-						self::SHIPPING_METHOD_AT_SHOP,
-						self::SHIPPING_METHOD_AT_24_7,
-					)))
-				{
-					$id_zone_be = false;
-					$zone_labels = array('België', 'Belgie', 'Belgique', 'Belgium');
-					foreach ($zone_labels as $zone_label)
-						if ($id_zone = Zone::getIdByName($zone_label))
-						{
-							$id_zone_be = (int)$id_zone;
-							break;
-						}
-
-					if (!$id_zone_be)
-					{
-						$zone = new Zone();
-						$zone->name = 'Belgium';
-						$zone->active = true;
-						$zone->save();
-						$id_zone_be = (int)$zone->id;
-					}
-
-					Service::updateGlobalValue('BPOST_ID_ZONE_BELGIUM', (int)$id_zone_be);
-
-					if ($id_country = Country::getByIso('BE'))
-					{
-						$country = new Country($id_country);
-						if (method_exists('Country', 'affectZoneToSelection'))
-						{
-							if ($country->affectZoneToSelection(array($id_country), $id_zone_be))
-								$carrier->addZone((int)$id_zone_be);
-						}
-						else
-						{
-							$country->id_zone = (int)$id_zone_be;
-							if ($country->save())
-								$carrier->addZone((int)$id_zone_be);
-						}
-					}
-				}
-				else
-					if ($zones = Zone::getZones(true))
-						foreach ($zones as $zone)
-							$carrier->addZone((int)$zone['id_zone']);
-
-				Configuration::updateValue('BPOST_SHIP_METHOD_'.$shipping_method.'_ID_CARRIER', (int)$carrier->id);
-
-				// Enable carrier for every user groups
-				if (is_array($user_groups) && !empty($user_groups) && method_exists($carrier, 'setGroups'))
-					$carrier->setGroups($user_groups);
-
-				// Copy carrier logo
-				$this->setIcon(_PS_MODULE_DIR_.$this->name.'/views/img/logo-carrier.jpg', _PS_SHIP_IMG_DIR_.'/'.(int)$carrier->id.'.jpg');
-				$this->setIcon(
-					_PS_MODULE_DIR_.$this->name.'/views/img/logo-carrier.jpg',
-					_PS_TMP_IMG_DIR_.'/carrier_mini_'.(int)$carrier->id.'_'.$this->context->language->id.'.jpg'
-				);
-			}
-
-			$return = $return && $ret_tmp;
-		}
-
-		// Sort carriers by position rather than price
-		if ($return && false !== Configuration::get('PS_CARRIER_DEFAULT_SORT'))
-			Configuration::updateValue('PS_CARRIER_DEFAULT_SORT', Carrier::SORT_BY_POSITION);
-
-		return $return;
-	}
- */
 	/**
 	 * [deleteCarriers mark carriers for deletion (carrier->deleted = true) if found]
 	 * [Remark: No need to remove carrier image icons]
@@ -451,6 +351,9 @@ class BpostShm extends CarrierModule
 			if (isset($id_carrier))
 			{
 				$carrier = new Carrier($id_carrier);
+				if (!Validate::isLoadedObject($carrier))
+					return false;
+
 				$carrier->active = false;
 				$carrier->deleted = (int)true;
 				$return = $return && $carrier->save();
@@ -467,16 +370,18 @@ class BpostShm extends CarrierModule
 	 */
 	private function addReplaceOrderState()
 	{
+		$return = true;
 		$treated_names = array(
 				'en' => 'Treated',
 				'fr' => 'Traitée',
 				'nl' => 'Behandeld',
 			);
 
-		$return = true;
-
 		$id_order_state = null;
 		$order_states = OrderState::getOrderStates($this->context->language->id);
+		if (!is_array($order_states))
+			return false;
+
 		foreach ($order_states as $order_state)
 			if (in_array($order_state['name'], array_values($treated_names)))
 			{
@@ -486,17 +391,20 @@ class BpostShm extends CarrierModule
 
 		// Creates new OrderState if id still null (ie. not found)
 		$order_state = new OrderState($id_order_state);
-		$order_state->name = $this->getTranslatedFields($treated_names);
+		if ($return = Validate::isLoadedObject($order_state))
+		{
+			$order_state->name = $this->getTranslatedFields($treated_names);
 
-		$order_state->color = '#ddff88';
-		$order_state->hidden = true;
-		$order_state->logable = true;
-		$order_state->paid = true;
+			$order_state->color = '#ddff88';
+			$order_state->hidden = true;
+			$order_state->logable = true;
+			$order_state->paid = true;
 
-		$return = $return && $order_state->save();
-		$return = $return && Service::updateGlobalValue('BPOST_ORDER_STATE_TREATED', (int)$order_state->id);
+			$return = $return && $order_state->save();
+			$return = $return && Service::updateGlobalValue('BPOST_ORDER_STATE_TREATED', (int)$order_state->id);
 
-		$this->setIcon(_PS_MODULE_DIR_.$this->name.'/views/img/icons/box_closed.png', _PS_IMG_DIR_.'os/'.(int)$order_state->id.'.gif');
+			$this->setIcon(_PS_MODULE_DIR_.$this->name.'/views/img/icons/box_closed.png', _PS_IMG_DIR_.'os/'.(int)$order_state->id.'.gif');
+		}
 
 		return $return;
 	}
@@ -641,10 +549,10 @@ AND
 	private function uninstallModuleTab($tab_class)
 	{
 		$return = true;
-		if ($id_tab = Tab::getIdFromClassName($tab_class))
+		if ($id_tab = (int)Tab::getIdFromClassName($tab_class))
 		{
 			$tab = new Tab($id_tab);
-			$return = $return && $tab->delete();
+			$return = $return && Validate::isLoadedObject($tab) && $tab->delete();
 		}
 		return $return;
 	}
@@ -660,7 +568,7 @@ AND
 	{
 		$icon_exists = md5_file($src) === md5_file($dest);
 		if (!$icon_exists)
-			$icon_exists = copy($src, $dest);
+			$icon_exists = Tools::copy($src, $dest);
 
 		return $icon_exists;
 	}
@@ -804,8 +712,7 @@ AND
 						continue;
 
 					$carrier = new Carrier((int)$id_carrier);
-
-					if (!empty($carrier->id))
+					if (Validate::isLoadedObject($carrier) && !empty($carrier->id))
 					{
 						$carrier->active = !$display_home_delivery_only;
 						$carrier->update();
@@ -1049,7 +956,6 @@ AND
 		if (!empty($params['id_carrier']))
 		{
 			if ($shipping_method = array_search((int)$params['id_carrier'], $this->getIdCarriers()))
-				// Configuration::updateValue('BPOST_SHIP_METHOD_'.$shipping_method.'_ID_CARRIER', (int)$params['carrier']->id);
 				Service::updateGlobalValue('BPOST_SHIP_METHOD_'.$shipping_method.'_ID_CARRIER', (int)$params['carrier']->id);
 		}
 	}
@@ -1075,7 +981,8 @@ AND
 			if ($at_home_id == $id_carrier)
 			{
 				$delivery_address = new Address((int)$id_address_delivery);
-				$delay = $delivery_address->address1
+				if (Validate::isLoadedObject($delivery_address))
+					$delay = $delivery_address->address1
 						.(!empty($delivery_address->address2) ? ' '.$delivery_address->address2 : '')
 						.', '.$delivery_address->postcode.' '.$delivery_address->city;
 
@@ -1177,9 +1084,6 @@ AND
 					'HOOK_PAYMENT' => $warning,
 					'summary' => $cart->getSummaryDetails(),
 				);
-
-				//$return['HOOK_SHOPPING_CART'] = Hook::exec('shoppingCart', $return['summary']);
-				//$return['HOOK_SHOPPING_CART_EXTRA'] = Hook::exec('shoppingCartExtra', $return['summary']);
 
 				if (Service::isPrestashop15plus())
 				{
