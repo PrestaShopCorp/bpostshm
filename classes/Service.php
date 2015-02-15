@@ -280,13 +280,12 @@ class Service
 		$line2 = $person['address2'];
 		$iso_code = Tools::strtoupper(Country::getIsoById($person['id_country']));
 
-		preg_match('#([0-9]+)?[, ]*([\p{L}a-zA-Z -\']+)[, ]*([0-9]+)?#iu', $line1, $matches);
+		preg_match('#([0-9]+)?[, ]*([\p{L}a-zA-Z -;\']+)[, ]*([0-9]+)?#iu', $line1, $matches);
 		if (!empty($matches[1]) && is_numeric($matches[1]))
 			$nr = $matches[1];
 		elseif (!empty($matches[3]) && is_numeric($matches[3]))
 			$nr = $matches[3];
 		else
-			//$nr = (!empty($line2) && is_numeric($line2) ? $line2 : 0);
 			$nr = (!empty($line2) && is_numeric($line2) ? $line2 : ',');
 
 		$street = !empty($matches[2]) ? $matches[2] : $line1;
@@ -315,12 +314,13 @@ class Service
 		$customer = new Customer((int)$ps_order->id_customer);
 		$delivery_address = new Address($ps_order->id_address_delivery, $this->context->language->id);
 		$invoice_address = new Address($ps_order->id_address_invoice, $this->context->language->id);
-		$company = trim($delivery_address->company);
-		$client_line2 = trim($delivery_address->address2);
+		$company = self::getBpostring($delivery_address->company);
+		$client_line1 = self::getBpostring($delivery_address->address1);
+		$client_line2 = self::getBpostring($delivery_address->address2);
 
 		$shippers = array(
 			'client' => array(
-				'address1' 	=> $delivery_address->address1,
+				'address1' 	=> $client_line1,
 				'address2' 	=> $client_line2,
 				'city' 		=> $delivery_address->city,
 				'email'		=> $customer->email,
@@ -344,7 +344,7 @@ class Service
 		$recipient = $shippers['client']['name'];
 		if (!empty($client_line2))
 		{
-			$company = !empty($company) ? ' ('.self::getBpostring($company).')' : '';
+			$company = !empty($company) ? ' ('.$company.')' : '';
 			$company = $shippers['client']['name'].$company;
 			$shippers['client']['name'] = $client_line2;
 			$recipient = $company;
