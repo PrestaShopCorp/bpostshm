@@ -257,8 +257,9 @@ class BpostShm extends CarrierModule
 		{
 			$id_carrier = $stored_carrier_ids[$shipping_method];
 			$carrier = new Carrier($id_carrier);
-			if (!Validate::isLoadedObject($carrier))
-				return false;
+			// Validate::isLoadedObject is no good for us. new object has no id!
+			// if (!Validate::isLoadedObject($carrier))
+			// 	return false;
 
 			$carrier->deleted = (int)false;
 			// $carrier->active = true;
@@ -342,17 +343,16 @@ class BpostShm extends CarrierModule
 	{
 		$return = true;
 		foreach ($this->getIdCarriers() as $id_carrier)
-			if (isset($id_carrier))
+		{
+			$carrier = new Carrier($id_carrier);
+			if ($valid_carrier = Validate::isLoadedObject($carrier))
 			{
-				$carrier = new Carrier($id_carrier);
-				if (!Validate::isLoadedObject($carrier))
-					return false;
-
 				$carrier->active = false;
 				$carrier->deleted = (int)true;
-				$return = $return && $carrier->save();
+				$valid_carrier = $carrier->save();
 			}
-
+			$return = $return && $valid_carrier;
+		}
 		$return = $return && (method_exists('Carrier', 'cleanPositions') ? Carrier::cleanPositions() : true);
 
 		return $return;
@@ -385,20 +385,17 @@ class BpostShm extends CarrierModule
 
 		// Creates new OrderState if id still null (ie. not found)
 		$order_state = new OrderState($id_order_state);
-		if ($return = Validate::isLoadedObject($order_state))
-		{
-			$order_state->name = $this->getTranslatedFields($treated_names);
+		$order_state->name = $this->getTranslatedFields($treated_names);
 
-			$order_state->color = '#ddff88';
-			$order_state->hidden = true;
-			$order_state->logable = true;
-			$order_state->paid = true;
+		$order_state->color = '#ddff88';
+		$order_state->hidden = true;
+		$order_state->logable = true;
+		$order_state->paid = true;
 
-			$return = $return && $order_state->save();
-			$return = $return && Service::updateGlobalValue('BPOST_ORDER_STATE_TREATED', (int)$order_state->id);
+		$return = $return && $order_state->save();
+		$return = $return && Service::updateGlobalValue('BPOST_ORDER_STATE_TREATED', (int)$order_state->id);
 
-			$this->setIcon(_PS_MODULE_DIR_.$this->name.'/views/img/icons/box_closed.png', _PS_IMG_DIR_.'os/'.(int)$order_state->id.'.gif');
-		}
+		$this->setIcon(_PS_MODULE_DIR_.$this->name.'/views/img/icons/box_closed.png', _PS_IMG_DIR_.'os/'.(int)$order_state->id.'.gif');
 
 		return $return;
 	}
