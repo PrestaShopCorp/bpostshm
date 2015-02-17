@@ -559,7 +559,8 @@ AND
 	{
 		$icon_exists = md5_file($src) === md5_file($dest);
 		if (!$icon_exists)
-			$icon_exists = Tools::copy($src, $dest);
+			// $icon_exists = Tools::copy($src, $dest);
+			$icon_exists = copy($src, $dest);
 
 		return $icon_exists;
 	}
