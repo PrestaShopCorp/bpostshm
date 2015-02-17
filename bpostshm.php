@@ -564,21 +564,28 @@ AND
 		return $icon_exists;
 	}
 
-	private function getCartBpost($id_cart)
+	private function getCartBpost($id_cart = 0)
 	{
-		// Service instance is required for Autoload to function
-		// correctly in the Admin context ?!
-		// $service = Service::getInstance($this->context);
-		Service::getInstance($this->context);
-		$cart_bpost = PsCartBpost::getByPsCartID((int)$id_cart);
+		$cart_bpost = false;
+		if ($id_cart)
+		{
+			// Service instance is required for Autoload to function
+			// correctly in the Admin context ?!
+			Service::getInstance($this->context);
+			$cart_bpost = PsCartBpost::getByPsCartID((int)$id_cart);
+		}
 
 		return $cart_bpost;
 	}
 
-	private function getOrderBpost($id_order)
+	private function getOrderBpost($id_order = 0)
 	{
-		Service::getInstance($this->context);
-		$order_bpost = PsOrderBpost::getByPsOrderID((int)$id_order);
+		$order_bpost = false;
+		if ($id_order)
+		{
+			Service::getInstance($this->context);
+			$order_bpost = PsOrderBpost::getByPsOrderID((int)$id_order);
+		}
 
 		return $order_bpost;
 	}

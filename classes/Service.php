@@ -117,9 +117,21 @@ class Service
 		return Tools::strtoupper(Tools::passwdGen(9, 'NO_NUMERIC'));
 	}
 
-	public static function isInternational($shipping_method)
+	public static function getActualShm($db_shm)
 	{
-		return BpostShm::SHIPPING_METHOD_AT_INTL == (int)$shipping_method;
+		// actual shipping method in 1st 3-bits
+		return $db_shm & 7;
+	}
+
+	public static function isInternational($db_shm)
+	{
+		return BpostShm::SHIPPING_METHOD_AT_INTL == (int)$db_shm;
+	}
+
+	public static function isAtHome($shm)
+	{
+		$is_athome = $shm & BpostShm::SHIPPING_METHOD_AT_HOME;
+		return (bool)$is_athome;
 	}
 
 	public static function getBpostring($str, $max = false)
@@ -268,10 +280,10 @@ class Service
 	/**
 	 * Rearrange address fields depending on Address2! because of stingy WS 40 char max fields
 	 * @author Serge <serge@stigmi.eu>
-	 * @param  string $person shop or client
-	 * @return EontechModBpostOrderAddress Bpost formatted address
+	 * @param  array $person shop or client
+	 * @return array Bpost formatted shipper
 	 */
-	protected function getFormattedBpostAddress($person = '')
+	protected function getBpostShipper($person = '')
 	{
 		if (empty($person))
 			return false;
@@ -279,37 +291,49 @@ class Service
 		$line1 = $person['address1'];
 		$line2 = $person['address2'];
 		$iso_code = Tools::strtoupper(Country::getIsoById($person['id_country']));
-
-		preg_match('#([0-9]+)?[, ]*([\p{L}a-zA-Z -;\']+)[, ]*([0-9]+)?#iu', $line1, $matches);
-		if (!empty($matches[1]) && is_numeric($matches[1]))
-			$nr = $matches[1];
-		elseif (!empty($matches[3]) && is_numeric($matches[3]))
-			$nr = $matches[3];
-		else
-			$nr = (!empty($line2) && is_numeric($line2) ? $line2 : ',');
-
-		$street = !empty($matches[2]) ? $matches[2] : $line1;
-		if ('BE' !== $iso_code && is_numeric($nr))
+		$nr = ',';
+		if ('BE' === $iso_code)
 		{
-			$street = $nr.' '.$street;
-			$nr = ',';
-		}
-		$address = new EontechModBpostOrderAddress();
-		$address->setNumber(Tools::substr($nr, 0, 8));
-		$address->setStreetName(self::getBpostring($street, 40));
-		$address->setPostalCode(self::getBpostring($person['postcode'], 32));
-		$address->setLocality(self::getBpostring($person['city'], 40));
-		$address->setCountryCode($iso_code);
+			preg_match('#([0-9]+)?[, ]*([\pL&;\'\. -]+)[, ]*([0-9]+[a-z]*)?[, ]*(.*)?#iu', $line1, $matches);
+			if (!empty($matches[1]) && is_numeric($matches[1]))
+				$nr = $matches[1];
+			elseif (!empty($matches[3]) && is_numeric($matches[3]))
+				$nr = $matches[3];
+			elseif (!empty($line2) && is_numeric($line2))
+			{
+				$nr = $line2;
+				$line2 = '';
+			}
 
-		return $address;
+			$street = !empty($matches[2]) ? $matches[2] : $line1;
+			$line2 = !empty($matches[4]) ? $matches[4].(!empty($line2) ? ', '.$line2 : '') : $line2;
+		}
+		else
+			$street = $line1;
+
+		$shipper = array(
+			'name' => $person['name'],
+			'company' => $person['company'],
+			'number' => $nr,
+			'street' => $street,
+			'line2' => $line2,
+			'postcode' => $person['postcode'],
+			'locality' => $person['city'],
+			'countrycode' => $iso_code,
+			'phone' => $person['phone'],
+			'email' => $person['email'],
+			);
+
+		return $shipper;
 	}
 
 	/**
 	 * @param Order $ps_order
 	 * @param bool $is_retour
+	 * @param int $shm_at_home bpost address field limits require differences for @home !
 	 * @return array 'sender' & 'receiver' + formatted 'recipient'
 	 */
-	public function getReceiverAndSender($ps_order, $is_retour = false)
+	public function getReceiverAndSender($ps_order, $is_retour = false, $shm_at_home = false)
 	{
 		$customer = new Customer((int)$ps_order->id_customer);
 		$delivery_address = new Address($ps_order->id_address_delivery, $this->context->language->id);
@@ -341,26 +365,36 @@ class Service
 			),
 		);
 
-		$recipient = $shippers['client']['name'];
-		if (!empty($client_line2))
+		$client = $this->getBpostShipper($shippers['client']);
+		$recipient = $client['name'];
+		if (!empty($client['line2']) && (bool)$shm_at_home)
 		{
 			$company = !empty($company) ? ' ('.$company.')' : '';
-			$company = $shippers['client']['name'].$company;
-			$shippers['client']['name'] = $client_line2;
+			$company = $client['name'].$company;
+			$client['name'] = $client['line2'];
 			$recipient = $company;
 		}
-		$shippers['client']['company'] = $company;
+		$client['company'] = $company;
+		$shop = $this->getBpostShipper($shippers['shop']);
 
-		$sender = $shippers['shop'];
-		$receiver = $shippers['client'];
+		$sender = $shop;
+		$receiver = $client;
 		if ($is_retour)
 		{
-			$sender = $shippers['client'];
-			$receiver = $shippers['shop'];
+			$sender = $client;
+			$receiver = $shop;
 		}
 
+		// sender
+		$address = new EontechModBpostOrderAddress();
+		$address->setNumber(Tools::substr($sender['number'], 0, 8));
+		$address->setStreetName(self::getBpostring($sender['street'], 40));
+		$address->setPostalCode(self::getBpostring($sender['postcode'], 32));
+		$address->setLocality(self::getBpostring($sender['locality'], 40));
+		$address->setCountryCode($sender['countrycode']);
+
 		$bpost_sender = new EontechModBpostOrderSender();
-		$bpost_sender->setAddress($this->getFormattedBpostAddress($sender));
+		$bpost_sender->setAddress($address);
 		$bpost_sender->setName(self::getBpostring($sender['name'], 40));
 		if (!empty($sender['company']))
 			$bpost_sender->setCompany(self::getBpostring($sender['company'], 40));
@@ -369,8 +403,15 @@ class Service
 			$bpost_sender->setPhoneNumber($sender_phone);
 		$bpost_sender->setEmailAddress(Tools::substr($sender['email'], 0, 50));
 
+		// receiver
+		$address = new EontechModBpostOrderAddress();
+		$address->setNumber(Tools::substr($receiver['number'], 0, 8));
+		$address->setStreetName(self::getBpostring($receiver['street'], 40));
+		$address->setPostalCode(self::getBpostring($receiver['postcode'], 32));
+		$address->setLocality(self::getBpostring($receiver['locality'], 40));
+		$address->setCountryCode($receiver['countrycode']);
+
 		$bpost_receiver = new EontechModBpostOrderReceiver();
-		$address = $this->getFormattedBpostAddress($receiver);
 		$bpost_receiver->setAddress($address);
 		$bpost_receiver->setName(self::getBpostring($receiver['name'], 40));
 		if (!empty($receiver['company']))
@@ -385,7 +426,7 @@ class Service
 		{
 			$nb = $address->getNumber();
 			$nb_part = is_numeric($nb) ? ' '.$nb : '';
-			$street2 = empty($client_line2) ? '' : ', '.$bpost_receiver->getName();
+			$street2 = empty($client['line2']) ? '' : ', '.$client['line2'];
 			$recipient .= ', '.$address->getStreetName().$nb_part.$street2
 				.' '.$address->getPostalCode().' '.$address->getLocality().' ('.Tools::strtoupper($address->getCountryCode()).')';
 		}
@@ -525,9 +566,6 @@ class Service
 		$ref = self::isPrestashop15plus() ? $ps_order->reference : self::generateReference();
 		$reference = Configuration::get('BPOST_ACCOUNT_ID').'_'.Tools::substr($ps_order->id, 0, 42).'_'.$ref;
 
-		$shippers = $this->getReceiverAndSender($ps_order);
-		$recipient = $shippers['recipient'];
-
 		$shm = $this->module->getShmFromCarrierID($ps_order->id_carrier);
 		$delivery_method = $this->module->shipping_methods[$shm]['slug'];
 		switch ($shm)
@@ -563,6 +601,9 @@ class Service
 		if ((bool)Configuration::get('BPOST_USE_PS_LABELS'))
 		{
 			// Labels managed are within Prestashop
+			$shippers = $this->getReceiverAndSender($ps_order, false, self::isAtHome($shm));
+			$recipient = $shippers['recipient'];
+
 			$order_bpost = new PsOrderBpost();
 			$order_bpost->reference = (string)$reference;
 			$order_bpost->recipient = (string)$recipient;
@@ -605,35 +646,35 @@ class Service
 
 	/**
 	 * @param string $reference Bpost order reference
-	 * @param int $shm Shipping method (regular 3 + 4th bit for international)
+	 * @param int $db_shm Shipping method (regular 3 + 4th bit for international)
 	 * @param Order $ps_order Prestashop order
 	 * @param int $weight
 	 * @param bool $is_retour if True create a retour box
 	 * @return EontechModBpostOrderBox
 	 */
 	public function createBox($reference = '',
-		$shm = 0,
+		$db_shm = 0,
 		$ps_order = null,
 		$weight = 1000,
 		$is_retour = false)
 	{
-		if (empty($reference) || empty($shm) || !isset($ps_order))
+		if (empty($reference) || empty($db_shm) || !isset($ps_order))
 			return false;
 
-		// actual shipping method in 1st 3-bits
-		$shipping_method = (int)($shm & 7);
-		$has_service_point = (bool)!($shipping_method & BpostShm::SHIPPING_METHOD_AT_HOME);
-		// now effective $shipping_method if retour is on is always @home ??!!
-		$shipping_method = (int)($is_retour && $has_service_point ? BpostShm::SHIPPING_METHOD_AT_HOME : $shipping_method);
-
+		$shipping_method = (int)self::getActualShm($db_shm);
+		$has_service_point = !self::isAtHome($shipping_method);
 		if ($has_service_point)
 		{
 			$cart = PsCartBpost::getByPsCartID((int)$ps_order->id_cart);
 			$service_point_id = (int)$cart->service_point_id;
 			$sp_type = (int)$cart->sp_type;
+
+			if ($is_retour)
+				// effective $shipping_method if retour is on is always @home!
+				$shipping_method = (int)BpostShm::SHIPPING_METHOD_AT_HOME;
 		}
 
-		$shippers = $this->getReceiverAndSender($ps_order, $is_retour);
+		$shippers = $this->getReceiverAndSender($ps_order, $is_retour, !$has_service_point);
 		$sender = $shippers['sender'];
 		$receiver = $shippers['receiver'];
 
@@ -644,7 +685,7 @@ class Service
 		switch ($shipping_method)
 		{
 			case BpostShm::SHIPPING_METHOD_AT_HOME:
-				if (self::isInternational($shm))
+				if (self::isInternational($db_shm))
 				{
 					// @International
 					$customs_info = new EontechModBpostOrderBoxCustomsinfoCustomsInfo();
@@ -794,11 +835,8 @@ class Service
 			$pdf_manager->setActiveFolder($reference);
 
 			$order_bpost = PsOrderBpost::getByReference($reference);
-			// Shop context is set per PS order (Ps 1.5+) before entry in AdminOrdersBpost.
-			// no need to set manually
-			// if (self::isPrestashop15plus())
-			// 	Shop::setContext(Shop::CONTEXT_SHOP, (int)$order_bpost->id_shop);
-
+			// Shop context is set per row in AdminOrdersBpost controller(1.5+)
+			// no need for manual reset here.
 			$order_bpost_status = $order_bpost->status;
 			$shm = $order_bpost->shm;
 			$is_intl = self::isInternational($shm);
