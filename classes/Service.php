@@ -295,9 +295,11 @@ class Service
 		if ('BE' === $iso_code)
 		{
 			preg_match('#([0-9]+)?[, ]*([\pL&;\'\. -]+)[, ]*([0-9]+[a-z]*)?[, ]*(.*)?#iu', $line1, $matches);
-			if (!empty($matches[1]) && is_numeric($matches[1]))
+			// if (!empty($matches[1]) && is_numeric($matches[1]))
+			if (!empty($matches[1]))
 				$nr = $matches[1];
-			elseif (!empty($matches[3]) && is_numeric($matches[3]))
+			// elseif (!empty($matches[3]) && is_numeric($matches[3]))
+			elseif (!empty($matches[3]))
 				$nr = $matches[3];
 			elseif (!empty($line2) && is_numeric($line2))
 			{
@@ -313,7 +315,7 @@ class Service
 
 		$shipper = array(
 			'name' => $person['name'],
-			'company' => $person['company'],
+			'company' => (string)$person['company'],
 			'number' => $nr,
 			'street' => $street,
 			'line2' => $line2,
@@ -359,7 +361,7 @@ class Service
 				'city' 		=> Configuration::get('PS_SHOP_CITY'),
 				'email' 	=> Configuration::get('PS_SHOP_EMAIL'),
 				'id_country'=> Configuration::get('PS_SHOP_COUNTRY_ID'),
-				'name'		=> Configuration::get('PS_SHOP_NAME'),
+				'name'		=> self::getBpostring(Configuration::get('PS_SHOP_NAME')),
 				'phone'		=> Configuration::get('PS_SHOP_PHONE'),
 				'postcode' 	=> Configuration::get('PS_SHOP_CODE'),
 			),
@@ -425,10 +427,12 @@ class Service
 		if (false === $is_retour)
 		{
 			$nb = $address->getNumber();
-			$nb_part = is_numeric($nb) ? ' '.$nb : '';
+			$country_code = Tools::strtoupper($address->getCountryCode());
+			// $nb_part = is_numeric($nb) ? ' '.$nb : '';
+			$nb_part = 'BE' === $country_code && ',' !== $nb ? ' '.$nb : '';
 			$street2 = empty($client['line2']) ? '' : ', '.$client['line2'];
 			$recipient .= ', '.$address->getStreetName().$nb_part.$street2
-				.' '.$address->getPostalCode().' '.$address->getLocality().' ('.Tools::strtoupper($address->getCountryCode()).')';
+				.' '.$address->getPostalCode().' '.$address->getLocality().' ('.$country_code.')';
 		}
 
 		return array(

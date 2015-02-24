@@ -316,10 +316,11 @@ class BpostShm extends CarrierModule
 					$carrier->setGroups($user_groups);
 
 				// Copy carrier logo
-				$this->setIcon(_PS_MODULE_DIR_.$this->name.'/views/img/logo-carrier.jpg', _PS_SHIP_IMG_DIR_.'/'.(int)$carrier->id.'.jpg');
+				$this->setIcon(_PS_MODULE_DIR_.$this->name.'/views/img/logo-carrier.jpg', _PS_SHIP_IMG_DIR_.(int)$carrier->id.'.jpg');
+				// $this->setIcon(_PS_MODULE_DIR_.$this->name.'/views/img/logo-carrier.jpg', _PS_SHIP_IMG_DIR_.'/'.(int)$carrier->id.'.jpg');
 				$this->setIcon(
 					_PS_MODULE_DIR_.$this->name.'/views/img/logo-carrier.jpg',
-					_PS_TMP_IMG_DIR_.'/carrier_mini_'.(int)$carrier->id.'_'.$this->context->language->id.'.jpg'
+					_PS_TMP_IMG_DIR_.'carrier_mini_'.(int)$carrier->id.'_'.$this->context->language->id.'.jpg'
 				);
 			}
 
@@ -557,7 +558,7 @@ AND
 	 */
 	private function setIcon($src, $dest)
 	{
-		$icon_exists = md5_file($src) === md5_file($dest);
+		$icon_exists = file_exists($dest) && md5_file($src) === md5_file($dest);
 		if (!$icon_exists)
 			// $icon_exists = Tools::copy($src, $dest);
 			$icon_exists = copy($src, $dest);
