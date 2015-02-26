@@ -315,7 +315,7 @@ class Service
 
 		$shipper = array(
 			'name' => $person['name'],
-			'company' => (string)$person['company'],
+			'company' => isset($person['company']) ? $person['company'] : '',
 			'number' => $nr,
 			'street' => $street,
 			'line2' => $line2,
