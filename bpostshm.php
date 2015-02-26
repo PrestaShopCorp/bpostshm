@@ -255,7 +255,8 @@ class BpostShm extends CarrierModule
 		$stored_carrier_ids = $this->getIdCarriers();
 		foreach ($this->shipping_methods as $shipping_method => $lang_fields)
 		{
-			$id_carrier = $stored_carrier_ids[$shipping_method];
+			// testing int 0 for null
+			$id_carrier = (int)$stored_carrier_ids[$shipping_method];
 			$carrier = new Carrier($id_carrier);
 			// Validate::isLoadedObject is no good for us. new object has no id!
 			// if (!Validate::isLoadedObject($carrier))
@@ -298,7 +299,7 @@ class BpostShm extends CarrierModule
 				if ($id_country = Country::getByIso('BE'))
 				{
 					$country = new Country($id_country);
-					if ($country->id_zone != $id_zone_be)
+					if ((int)$country->id_zone != (int)$id_zone_be)
 					{
 						$country->id_zone = (int)$id_zone_be;
 						$country->save();
@@ -317,7 +318,6 @@ class BpostShm extends CarrierModule
 
 				// Copy carrier logo
 				$this->setIcon(_PS_MODULE_DIR_.$this->name.'/views/img/logo-carrier.jpg', _PS_SHIP_IMG_DIR_.(int)$carrier->id.'.jpg');
-				// $this->setIcon(_PS_MODULE_DIR_.$this->name.'/views/img/logo-carrier.jpg', _PS_SHIP_IMG_DIR_.'/'.(int)$carrier->id.'.jpg');
 				$this->setIcon(
 					_PS_MODULE_DIR_.$this->name.'/views/img/logo-carrier.jpg',
 					_PS_TMP_IMG_DIR_.'carrier_mini_'.(int)$carrier->id.'_'.$this->context->language->id.'.jpg'
@@ -380,7 +380,8 @@ class BpostShm extends CarrierModule
 		foreach ($order_states as $order_state)
 			if (in_array($order_state['name'], array_values($treated_names)))
 			{
-				$id_order_state = $order_state['id_order_state'];
+				// testing int 0 for null
+				$id_order_state = (int)$order_state['id_order_state'];
 				break;
 			}
 
@@ -560,8 +561,7 @@ AND
 	{
 		$icon_exists = file_exists($dest) && md5_file($src) === md5_file($dest);
 		if (!$icon_exists)
-			// $icon_exists = Tools::copy($src, $dest);
-			$icon_exists = copy($src, $dest);
+			$icon_exists = Service::isPrestashop155plus() ? Tools::copy($src, $dest) : copy($src, $dest);
 
 		return $icon_exists;
 	}

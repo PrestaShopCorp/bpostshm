@@ -78,6 +78,11 @@ class Service
 		return Service::$instance;
 	}
 
+	public static function isPrestashop155plus()
+	{
+		return version_compare(_PS_VERSION_, '1.5.5.0', '>=');
+	}
+
 	public static function isPrestashop15plus()
 	{
 		return version_compare(_PS_VERSION_, '1.5', '>=');
