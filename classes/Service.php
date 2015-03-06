@@ -1269,7 +1269,7 @@ class Service
 	 */
 	public function explodeCountryList($iso_list, $glue = '|')
 	{
-		$iso_list = str_replace($glue, "','", $iso_list);
+		$iso_list = str_replace($glue, "','", pSQL($iso_list));
 		$query = '
 SELECT
 	c.id_country as id, c.iso_code as iso, cl.name

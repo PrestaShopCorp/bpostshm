@@ -11,7 +11,7 @@
 				{if $bulk_actions}
 					<p id="bulky">
 						{foreach $bulk_actions as $key => $params}
-							<input type="submit" class="button" name="submitBulk{$key}{$table}" value="{$params.text}" {if isset($params.confirm)}onclick="return confirm('{$params.confirm}');"{/if} />
+							<input type="submit" class="button" name="submitBulk{$key|escape}{$table|escape}" value="{$params.text|escape}" {if isset($params.confirm)}onclick="return confirm('{$params.confirm|escape}');"{/if} />
 						{/foreach}
 					</p>
 				{/if}
@@ -58,8 +58,8 @@
 					{foreach $bulk_actions as $key => $params}
 						<li{if $params.text == 'divider'} class="divider"{/if}>
 							{if $params.text != 'divider'}
-							<a href="#" onclick="{if isset($params.confirm)}if (confirm('{$params.confirm}')){/if}sendBulkAction($(this).closest('form').get(0), 'submitBulk{$key}{$table}');">
-								{if isset($params.icon)}<i class="{$params.icon}"></i>{/if}&nbsp;{$params.text}
+							<a href="#" onclick="{if isset($params.confirm)}if (confirm('{$params.confirm|escape}')){/if}sendBulkAction($(this).closest('form').get(0), 'submitBulk{$key|escape}{$table|escape}');">
+								{if isset($params.icon)}<i class="{$params.icon}"></i>{/if}&nbsp;{$params.text|escape}
 							</a>
 							{/if}
 						</li>
@@ -80,12 +80,12 @@
 				<ul class="dropdown-menu">
 				{foreach $pagination AS $value}
 					<li>
-						<a href="javascript:void(0);" class="pagination-items-page" data-items="{$value|intval}" data-list-id="{$list_id}">{$value}</a>
+						<a href="javascript:void(0);" class="pagination-items-page" data-items="{$value|intval}" data-list-id="{$list_id|escape}">{$value|escape}</a>
 					</li>
 				{/foreach}
 				</ul>
 				/ {$list_total|intval} {l s='result(s)' mod='bpostshm'}
-				<input type="hidden" id="{$list_id}-pagination-items-page" name="{$list_id}_pagination" value="{$selected_pagination|intval}" />
+				<input type="hidden" id="{$list_id|escape}-pagination-items-page" name="{$list_id|escape}_pagination" value="{$selected_pagination|intval}" />
 			</div>
 			<script type="text/javascript">
 				$('.pagination-items-page').on('click',function(e){
@@ -153,8 +153,8 @@
 	{/foreach}
 	{if isset($back_button)}
 	<div class="panel-footer">
-		<a id="desc-{$table}-{if isset($back_button.imgclass)}{$back_button.imgclass}{else}{$k}{/if}" class="btn btn-default" {if isset($back_button.href)}href="{$back_button.href|escape:'html':'UTF-8'}"{/if} {if isset($back_button.target) && $back_button.target}target="_blank"{/if}{if isset($back_button.js) && $back_button.js}onclick="{$back_button.js}"{/if}>
-			<i class="process-icon-back {if isset($back_button.class)}{$back_button.class}{/if}" ></i> <span {if isset($back_button.force_desc) && $back_button.force_desc == true } class="locked" {/if}>{$back_button.desc}</span>
+		<a id="desc-{$table|escape}-{if isset($back_button.imgclass)}{$back_button.imgclass|escape}{else}{$k}{/if}" class="btn btn-default" {if isset($back_button.href)}href="{$back_button.href|escape:'html':'UTF-8'}"{/if} {if isset($back_button.target) && $back_button.target}target="_blank"{/if}{if isset($back_button.js) && $back_button.js}onclick="{$back_button.js}"{/if}>
+			<i class="process-icon-back {if isset($back_button.class)}{$back_button.class|escape}{/if}" ></i> <span {if isset($back_button.force_desc) && $back_button.force_desc == true } class="locked" {/if}>{$back_button.desc|escape}</span>
 		</a>
 	</div>
 	{/if}
@@ -186,8 +186,8 @@
 	<script type="text/javascript">
 		
 		function reloadPage()
-		{
-			window.location.replace('{$reload_href|default:''}');
+		{	// {$reload_href|default:''}
+			window.location.replace('{$reload_href|escape:'javascript'}');
 			// All smarty escape attempts FAIL!!
 			// window.location.replace('{$reload_href|escape:url}');
 		}
@@ -227,8 +227,8 @@
 		(function($) {
 			$(function() {
 				/* Tabs */
-				var $str_open = "{$str_tabs['open']|escape}",
-					$str_treated = "{$str_tabs['treated']|escape}",
+				var $str_open = "{$str_tabs['open']|escape:'javascript'}",
+					$str_treated = "{$str_tabs['treated']|escape:'javascript'}",
 					$table 	= $('table.order_bpost'),
 					$thead  = $table.find('thead'),
 					tr_list = [];
@@ -457,7 +457,8 @@
 					srgBox.displayError(err_msgs);
 				{/if}
 
-				$('#desc-order_bpost-new, .process-icon-new').attr('href', '{$url_get_label|urldecode}');
+				// $('#desc-order_bpost-new, .process-icon-new').attr('href', '{$url_get_label|urldecode}');
+				$('#desc-order_bpost-new, .process-icon-new').attr('href', '{$url_get_label|escape:'javascript'}');
 			});
 		})(jQuery);
 	</script>

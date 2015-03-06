@@ -44,66 +44,66 @@
 					{/strip}</ul>
 					<img src="{$module_dir|escape}views/img/bpack247.png" alt="{l s='bpost 24/7' mod='bpostshm'}" />
 				</div>
-				<form class="col-xs-6" action="{$url_post_bpack247_register|escape:'javascript'}" id="register-247" method="POST" autocomplete="off" novalidate="novalidate">
+				<form class="col-xs-6" action="{$url_post_bpack247_register|escape}" id="register-247" method="POST" autocomplete="off" novalidate="novalidate">
 					<div class="row clearfix">
 						<label for="title">{l s='Title' mod='bpostshm'}</label>
 						<select name="id_gender" id="title" required="required">
 							{foreach $genders as $_gender}
-								<option value="{$_gender->id}"{if $gender == $_gender->id} selected="selected"{/if}>{$_gender->name}</option>
+								<option value="{$_gender->id|intval}"{if $gender == $_gender->id} selected="selected"{/if}>{$_gender->name|escape}</option>
 							{/foreach}
 						</select>
 						<sup>*</sup>
 					</div>
 					<div class="row clearfix">
 						<label for="firstname">{l s='Firstname' mod='bpostshm'}</label>
-						<input type="text" name="firstname" id="firstname" value="{$firstname|default:''}" required="required" />
+						<input type="text" name="firstname" id="firstname" value="{$firstname|escape}" required="required" />
 						<sup>*</sup>
 					</div>
 					<div class="row clearfix">
 						<label for="lastname">{l s='Lastname' mod='bpostshm'}</label>
-						<input type="text" name="lastname" id="lastname" value="{$lastname|default:''}" required="required" />
+						<input type="text" name="lastname" id="lastname" value="{$lastname|escape}" required="required" />
 						<sup>*</sup>
 					</div>
 					<div class="row clearfix">
 						<label for="street">{l s='Street' mod='bpostshm'}</label>
-						<input type="text" name="street" id="street" value="{$street|default:''}" required="required" />
+						<input type="text" name="street" id="street" value="{$street|escape}" required="required" />
 						<sup>*</sup>
 					</div>
 					<div class="row clearfix">
 						<label for="number">{l s='Number' mod='bpostshm'}</label>
-						<input type="text" name="number" id="number" value="{$number|default:''}" required="required" />
+						<input type="text" name="number" id="number" value="{$number|escape}" required="required" />
 						<sup>*</sup>
 					</div>
 					<div class="row clearfix">
 						<label for="postal_code">{l s='Postal code' mod='bpostshm'}</label>
-						<input type="text" name="postal_code" id="postal_code" value="{$postal_code|default:''}" required="required" />
+						<input type="text" name="postal_code" id="postal_code" value="{$postal_code|escape}" required="required" />
 						<sup>*</sup>
 					</div>
 					<div class="row clearfix">
 						<label for="town">{l s='Locality' mod='bpostshm'}</label>
-						<input type="text" name="town" id="town" value="{$locality|default:''}" required="required" />
+						<input type="text" name="town" id="town" value="{$locality|escape}" required="required" />
 						<sup>*</sup>
 					</div>
 					<div class="row clearfix">
 						<label for="date-of-birth">{l s='Birthday' mod='bpostshm'}</label>
-						<input type="text" name="date_of_birth" id="date-of-birth" value="{$birthday|default:''}" placeholder="{l s='yyyy-mm-dd' mod='bpostshm'}" />
+						<input type="text" name="date_of_birth" id="date-of-birth" value="{$birthday|escape}" placeholder="{l s='yyyy-mm-dd' mod='bpostshm'}" />
 						<sup>*</sup>
 					</div>
 					<div class="row clearfix">
 						<label for="email">{l s='E-mail' mod='bpostshm'}</label>
-						<input type="text" name="email" id="email" value="{$email|default:''}" required="required" />
+						<input type="text" name="email" id="email" value="{$email|escape}" required="required" />
 						<sup>*</sup>
 					</div>
 					<div class="row clearfix">
 						<label for="mobile-number">{l s='Mobile phone' mod='bpostshm'}</label>
-						<input type="text" name="mobile_number" id="mobile-number" value="{$mobile_phone|default:''}" required="required" />
+						<input type="text" name="mobile_number" id="mobile-number" value="{$mobile_phone|escape}" required="required" />
 						<sup>*</sup>
 					</div>
 					<div class="row clearfix">
 						<label for="preferred-language">{l s='Preferred language' mod='bpostshm'}</label>
 						<select name="preferred_language" id="preferred-language" required="required">
 							{foreach $languages as $iso_code => $_language}
-								<option value="{$_language['lang']}"{if $language == $iso_code} selected="selected"{/if}>{$_language['name']}</option>
+								<option value="{$_language['lang']|escape}"{if $language == $iso_code} selected="selected"{/if}>{$_language['name']|escape}</option>
 							{/foreach}
 						</select>
 						<sup>*</sup>

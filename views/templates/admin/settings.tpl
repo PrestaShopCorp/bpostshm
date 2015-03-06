@@ -21,7 +21,8 @@
 						{/if}
 						<ol>
 							{foreach $errors as $error}
-								<li>{$error|strval}</li>
+								<!-- <li>{$error|strval}</li> -->
+								<li>{$error|escape}</li>
 							{/foreach}
 						</ol>
 					</div>
@@ -84,7 +85,7 @@
 			<div class="form-group">
 				<label class="control-label{if $version < 1.6}-bw{/if} col-lg-3" for="account_id_account">{l s='Account ID' mod='bpostshm'}</label>
 				<div class="margin-form col-lg-9">
-					<input type="text" name="account_id_account" id="account_id_account" value="{$account_id_account|default:''}" size="50" />
+					<input type="text" name="account_id_account" id="account_id_account" value="{$account_id_account|escape}" size="50" />
 				</div>
 				<div class="margin-form col-lg-9 col-lg-offset-3">
 					<p class="preference_description help-block">
@@ -96,7 +97,7 @@
 			<div class="form-group">
 				<label class="control-label{if $version < 1.6}-bw{/if} col-lg-3" for="account_passphrase">{l s='Passphrase' mod='bpostshm'}</label>
 				<div class="margin-form col-lg-9">
-					<input type="text" name="account_passphrase" id="account_passphrase" value="{$account_passphrase|default:''}" size="50" />
+					<input type="text" name="account_passphrase" id="account_passphrase" value="{$account_passphrase|escape}" size="50" />
 				</div>
 				<div class="margin-form col-lg-9 col-lg-offset-3">
 					<p class="preference_description help-block">
@@ -108,7 +109,7 @@
 			<div class="form-group">
 				<label class="control-label{if $version < 1.6}-bw{/if} col-lg-3" for="account_api_url">{l s='API URL' mod='bpostshm'}</label>
 				<div class="margin-form col-lg-9">
-					<input type="text" name="account_api_url" id="account_api_url" value="{$account_api_url|default:''}" size="50" />
+					<input type="text" name="account_api_url" id="account_api_url" value="{$account_api_url|escape}" size="50" />
 				</div>
 				<div class="margin-form col-lg-9 col-lg-offset-3">
 					<p class="preference_description help-block">
@@ -205,7 +206,7 @@
 						{foreach $options['full'] as $key => $opt}
 							{assign var="chk_id" value="$name-$key"}
 							<label for="{$chk_id|escape}">
-								<input type="checkbox" name="{$chk_id|escape}" id="{$chk_id|escape}" value="{$key|escape}" {if in_array($key, $options['list'])}checked="checked"{/if} />&nbsp;{$opt['title']}
+								<input type="checkbox" name="{$chk_id|escape}" id="{$chk_id|escape}" value="{$key|escape}" {if in_array($key, $options['list'])}checked="checked"{/if} />&nbsp;{$opt['title']|escape}
 							</label>
 							<br />
 						{/foreach}	

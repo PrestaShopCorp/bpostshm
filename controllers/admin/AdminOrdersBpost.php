@@ -103,7 +103,7 @@ class AdminOrdersBpost extends ModuleAdminController
 
 		$id_bpost_carriers = array_values($this->module->getIdCarriers());
 		if ($references = Db::getInstance()->executeS('
-			SELECT id_reference FROM `'._DB_PREFIX_.'carrier` WHERE id_carrier IN ('.implode(', ', $id_bpost_carriers).')'))
+			SELECT id_reference FROM `'._DB_PREFIX_.'carrier` WHERE id_carrier IN ('.implode(', ', array_map('intval', $id_bpost_carriers)).')'))
 		{
 			foreach ($references as $reference)
 				$id_bpost_carriers[] = (int)$reference['id_reference'];
@@ -298,6 +298,9 @@ class AdminOrdersBpost extends ModuleAdminController
 	{
 		global $_LANGADM;
 
+		if (!(bool)preg_match('/^([a-z]{2})$/', $iso_code))
+			return;
+		
 		$class_name = get_class($this);
 		$module = isset($this->module) ? $this->module : 'bpostshm';
 		$needle = Tools::strtolower($class_name).'_';
@@ -665,7 +668,7 @@ class AdminOrdersBpost extends ModuleAdminController
 			$opts = '<ul style="list-style:none;font-size:11px;line-height:14px;padding:0;">';
 			// foreach ($dm_options as $key => $option)
 			foreach ($dm_options as $option)
-				$opts .= '<li>+ '.$option.'</li>';
+				$opts .= '<li>+ '.strip_tags ($option).'</li>';
 
 			$delivery_method .= $opts.'</ul>';
 		}

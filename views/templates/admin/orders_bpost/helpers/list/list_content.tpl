@@ -11,9 +11,9 @@
 	{if count($list)}
 	{foreach $list AS $index => $tr}
 		<tr
-		{if $position_identifier}id="tr_{$id_category}_{$tr.$identifier}_{if isset($tr.position['position'])}{$tr.position['position']}{else}0{/if}"{/if}
+		{if $position_identifier}id="tr_{$id_category|escape}_{$tr.$identifier|escape}_{if isset($tr.position['position'])}{$tr.position['position']}{else}0{/if}"{/if}
 		class="{if $index is odd}alt_row{/if} {if $row_hover}row_hover{/if}"
-		{if isset($tr.color) && $color_on_bg}style="background-color: {$tr.color}"{/if}
+		{if isset($tr.color) && $color_on_bg}style="background-color: {$tr.color|escape}"{/if}
 		>
 			<td class="center">
 				{if {$has_bulk_actions}}
@@ -30,12 +30,12 @@
 				{block name="open_td"}
 					<td
 						{if isset($params.position)}
-							id="td_{if !empty($id_category)}{$id_category}{else}0{/if}_{$tr.$identifier}"
+							id="td_{if !empty($id_category)}{$id_category|escape}{else}0{/if}_{$tr.$identifier|escape}"
 						{/if}
 						class="{if !$no_link}pointer{/if}
 						{if isset($params.position) && $order_by == 'position'  && $order_way != 'DESC'} dragHandle{/if}
-						{if isset($params.class)} {$params.class}{/if}
-						{if isset($params.align)} {$params.align}{/if}"
+						{if isset($params.class)} {$params.class|escape}{/if}
+						{if isset($params.align)} {$params.align|escape}{/if}"
 						{if (!isset($params.position) && !$no_link && !isset($params.remove_onclick))}
 							onclick="document.location = '{$current_index}&{$identifier}={$tr.$identifier}{if $view}&view{else}&update{/if}{$table}&token={$token}'">
 						{else}

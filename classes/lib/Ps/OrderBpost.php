@@ -150,7 +150,7 @@ class PsOrderBpost extends ObjectModel
 		$result = Db::getInstance()->getRow('
 		SELECT `id_order_bpost`
 		FROM `'._DB_PREFIX_.'order_bpost`
-		WHERE `reference` = "'.(string)$reference.'"');
+		WHERE `reference` = "'.pSQL($reference).'"');
 
 		return isset($result['id_order_bpost']) ? new PsOrderBpost((int)$result['id_order_bpost']) : false;
 	}
@@ -221,7 +221,7 @@ class PsOrderBpost extends ObjectModel
 		$result = Db::getInstance()->getRow('
 		SELECT COUNT(`id_order_bpost_label`) AS count_printed
 		FROM `'._DB_PREFIX_.'order_bpost_label`
-		WHERE `id_order_bpost` = '.$this->id.'
+		WHERE `id_order_bpost` = '.(int)$this->id.'
 		AND barcode IS NOT NULL');
 
 		return isset($result['count_printed']) ? (int)$result['count_printed'] : false;
@@ -252,7 +252,7 @@ class PsOrderBpost extends ObjectModel
 		$rows = Db::getInstance(_PS_USE_SQL_SLAVE_)->ExecuteS('
 		SELECT `id_order_bpost_label`, `has_retour`
 		FROM `'._DB_PREFIX_.'order_bpost_label`
-		WHERE `id_order_bpost` = '.$this->id.' AND barcode IS NULL
+		WHERE `id_order_bpost` = '.(int)$this->id.' AND barcode IS NULL
 		ORDER BY id_order_bpost_label ASC');
 
 		if ($rows)
@@ -306,7 +306,7 @@ class PsOrderBpost extends ObjectModel
 		return Db::getInstance(_PS_USE_SQL_SLAVE_)->ExecuteS('
 		SELECT `id_order_bpost_label`, `is_retour`, `has_retour`
 		FROM `'._DB_PREFIX_.'order_bpost_label`
-		WHERE `id_order_bpost` = '.$this->id.' AND barcode IS NULL
+		WHERE `id_order_bpost` = '.(int)$this->id.' AND barcode IS NULL
 		ORDER BY id_order_bpost_label ASC');
 	}
 

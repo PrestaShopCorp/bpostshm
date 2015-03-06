@@ -96,7 +96,7 @@ class AdminOrdersBpost extends AdminTab
 
 		$id_bpost_carriers = array_values($this->module->getIdCarriers());
 		if ($references = Db::getInstance()->executeS('
-			SELECT id_reference FROM `'._DB_PREFIX_.'carrier` WHERE id_carrier IN ('.implode(', ', $id_bpost_carriers).')'))
+			SELECT id_reference FROM `'._DB_PREFIX_.'carrier` WHERE id_carrier IN ('.implode(', ', array_map('intval', $id_bpost_carriers)).')'))
 		{
 			foreach ($references as $reference)
 				$id_bpost_carriers[] = (int)$reference['id_reference'];
@@ -244,6 +244,9 @@ class AdminOrdersBpost extends AdminTab
 	{
 		global $_LANGADM;
 
+		if (!(bool)preg_match('/^([a-z]{2})$/', $iso_code))
+			return;
+		
 		$class_name = get_class($this);
 		$module = isset($this->module) ? $this->module : 'bpostshm';
 		$needle = Tools::strtolower($class_name).'_';
@@ -568,7 +571,7 @@ class AdminOrdersBpost extends AdminTab
 			$dm_options = $this->service->getDeliveryOptions($dm_options[1]);
 			$opts = '<ul style="list-style:none;font-size:11px;line-height:14px;padding:0;">';
 			foreach ($dm_options as $option)
-				$opts .= '<li>+ '.$option.'</li>';
+				$opts .= '<li>+ '.strip_tags ($option).'</li>';
 
 			$delivery_method .= $opts.'</ul>';
 		}
@@ -895,7 +898,9 @@ class AdminOrdersBpost extends AdminTab
 
 		// these variables act as 'smarty' assigned variables do in the template below!
 		// They are NOT unused!
-		$treated_status = $this->bpost_treated_state;
+		$treated_status = intval($this->bpost_treated_state);
+		// Tools::safeOutput Results in FAIL
+		// $reload_href = Tools::safeOutput(self::$current_index.'&token='.Tools::getAdminTokenLite('AdminOrdersBpost'));
 		$reload_href = self::$current_index.'&token='.Tools::getAdminTokenLite('AdminOrdersBpost');
 		$str_tabs = array(
 			'open' => $this->l('Open'),
@@ -921,7 +926,7 @@ class AdminOrdersBpost extends AdminTab
 			$is_cms = true;
 		$id_cat = Tools::getValue('id_'.($is_cms ? 'cms_' : '').'category');
 
-		if (!isset($token) || empty($token))
+		// if (!isset($token) || empty($token))
 			$token = $this->token;
 
 		/* Determine total page number */

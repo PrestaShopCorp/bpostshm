@@ -10,9 +10,10 @@
 	<div id="catch-phrase">{l s='Select where you want to pick up your parcel.' mod='bpostshm'}</div>
 	<form action="{$url_get_nearest_service_points|escape}" id="search-form" method="GET" target="_self" autocomplete="off">
 		<label for="postcode">{l s='Postcode' mod='bpostshm'}</label>
-		<input type="text" name="postcode" id="postcode" value="{$postcode|default:''}" size="10" />
+		<!-- <input type="text" name="postcode" id="postcode" value="{$postcode|default:''}" size="10" /> -->
+		<input type="text" name="postcode" id="postcode" value="{$postcode|escape}" size="10" />
 		<label for="city">{l s='City' mod='bpostshm'}</label>
-		<input type="text" name="city" id="city" value="{$city|default:''}" size="25" />
+		<input type="text" name="city" id="city" value="{$city|escape}" size="25" />
 		<input type="submit" name="searchSubmit" class="button" value="{l s='Search' mod='bpostshm'}" />
 		<img class="loader" src="{$module_dir|escape}views/img/ajax-loader.gif" alt="{l s='Loading...' mod='bpostshm'}" />
 	</form>
