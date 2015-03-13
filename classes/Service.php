@@ -154,9 +154,7 @@ class Service
 
 	public function getWeightGrams($weight = 0)
 	{
-		if (empty($weight))
-			$weight = 1;
-
+		$weight = (empty($weight) || !is_numeric($weight)) ? 1.0 : (float)$weight;
 		$weight_unit = Tools::strtolower(Configuration::get('PS_WEIGHT_UNIT'));
 		switch ($weight_unit)
 		{
@@ -180,8 +178,9 @@ class Service
 				$weight = 1000;
 				break;
 		}
+		$weight = (int)round($weight, 0, PHP_ROUND_HALF_UP);
 
-		return round($weight, 0, PHP_ROUND_HALF_UP);
+		return empty($weight) ? 1 : $weight;
 	}
 
 	/**
@@ -699,7 +698,7 @@ class Service
 					// @International
 					$customs_info = new EontechModBpostOrderBoxCustomsinfoCustomsInfo();
 					$customs_info->setParcelValue((float)$ps_order->total_paid * 100);
-					$customs_info->setContentDescription('ORDER '.Configuration::get('PS_SHOP_NAME'));
+					$customs_info->setContentDescription(Tools::substr('ORDER '.Configuration::get('PS_SHOP_NAME'), 0, 50));
 					$customs_info->setShipmentType('OTHER');
 					$customs_info->setParcelReturnInstructions('RTS');
 					$customs_info->setPrivateAddress(false);

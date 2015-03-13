@@ -37,7 +37,7 @@
 						{if isset($params.class)} {$params.class|escape}{/if}
 						{if isset($params.align)} {$params.align|escape}{/if}"
 						{if (!isset($params.position) && !$no_link && !isset($params.remove_onclick))}
-							onclick="document.location = '{$current_index}&{$identifier}={$tr.$identifier}{if $view}&view{else}&update{/if}{$table}&token={$token}'">
+							onclick="document.location = '{$current_index}&{$identifier|escape}={$tr.$identifier|escape}{if $view}&view{else}&update{/if}{$table|escape}&token={$token|escape}'">
 						{else}
 						>
 					{/if}
@@ -45,7 +45,7 @@
 				{block name="td_content"}
 					{if isset($params.prefix)}{$params.prefix}{/if}
 					{if isset($params.color) && isset($tr[$params.color])}
-						<span class="color_field" style="background-color:{$tr[$params.color]};color:{if Tools::getBrightness($tr[$params.color]) < 128}white{else}#383838{/if}">
+						<span class="color_field" style="background-color:{$tr[$params.color]|escape};color:{if Tools::getBrightness($tr[$params.color]|escape) < 128}white{else}#383838{/if}">
 					{/if}
 					{if isset($tr.$key)}
 						{if isset($params.active)}
@@ -139,15 +139,15 @@
 	<tbody>
 	{if count($list)}
 	{foreach $list AS $index => $tr}
-		<tr{if $position_identifier} id="tr_{$position_group_identifier}_{$tr.$identifier}_{if isset($tr.position['position'])}{$tr.position['position']}{else}0{/if}"{/if} class="{if isset($tr.class)}{$tr.class}{/if} {if $tr@iteration is odd by 1}odd{/if}"{if isset($tr.color) && $color_on_bg} style="background-color: {$tr.color}"{/if} >
+		<tr{if $position_identifier} id="tr_{$position_group_identifier|escape}_{$tr.$identifier|escape}_{if isset($tr.position['position'])}{$tr.position['position']|escape}{else}0{/if}"{/if} class="{if isset($tr.class)}{$tr.class|escape}{/if} {if $tr@iteration is odd by 1}odd{/if}"{if isset($tr.color) && $color_on_bg} style="background-color: {$tr.color|escape}"{/if} >
 			{if $bulk_actions && $has_bulk_actions}
 				<td class="text-center">
 					{if isset($list_skip_actions.delete)}
 						{if !in_array($tr.$identifier, $list_skip_actions.delete)}
-							<input type="checkbox" name="{$list_id}Box[]" value="{$tr.$identifier}"{if isset($checked_boxes) && is_array($checked_boxes) && in_array({$tr.$identifier}, $checked_boxes)} checked="checked"{/if} class="noborder" />
+							<input type="checkbox" name="{$list_id|escape}Box[]" value="{$tr.$identifier|escape}"{if isset($checked_boxes) && is_array($checked_boxes) && in_array({$tr.$identifier}, $checked_boxes)} checked="checked"{/if} class="noborder" />
 						{/if}
 					{else}
-						<input type="checkbox" name="{$list_id}Box[]" value="{$tr.$identifier}"{if isset($checked_boxes) && is_array($checked_boxes) && in_array({$tr.$identifier}, $checked_boxes)} checked="checked"{/if} class="noborder" />
+						<input type="checkbox" name="{$list_id|escape}Box[]" value="{$tr.$identifier|escape}"{if isset($checked_boxes) && is_array($checked_boxes) && in_array({$tr.$identifier}, $checked_boxes)} checked="checked"{/if} class="noborder" />
 					{/if}
 				</td>
 			{/if}
@@ -155,12 +155,12 @@
 				{block name="open_td"}
 					<td
 						{if isset($params.position)}
-							id="td_{if !empty($position_group_identifier)}{$position_group_identifier}{else}0{/if}_{$tr.$identifier}{if $smarty.capture.tr_count > 1}_{($smarty.capture.tr_count - 1)|intval}{/if}"
+							id="td_{if !empty($position_group_identifier)}{$position_group_identifier|escape}{else}0{/if}_{$tr.$identifier|escape}{if $smarty.capture.tr_count > 1}_{($smarty.capture.tr_count - 1)|intval}{/if}"
 						{/if}
 						class="{if !$no_link}pointer{/if}
 						{if isset($params.position) && $order_by == 'position'  && $order_way != 'DESC'} dragHandle{/if}
-						{if isset($params.class)} {$params.class}{/if}
-						{if isset($params.align)} {$params.align}{/if}"
+						{if isset($params.class)} {$params.class|escape}{/if}
+						{if isset($params.align)} {$params.align|escape}{/if}"
 						{if (!isset($params.position) && !$no_link && !isset($params.remove_onclick))}
 							onclick="document.location = '{$current_index|escape:'html':'UTF-8'}&amp;{$identifier|escape:'html':'UTF-8'}={$tr.$identifier|escape:'html':'UTF-8'}{if $view}&amp;view{else}&amp;update{/if}{$table|escape:'html':'UTF-8'}&amp;token={$token|escape:'html':'UTF-8'}'">
 						{else}
@@ -173,7 +173,7 @@
 					{if isset($params.badge_warning) && $params.badge_warning && isset($tr.badge_warning) && $tr.badge_warning == $params.badge_warning}<span class="badge badge-warning">{/if}
 					{if isset($params.badge_danger) && $params.badge_danger && isset($tr.badge_danger) && $tr.badge_danger == $params.badge_danger}<span class="badge badge-danger">{/if}
 					{if isset($params.color) && isset($tr[$params.color])}
-						<span class="label color_field" style="background-color:{$tr[$params.color]};color:{if Tools::getBrightness($tr[$params.color]) < 128}white{else}#383838{/if}">
+						<span class="label color_field" style="background-color:{$tr[$params.color]|escape};color:{if Tools::getBrightness($tr[$params.color]|escape) < 128}white{else}#383838{/if}">
 					{/if}
 					{if isset($tr.$key)}
 						{if isset($params.active)}
@@ -221,10 +221,10 @@
 							{$tr.$key|strval} {l s='%' mod='bpostshm'}
 						{* If type is 'editable', an input is created *}
 						{elseif isset($params.type) && $params.type == 'editable' && isset($tr.id)}
-							<input type="text" name="{$key}_{$tr.id}" value="{$tr.$key|escape:'html':'UTF-8'}" class="{$key}" />
+							<input type="text" name="{$key|escape}_{$tr.id|escape}" value="{$tr.$key|escape:'html':'UTF-8'}" class="{$key|escape}" />
 						{elseif isset($params.callback)}
 							{if isset($params.maxlength) && Tools::strlen($tr.$key) > $params.maxlength}
-								<span title="{$tr.$key}">{$tr.$key|truncate:$params.maxlength:'...'}</span>
+								<span title="{$tr.$key|escape}">{$tr.$key|truncate:$params.maxlength:'...'}</span>
 							{else}
 								{$tr.$key|strval}
 							{/if}
@@ -242,7 +242,7 @@
 					{else}
 						{block name="default_field"}--{/block}
 					{/if}
-					{if isset($params.suffix)}{$params.suffix}{/if}
+					{if isset($params.suffix)}{$params.suffix|escape}{/if}
 					{if isset($params.color) && isset($tr.color)}
 						</span>
 					{/if}
