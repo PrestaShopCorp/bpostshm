@@ -47,7 +47,7 @@ class BpostShm extends CarrierModule
 		$this->name = 'bpostshm';
 		$this->need_instance = 0;
 		$this->tab = 'shipping_logistics';
-		$this->version = '1.2';
+		$this->version = '1.20.0';
 
 		$this->displayName = $this->l('bpost Shipping Manager - bpost customers only');
 		$this->description = $this->l('IMPORTANT: bpostshm module description');
