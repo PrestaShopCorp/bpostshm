@@ -196,6 +196,20 @@
 
 					if ('undefined' !== typeof $img.data('labels'))
 						$.get($img.data('labels'), { }, function(response) {
+							if ('undefined' !== typeof response.errors && response.errors.length)
+							{
+								var errors = '';
+								$.each(response.errors, function(i, error) {
+									if (i > 0)
+										errors += "<li>" + error;
+									else
+										errors += error;
+								});
+								srgBox.displayError(errors, function() {
+									reloadPage();
+								});
+							}
+
 							if ('undefined' !== typeof response.links) {
 								srgBox.reset();
 								$.each(response.links, function(i, link) {
@@ -205,10 +219,10 @@
 										window.open(link);
 								});
 								srgBox.open();
-								//window.location.reload();
 								reloadPage();
-								return;
 							}
+
+							return;
 						});
 				});
 

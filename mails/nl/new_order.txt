@@ -1,0 +1,24 @@
+
+[{shop_url}] 
+
+Hi {customer_name},
+
+Thank you for shopping with {shop_name} and bpost! 
+
+You'll find below the details of the delivery point you chose for your order:
+
+{sp_name}: {sp_id}
+{sp_office}
+{sp_street} {sp_nr}
+{sp_zip} {sp_city}
+
+
+You can review your order and view these details from the
+"Order history" [{history_url}] section of your
+customer account by clicking "My account"
+[{my_account_url}] on our shop. 
+
+
+{shop_name} [{shop_url}] powered by
+PrestaShop(tm) [http://www.prestashop.com/] 
+

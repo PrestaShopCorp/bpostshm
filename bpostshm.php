@@ -47,12 +47,26 @@ class BpostShm extends CarrierModule
 		$this->name = 'bpostshm';
 		$this->need_instance = 0;
 		$this->tab = 'shipping_logistics';
-		$this->version = '1.20.0';
+		$this->version = '1.20.5';
 
 		$this->displayName = $this->l('bpost Shipping Manager - bpost customers only');
 		$this->description = $this->l('IMPORTANT: bpostshm module description');
 
 		parent::__construct();
+
+		$this->hooks = array(
+			'backOfficeHeader',			// displayBackOfficeHeader
+			'beforeCarrier',			// displayBeforeCarrier
+			'extraCarrier',				// displayCarrierList
+			'paymentTop',				// displayPaymentTop
+			'processCarrier',			// actionCarrierProcess
+			'newOrder',					// actionValidateOrder
+			'postUpdateOrderStatus',	// actionOrderStatusPostUpdate
+			'updateCarrier',			// actionCarrierUpdate
+			// v1.21
+			// 'adminOrder',				// displayAdminOrder
+			'orderDetailDisplayed',		// displayOrderDetail
+			);
 
 		$this->shipping_methods = array(
 			self::SHIPPING_METHOD_AT_HOME => array(
@@ -125,17 +139,11 @@ class BpostShm extends CarrierModule
 		$return = $return && parent::install();
 		$return = $return && $this->addReplaceCarriers();
 
-		$return = $return && $this->registerHook('backOfficeHeader');		// displayBackOfficeHeader
-		$return = $return && $this->registerHook('beforeCarrier');			// displayBeforeCarrier
-		$return = $return && $this->registerHook('extraCarrier');			// displayCarrierList
-		$return = $return && $this->registerHook('paymentTop');				// displayPaymentTop
-		$return = $return && $this->registerHook('processCarrier');			// actionCarrierProcess
-		$return = $return && $this->registerHook('newOrder');				// actionValidateOrder
-		$return = $return && $this->registerHook('postUpdateOrderStatus');	// actionOrderStatusPostUpdate
-		$return = $return && $this->registerHook('updateCarrier');			// actionCarrierUpdate
+		foreach ($this->hooks as $hook)
+			if (!$this->isRegisteredInHook($hook))
+				$return = $return && $this->registerHook($hook);
 
 		$return = $return && Service::updateGlobalValue('BPOST_ACCOUNT_API_URL', $this->api_url);
-
 		$return = $return && $this->addReplaceOrderState();
 
 		// addCartBpostTable
@@ -218,14 +226,10 @@ class BpostShm extends CarrierModule
 		if (Tools::file_exists_cache($cache_dir.'class_bpost_index.php'))
 			$return = $return && unlink($cache_dir.'class_bpost_index.php');
 
-		$return = $return && $this->unregisterHook('backOfficeHeader');
-		$return = $return && $this->unregisterHook('beforeCarrier');
-		$return = $return && $this->unregisterHook('extraCarrier');
-		$return = $return && $this->unregisterHook('paymentTop');
-		$return = $return && $this->unregisterHook('processCarrier');
-		$return = $return && $this->unregisterHook('newOrder');
-		$return = $return && $this->unregisterHook('postUpdateOrderStatus');
-		$return = $return && $this->unregisterHook('updateCarrier');
+		foreach ($this->hooks as $hook)
+			if ($this->isRegisteredInHook($hook))
+				$return = $return && $this->unregisterHook($hook);
+
 		$return = $return && $this->removeCarriers();
 
 		$return = $return && parent::uninstall();
@@ -273,6 +277,7 @@ class BpostShm extends CarrierModule
 			$carrier->need_range = true;
 			$carrier->shipping_external = true;
 			$carrier->shipping_handling = false;
+			$carrier->is_module = version_compare(_PS_VERSION_, '1.4', '<') ? 0 : 1;
 
 			if ($ret_tmp = $carrier->save())
 			{
@@ -566,6 +571,11 @@ AND
 		return $icon_exists;
 	}
 
+	private function smartyAssignVersion()
+	{
+		$this->context->smarty->assign('version', (Service::isPrestashop16plus() ? 1.6 : (Service::isPrestashop15plus() ? 1.5 : 1.4)), true);
+	}
+
 	private function getCartBpost($id_cart = 0)
 	{
 		$cart_bpost = false;
@@ -578,6 +588,11 @@ AND
 		}
 
 		return $cart_bpost;
+	}
+
+	private function isBpostShmCarrier($id_carrier)
+	{
+		return (bool)in_array((int)$id_carrier, $this->getIdCarriers());
 	}
 
 	private function getOrderBpost($id_order = 0)
@@ -893,30 +908,32 @@ AND
 	{
 		//$cart = !empty($this->context->cart) ? $this->context->cart : $params['cart'];
 		// not for 1.4
-		if (!Service::isPrestashop15plus())
+		if (!Service::isPrestashop15plus() || !isset($params['delivery_option_list']))
 			return;
 
 		$at_home_id = (int)Configuration::get('BPOST_SHIP_METHOD_'.BpostShm::SHIPPING_METHOD_AT_HOME.'_ID_CARRIER');
 		$delivery_option_list = $params['delivery_option_list'];
-		$id_address_delivery = (int)key($delivery_option_list);
-		$carrier_list = $delivery_option_list[$id_address_delivery];
-		foreach ($carrier_list as $id_carrier => $carrier_options)
+		if ($id_address_delivery = (int)key($delivery_option_list))
 		{
-			$carrier = $carrier_options['carrier_list'][(int)$id_carrier]['instance'];
-			if ($at_home_id == $id_carrier)
+			$carrier_list = $delivery_option_list[$id_address_delivery];
+			foreach ($carrier_list as $id_carrier => $carrier_options)
 			{
-				$delivery_address = new Address((int)$id_address_delivery);
-				if (Validate::isLoadedObject($delivery_address))
-					$delay = $delivery_address->address1
-						.(!empty($delivery_address->address2) ? ' '.$delivery_address->address2 : '')
-						.', '.$delivery_address->postcode.' '.$delivery_address->city;
+				$carrier = $carrier_options['carrier_list'][(int)$id_carrier]['instance'];
+				if ($at_home_id == $id_carrier)
+				{
+					$delivery_address = new Address((int)$id_address_delivery);
+					if (Validate::isLoadedObject($delivery_address))
+						$delay = $delivery_address->address1
+							.(!empty($delivery_address->address2) ? ' '.$delivery_address->address2 : '')
+							.', '.$delivery_address->postcode.' '.$delivery_address->city;
 
-				$carrier->delay[$this->context->language->id] = $delay;
+					$carrier->delay[$this->context->language->id] = $delay;
+				}
+				$name_parts = explode('/', $carrier->name);
+				if (count($name_parts))
+					$carrier->name = $this->l(trim($name_parts[0]));
+
 			}
-			$name_parts = explode('/', $carrier->name);
-			if (count($name_parts))
-				$carrier->name = $this->l(trim($name_parts[0]));
-
 		}
 
 		return '';
@@ -1166,13 +1183,46 @@ AND
 	 */
 	public function hookNewOrder($params)
 	{
-		$bpost_carriers = $this->getIdCarriers();
-		$id_carrier = (int)$params['order']->id_carrier;
-		if (!in_array($id_carrier, $bpost_carriers))
+		$ps_order = $params['order'];
+		if (!Validate::isLoadedObject($ps_order) || !$this->isBpostShmCarrier((int)$ps_order->id_carrier))
 			return;
 
 		$service = Service::getInstance($this->context);
-		$service->prepareBpostOrder((int)$params['order']->id);
+		$service->prepareBpostOrder((int)$ps_order->id);
+
+		if ($service_point = $this->getCartServicePointDetails((int)$ps_order->id_cart))
+		{
+			// Send mail
+			$id_lang = (int)$ps_order->id_lang;
+			$template = 'new_order';
+			$subject = $this->l('New order').' - '.sprintf('%06d', $ps_order->id);
+
+			$shop_name = Service::getBpostring(Configuration::get('PS_SHOP_NAME'));
+			$customer = new Customer((int)$ps_order->id_customer);
+			$customer_name = $customer->firstname.' '.$customer->lastname;
+			$tpl_vars = array(
+				'{customer_name}' => $customer_name,
+				'{shop_name}' => $shop_name,
+				'{sp_name}' => $service_point['lname'],
+				'{sp_id}' => $service_point['id'],
+				'{sp_office}' => $service_point['office'],
+				'{sp_street}' => $service_point['street'],
+				'{sp_nr}' => $service_point['nr'],
+				'{sp_zip}' => $service_point['zip'],
+				'{sp_city}' => $service_point['city'],
+			);
+
+			$iso_code = $this->context->language->iso_code;
+			$iso_code = in_array($iso_code, array('de', 'fr', 'nl', 'en')) ? $iso_code : 'en';
+			$mail_dir = _PS_MODULE_DIR_.$this->name.'/mails/';
+			if (file_exists($mail_dir.$iso_code.'/'.$template.'.txt') && file_exists($mail_dir.$iso_code.'/'.$template.'.html'))
+				Mail::Send($id_lang, $template, $subject, $tpl_vars,
+					$customer->email,
+					$customer_name,
+					Configuration::get('PS_SHOP_EMAIL'),
+					$shop_name,
+					null, null, $mail_dir);
+		}
 	}
 
 	/**
@@ -1191,12 +1241,98 @@ AND
 		return $return;
 	}
 
+	public function hookAdminOrder($params)
+	{
+		$id_order = (int)$params['id_order'];
+		if ($order_bpost = $this->getOrderBpost($id_order))
+		{
+			if (Service::isPrestashop15plus())
+				$id_cart = (int)$params['cart']->id;
+			else
+			{
+				$ps_order = new Order($id_order);
+				$id_cart = (int)$ps_order->id_cart;
+			}
+
+			$cart_bpost = $this->getCartBpost($id_cart);
+			if (Validate::isLoadedObject($cart_bpost))
+			{
+				$bpost = array(
+					'id_order' => $id_order,
+					'shm' => (int)$order_bpost->shm,
+					'dm' => $order_bpost->delivery_method,
+					'ref' => $order_bpost->reference,
+					);
+
+				if ($sp_type = (int)$cart_bpost->sp_type)
+				{
+					$service = Service::getInstance();
+					$service_point = $service->getServicePointDetails((int)$cart_bpost->service_point_id, $sp_type);
+					$bpost['sp'] = $service_point;
+				}
+
+				$this->context->smarty->assign('module_dir', __PS_BASE_URI__.'/modules/'.$this->name);
+				$this->context->smarty->assign('bpost', $bpost);
+
+				return $this->context->smarty->fetch(dirname(__FILE__).'/views/templates/admin/admin_order_details.tpl');
+			}
+		}
+
+		return 'not ours';
+	}
+
+	public function hookOrderDetailDisplayed($params)
+	{
+		if ($service_point = $this->getCartServicePointDetails((int)$params['order']->id_cart))
+		{
+			$this->smartyAssignVersion();
+			$this->context->smarty->assign('module_dir', __PS_BASE_URI__.'/modules/'.$this->name);
+			$this->context->smarty->assign('sp', $service_point);
+
+			return $this->context->smarty->fetch(dirname(__FILE__).'/views/templates/front/order_details.tpl');
+		}
+	}
+
 	/**
 	 *  PrestaShop 1.4 hook
 	 */
 	public function hookBackOfficeHeader()
 	{
 		return '<link href="'.($this->_path).'views/css/admin-bpost.css" type="text/css" rel="stylesheet" />';
+	}
+
+	/**
+	 * Undocumented Admin function
+	 * @author Serge <serge@stigmi.eu>
+	 * @param int $id_cart
+	 */
+	public function displayInfoByCart($id_cart)
+	{
+		if ($service_point = $this->getCartServicePointDetails($id_cart))
+		{
+			$this->context->smarty->assign('module_dir', __PS_BASE_URI__.'/modules/'.$this->name);
+			$this->context->smarty->assign('sp', $service_point);
+
+			return $this->context->smarty->fetch(dirname(__FILE__).'/views/templates/admin/admin_order_details.tpl');
+		}
+	}
+
+	protected function getCartServicePointDetails($id_cart)
+	{
+		$service_point = false;
+		$cart_bpost = $this->getCartBpost((int)$id_cart);
+		if (Validate::isLoadedObject($cart_bpost))
+			if ($sp_type = (int)$cart_bpost->sp_type)
+			{
+				$service = Service::getInstance();
+				$service_point = $service->getServicePointDetails((int)$cart_bpost->service_point_id, $sp_type);
+				// we're done with sp_type so..
+				if (1 === $sp_type) $sp_type = 2;
+				$service_point['lname'] = $this->shipping_methods[$sp_type]['lname'];
+				$service_point['slug'] = $this->shipping_methods[$sp_type]['slug'];
+			}
+
+		return $service_point;
 	}
 
 	/**

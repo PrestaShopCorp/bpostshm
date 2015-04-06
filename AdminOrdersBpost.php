@@ -918,7 +918,7 @@ class AdminOrdersBpost extends AdminTab
 	 */
 	public function displayListHeader($token = null)
 	{
-		$current_index = $this->current_index;
+		$current_index = self::$current_index;
 		$cookie = $this->context->cookie;
 
 		$is_cms = false;
