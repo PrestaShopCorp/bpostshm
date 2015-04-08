@@ -248,8 +248,10 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 							'Street'		=> $customer['Street'],
 							'Number'		=> $customer['Number'],
 							'Postalcode' 	=> $customer['Postalcode'],
-							'Town'			=> $customer['Town'],
 							);
+						if (isset($customer['Town']))
+							$focus_point['Town'] = $customer['Town'];
+
 						if (!empty($customer['PackstationID']))
 						{
 							$packstation_id = $customer['PackstationID'];

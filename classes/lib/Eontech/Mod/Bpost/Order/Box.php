@@ -35,6 +35,11 @@ class EontechModBpostOrderBox
 	/**
 	 * @var string
 	 */
+	private $additional_customer_reference;
+
+	/**
+	 * @var string
+	 */
 	private $barcode;
 
 	/**
@@ -88,6 +93,22 @@ class EontechModBpostOrderBox
 	public function getRemark()
 	{
 		return $this->remark;
+	}
+
+	/**
+	 * @param string $additional_customer_reference
+	 */
+	public function setAdditionalCustomerReference($additional_customer_reference)
+	{
+		$this->additional_customer_reference = $additional_customer_reference;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getAdditionalCustomerReference()
+	{
+		return $this->additional_customer_reference;
 	}
 
 	/**
@@ -202,6 +223,18 @@ class EontechModBpostOrderBox
 				)
 			);
 		}
+		if ($this->getAdditionalCustomerReference() !== null)
+		{
+			$tag_name = 'additionalCustomerReference';
+			if ($prefix !== null)
+				$tag_name = $prefix.':'.$tag_name;
+			$box->appendChild(
+				$document->createElement(
+					$tag_name,
+					$this->getAdditionalCustomerReference()
+				)
+			);
+		}
 
 		return $box;
 	}
@@ -260,6 +293,8 @@ class EontechModBpostOrderBox
 		}
 		if (isset($xml->remark) && $xml->remark != '')
 			$box->setRemark((string)$xml->remark);
+		if (isset($xml->additionalCustomerReference) && $xml->additionalCustomerReference != '')
+			$box->setAdditionalCustomerReference((string)$xml->additionalCustomerReference);
 		if (isset($xml->barcode) && $xml->barcode != '')
 			$box->setBarcode((string)$xml->barcode);
 		if (isset($xml->status) && $xml->status != '')

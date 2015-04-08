@@ -34,9 +34,9 @@ class Service
 	 * @var Service
 	 */
 	protected static $instance;
-	public $bpost;
 	private $context;
 	private $geo6;
+	public $bpost;
 
 	/**
 	 * @param Context $context
@@ -624,7 +624,8 @@ class Service
 		{
 			// Send order for SHM only processing
 			$bpost_order = new EontechModBpostOrder($reference);
-			$bpost_order->setCostCenter('PrestaShop_'._PS_VERSION_);
+			// $bpost_order->setCostCenter('PrestaShop_'._PS_VERSION_);
+			// $bpost_order->setCostCenter('Cost Center');
 
 			// add product lines
 			if ($products = $ps_order->getProducts())
@@ -810,6 +811,8 @@ class Service
 				$box->setNationalBox($at247);
 				break;
 		}
+		// new field to insert PS version once per box, instead of once per Order!
+		$box->setAdditionalCustomerReference((string)'PrestaShop_'._PS_VERSION_);
 
 		return $box;
 	}
@@ -870,7 +873,8 @@ class Service
 					// create a new bpost order
 					$order_bpost_status = 'PENDING';
 					$bpost_order = new EontechModBpostOrder($reference);
-					$bpost_order->setCostCenter('PrestaShop_'._PS_VERSION_);
+					// $bpost_order->setCostCenter('PrestaShop_'._PS_VERSION_);
+					// $bpost_order->setCostCenter('Cost Center');
 
 					// add product lines
 					if ($products = $ps_order->getProducts())

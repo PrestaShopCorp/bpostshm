@@ -14,12 +14,16 @@
 					<span class="step">1</span>
 					{l s='Select or create an account' mod='bpostshm'}
 				</h1>
+				<p class="col-xs-12">
+					<a href="{l s='parcel locker info link' mod='bpostshm'}" target="_blank">{l s='Click here' mod='bpostshm'}</a>
+					{l s='for more information on the parcel locker delivery method' mod='bpostshm'}.
+				</p>
 				<form class="col-xs-12" action="" id="rc-form" method="POST" autocomplete="off"{if $version < 1.5} style="margin-top: 46px;"{/if}>
 					<input name="bpack247_register" id="bpack247_register_0" type="radio" value="0" checked="checked" />
 					<label for="bpack247_register_0">{l s='I am a registered user' mod='bpostshm'}</label>
 					<label for="rc">{l s='RC:' mod='bpostshm'}</label>
 					<input type="text" name="rc" id="rc" type="text" value="" placeholder="{l s='123-456-789' mod='bpostshm'}" />
-					<a id="rc-info" href="#rc-info-content" title="{l s='Where can I find this info?' mod='bpostshm'}">{l s='Where can I find this info?' mod='bpostshm'}</a>
+					<!-- <a id="rc-info" href="#rc-info-content" title="{l s='Where can I find this info?' mod='bpostshm'}">{l s='Where can I find this info?' mod='bpostshm'}</a> -->
 					<img class="loader" src="{$module_dir|escape}views/img/ajax-loader.gif" alt="{l s='Loading...' mod='bpostshm'}" />
 					<br />
 					<input name="bpack247_register" id="bpack247_register_1" type="radio" value="1" />
@@ -27,7 +31,7 @@
 				</form>
 			</div>
 			<div id="register" class="clearfix">
-				<h2>{l s='What is the parcel locker delivery service ?' mod='bpostshm'}</h2>
+				<!-- <h2>{l s='What is the parcel locker delivery service ?' mod='bpostshm'}</h2>
 				<div class="col-xs-6">
 					<p>{l s='Are you rarely at home during the day? Do you have enough time to go to the post office, when you want to send or retrieve packages?' mod='bpostshm'}</p>
 					<h3>{l s='Discover the parcel locker delivery service!' mod='bpostshm'}</h3>
@@ -37,13 +41,13 @@
 					<ul>{strip}
 						<li>{l s='Parcel lockers are available 24 hours/day, 7 days/week' mod='bpostshm'}</li>
 						<li>{l s='You register for free' mod='bpostshm'}</li>
-						<!-- <li>{l s='You will receive your packages for free' mod='bpostshm'}</li> -->
+						<li>{l s='You will receive your packages for free' mod='bpostshm'}</li>
 						<li>{l s='Shipments are done in a jiffy' mod='bpostshm'}</li>
 						<li>{l s='You follow your parcel online' mod='bpostshm'}</li>
 						<li>{l s='You can always choose another package dispenser' mod='bpostshm'}</li>
 					{/strip}</ul>
 					<img src="{$module_dir|escape}views/img/bpack247.png" alt="{l s='bpost 24/7' mod='bpostshm'}" />
-				</div>
+				</div> -->
 				<form class="col-xs-6" action="{$url_post_bpack247_register|escape}" id="register-247" method="POST" autocomplete="off" novalidate="novalidate">
 					<div class="row clearfix">
 						<label for="title">{l s='Title' mod='bpostshm'}</label>

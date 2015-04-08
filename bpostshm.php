@@ -1215,13 +1215,19 @@ AND
 			$iso_code = $this->context->language->iso_code;
 			$iso_code = in_array($iso_code, array('de', 'fr', 'nl', 'en')) ? $iso_code : 'en';
 			$mail_dir = _PS_MODULE_DIR_.$this->name.'/mails/';
-			if (file_exists($mail_dir.$iso_code.'/'.$template.'.txt') && file_exists($mail_dir.$iso_code.'/'.$template.'.html'))
-				Mail::Send($id_lang, $template, $subject, $tpl_vars,
-					$customer->email,
-					$customer_name,
-					Configuration::get('PS_SHOP_EMAIL'),
-					$shop_name,
-					null, null, $mail_dir);
+			try {
+				if (file_exists($mail_dir.$iso_code.'/'.$template.'.txt') && file_exists($mail_dir.$iso_code.'/'.$template.'.html'))
+					Mail::Send($id_lang, $template, $subject, $tpl_vars,
+						$customer->email,
+						$customer_name,
+						Configuration::get('PS_SHOP_EMAIL'),
+						$shop_name,
+						null, null, $mail_dir);
+
+			} catch (Exception $e) {
+				Service::logError('hookNewOrder: sending mail', $e->getMessage(), $e->getCode(), 'Order', (int)$ps_order->id);
+
+			}
 		}
 	}
 
