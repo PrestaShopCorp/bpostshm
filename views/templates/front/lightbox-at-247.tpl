@@ -14,7 +14,7 @@
 					<span class="step">1</span>
 					{l s='Select or create an account' mod='bpostshm'}
 				</h1>
-				<p class="col-xs-12">
+				<p class="col-xs-12" style="padding: 15px 0 15px 15px;">
 					<a href="{l s='parcel locker info link' mod='bpostshm'}" target="_blank">{l s='Click here' mod='bpostshm'}</a>
 					{l s='for more information on the parcel locker delivery method' mod='bpostshm'}.
 				</p>
