@@ -40,6 +40,7 @@ $_MODULE['<{bpostshm}prestashop>bpostshm_880b2a2e301a027d906ca2262ff1953a'] = 'V
 $_MODULE['<{bpostshm}prestashop>bpostshm_1b0bbccdbeb939b4fedd9313b572512d'] = 'Bpost Bestellingen';
 $_MODULE['<{bpostshm}prestashop>bpostshm_270229cc139f5846ad9a554e7eec12d6'] = 'De API URL kan niet leeg zijn!';
 $_MODULE['<{bpostshm}prestashop>bpostshm_c4adffdfb9aae7c9b0dfb48eeba50cbb'] = 'Gelieve de geselecteerde bpost leveringsmethode te configureren.';
+$_MODULE['<{bpostshm}prestashop>bpostshm_2ea49dfb03bbe37cbbd5dc31bb804382'] = 'bpost service point';
 $_MODULE['<{bpostshm}prestashop>adminordersbpost_12dacce40a17fa6a6268d08a740db84d'] = 'Markeer bestelling als behandeld?';
 $_MODULE['<{bpostshm}prestashop>adminordersbpost_a8da4f107875e96228b2ad2d27a534ec'] = 'Stuur een Track &Trace e-mail';
 $_MODULE['<{bpostshm}prestashop>adminordersbpost_3ec0e9725d095189272d81a605f7b45e'] = 'De ontvanger een Track & Trace e-mail sturen?';

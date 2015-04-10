@@ -44,6 +44,7 @@ $_MODULE['<{bpostshm}prestashop>bpostshm_880b2a2e301a027d906ca2262ff1953a'] = 'A
 $_MODULE['<{bpostshm}prestashop>bpostshm_1b0bbccdbeb939b4fedd9313b572512d'] = 'Bpost Commandes';
 $_MODULE['<{bpostshm}prestashop>bpostshm_270229cc139f5846ad9a554e7eec12d6'] = 'L\'API URL ne doit pas être vide !';
 $_MODULE['<{bpostshm}prestashop>bpostshm_c4adffdfb9aae7c9b0dfb48eeba50cbb'] = 'Merci de configurer la méthode de livraison bpost sélectionnée.';
+$_MODULE['<{bpostshm}prestashop>bpostshm_2ea49dfb03bbe37cbbd5dc31bb804382'] = 'Point de livraison bpost';
 $_MODULE['<{bpostshm}prestashop>adminordersbpost_12dacce40a17fa6a6268d08a740db84d'] = 'Marquer la commande comme traitée ?';
 $_MODULE['<{bpostshm}prestashop>adminordersbpost_a8da4f107875e96228b2ad2d27a534ec'] = 'Envoyer e-mail T&T';
 $_MODULE['<{bpostshm}prestashop>adminordersbpost_3ec0e9725d095189272d81a605f7b45e'] = 'Send Track & Trace e-mail to recipient?';

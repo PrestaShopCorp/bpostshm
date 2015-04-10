@@ -1193,10 +1193,6 @@ AND
 		if ($service_point = $this->getCartServicePointDetails((int)$ps_order->id_cart))
 		{
 			// Send mail
-			$id_lang = (int)$ps_order->id_lang;
-			$template = 'new_order';
-			$subject = $this->l('New order').' - '.sprintf('%06d', $ps_order->id);
-
 			$shop_name = Service::getBpostring(Configuration::get('PS_SHOP_NAME'));
 			$customer = new Customer((int)$ps_order->id_customer);
 			$customer_name = $customer->firstname.' '.$customer->lastname;
@@ -1212,6 +1208,9 @@ AND
 				'{sp_city}' => $service_point['city'],
 			);
 
+			$id_lang = (int)$ps_order->id_lang;
+			$template = 'new_order';
+			$subject = $shop_name.' '.$this->l('bpost delivery point');
 			$iso_code = $this->context->language->iso_code;
 			$iso_code = in_array($iso_code, array('de', 'fr', 'nl', 'en')) ? $iso_code : 'en';
 			$mail_dir = _PS_MODULE_DIR_.$this->name.'/mails/';
