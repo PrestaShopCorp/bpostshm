@@ -239,30 +239,22 @@
 						tr_list.push($td.closest('tr'));
 				});
 
-/*
+
 				// remove order_state column;
 				var $first_row = $table.find('tbody tr:eq(0)'),
 					$first_row_haystack = $first_row.children('td'),
 					$first_row_needle = $first_row.children('td.order_state'),
 					position = $first_row_haystack.index($first_row_needle);
 
-				$('tr, colgroup', 'table.order_bpost').each(function() {
-					$(this).children(':eq('+position+')').not('.list-empty').remove();
-				});
-*/				
-				// sep list
-				if (tr_list.length)
-				{
-					// remove order_state column;
-					var $first_row = $table.find('tbody tr:eq(0)'),
-						$first_row_haystack = $first_row.children('td'),
-						$first_row_needle = $first_row.children('td.order_state'),
-						position = $first_row_haystack.index($first_row_needle);
-
+				if (0 == $('td.list-empty').length) {
 					$('tr, colgroup', 'table.order_bpost').each(function() {
 						$(this).children(':eq('+position+')').not('.list-empty').remove();
 					});
-
+				}
+				
+				// sep list
+				if (tr_list.length)
+				{
 					var $table_treated = $table.clone(),
 						$parent;
 
