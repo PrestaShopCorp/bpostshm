@@ -37,6 +37,7 @@ class BpostShm extends CarrierModule
 
 	public $carriers = array();
 	public $shipping_methods = array();
+	public $custom_order_states = array(2, 3, 4, 5, 9, 12);
 
 	private $api_url = 'https://shippingmanager.bpost.be/ShmFrontEnd/start';
 
@@ -54,7 +55,6 @@ class BpostShm extends CarrierModule
 
 		parent::__construct();
 
-		$this->custom_order_states = array(2, 3, 4, 5, 9, 12);
 		$this->hooks = array(
 			'backOfficeHeader',			// displayBackOfficeHeader
 			'beforeCarrier',			// displayBeforeCarrier
