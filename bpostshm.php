@@ -54,6 +54,7 @@ class BpostShm extends CarrierModule
 
 		parent::__construct();
 
+		$this->custom_order_states = array(2, 3, 4, 5, 9, 12);
 		$this->hooks = array(
 			'backOfficeHeader',			// displayBackOfficeHeader
 			'beforeCarrier',			// displayBeforeCarrier
