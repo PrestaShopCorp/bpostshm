@@ -37,8 +37,8 @@ class BpostShm extends CarrierModule
 
 	public $carriers = array();
 	public $shipping_methods = array();
-	public $custom_order_states = array(2, 3, 4, 5, 9, 12);
 
+	private $order_states_inc = array();
 	private $api_url = 'https://shippingmanager.bpost.be/ShmFrontEnd/start';
 
 	public function __construct()
@@ -882,6 +882,18 @@ AND
 				$return = $shm;
 				break;
 			}
+
+		return $return;
+	}
+
+	public function getOrderStateListSQL()
+	{
+		$os_exclude = array(1, 6, 10);
+		$return = false;
+		if (empty($this->order_states_inc) || !is_array($this->order_states_inc))
+			$return = 'NOT IN('.implode(', ', $os_exclude).')';
+		else
+			$return = sprintf('IN(%s, %d)', implode(', ', $this->order_states_inc), (int)Configuration::get('BPOST_ORDER_STATE_TREATED'));
 
 		return $return;
 	}
