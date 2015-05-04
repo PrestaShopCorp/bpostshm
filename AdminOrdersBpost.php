@@ -504,6 +504,9 @@ class AdminOrdersBpost extends AdminTab
 		if (Tools::getValue($this->table.'Orderway'))
 			$order_way = Tools::getValue($this->table.'Orderway');
 
+		if (!empty($this->_filter))
+			$this->_filter = (string)str_replace('`lstatus`', 'obl.`status`', $this->_filter);
+
 		parent::getList($id_lang, $order_by, $order_way, $start, $limit, $id_lang_shop);
 	}
 
