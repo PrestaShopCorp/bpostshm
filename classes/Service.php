@@ -330,8 +330,8 @@ class Service
 			);
 
 		$iso_code = Tools::strtoupper(Country::getIsoById($person['id_country']));
-		if ('BE' === $iso_code)
-			$address = $this->getAddressStreetNr($address);
+		// if ('BE' === $iso_code)
+		// 	$address = $this->getAddressStreetNr($address);
 
 		$shipper = array(
 			'name' => $person['name'],
