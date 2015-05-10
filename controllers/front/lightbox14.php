@@ -204,17 +204,14 @@ class Lightbox extends FrontController
 						self::$smarty->assign('firstname', $delivery_address->firstname, true);
 						self::$smarty->assign('lastname', $delivery_address->lastname, true);
 
-						preg_match('#([0-9]+)?[, ]*([\p{L}a-zA-Z -\']+)[, ]*([0-9]+)?#iu', $delivery_address->address1, $matches);
-						if (!empty($matches[1]) && is_numeric($matches[1]))
-							$nr = $matches[1];
-						elseif (!empty($matches[3]) && is_numeric($matches[3]))
-							$nr = $matches[3];
-						else
-							$nr = (!empty($delivery_address->address2) && is_numeric($delivery_address->address2) ? $delivery_address->address2 : '');
-						$street = !empty($matches[2]) ? $matches[2] : $delivery_address->address1;
-
-						self::$smarty->assign('street', $street, true);
-						self::$smarty->assign('number', $nr, true);
+						$address = $service->getAddressStreetNr(
+							array(
+								'nr' => '',
+								'street' => $delivery_address->address1,
+								'line2' => $delivery_address->address2,
+								));
+						self::$smarty->assign('street', $address['street'], true);
+						self::$smarty->assign('number', $address['nr'], true);
 
 						self::$smarty->assign('postal_code', $delivery_address->postcode, true);
 						self::$smarty->assign('locality', $delivery_address->city, true);

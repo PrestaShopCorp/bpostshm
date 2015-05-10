@@ -282,6 +282,37 @@ class Service
 	}
 
 	/**
+	 * extract number, street and line2 from address fields
+	 * @author Serge <serge@stigmi.eu>
+	 * @param  array $address
+	 * @return array $address
+	 */
+	public function getAddressStreetNr($address = '')
+	{
+		if (empty($address) || !is_array($address))
+			return false;
+
+		$line2 = $address['line2'];
+		preg_match('#([0-9]+)?[, ]*([\pL&;\'\. -]+)[, ]*([0-9]+[a-z]*)?[, ]*(.*)?#iu', $address['street'], $matches);
+		if (!empty($matches[1]))
+			$nr = $matches[1];
+		elseif (!empty($matches[3]))
+			$nr = $matches[3];
+		elseif (!empty($line2) && is_numeric($line2))
+		{
+			$nr = $line2;
+			$line2 = '';
+		}
+
+		$address['nr'] = $nr;
+		$address['line2'] = !empty($matches[4]) ? $matches[4].(!empty($line2) ? ', '.$line2 : '') : $line2;
+		if (!empty($matches[2]))
+			$address['street'] = $matches[2];
+
+		return $address;
+	}
+
+	/**
 	 * Rearrange address fields depending on Address2! because of stingy WS 40 char max fields
 	 * @author Serge <serge@stigmi.eu>
 	 * @param  array $person shop or client
@@ -292,37 +323,22 @@ class Service
 		if (empty($person))
 			return false;
 
-		$line1 = $person['address1'];
-		$line2 = $person['address2'];
-		$iso_code = Tools::strtoupper(Country::getIsoById($person['id_country']));
-		$nr = ',';
-		if ('BE' === $iso_code)
-		{
-			preg_match('#([0-9]+)?[, ]*([\pL&;\'\. -]+)[, ]*([0-9]+[a-z]*)?[, ]*(.*)?#iu', $line1, $matches);
-			// if (!empty($matches[1]) && is_numeric($matches[1]))
-			if (!empty($matches[1]))
-				$nr = $matches[1];
-			// elseif (!empty($matches[3]) && is_numeric($matches[3]))
-			elseif (!empty($matches[3]))
-				$nr = $matches[3];
-			elseif (!empty($line2) && is_numeric($line2))
-			{
-				$nr = $line2;
-				$line2 = '';
-			}
+		$address = array(
+			'nr' => ',',
+			'street' => $person['address1'],
+			'line2' => $person['address2'],
+			);
 
-			$street = !empty($matches[2]) ? $matches[2] : $line1;
-			$line2 = !empty($matches[4]) ? $matches[4].(!empty($line2) ? ', '.$line2 : '') : $line2;
-		}
-		else
-			$street = $line1;
+		$iso_code = Tools::strtoupper(Country::getIsoById($person['id_country']));
+		if ('BE' === $iso_code)
+			$address = $this->getAddressStreetNr($address);
 
 		$shipper = array(
 			'name' => $person['name'],
 			'company' => isset($person['company']) ? $person['company'] : '',
-			'number' => $nr,
-			'street' => $street,
-			'line2' => $line2,
+			'number' => $address['nr'],
+			'street' => $address['street'],
+			'line2' => $address['line2'],
 			'postcode' => $person['postcode'],
 			'locality' => $person['city'],
 			'countrycode' => $iso_code,
