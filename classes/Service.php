@@ -142,8 +142,9 @@ class Service
 	public static function getBpostring($str, $max = false)
 	{
 		$pattern = '/[^\pL0-9,-_\.\s\'\(\)\&]/u';
-		$str = preg_replace($pattern, '', trim($str));
-		$str = str_replace(array('/', '\\'), '', $str);
+		$rpl = '-';
+		$str = preg_replace($pattern, $rpl, trim($str));
+		$str = str_replace(array('/', '\\'), $rpl, $str);
 		if (false === strpos($str, '&amp;'))
 			$str = str_replace('&', '&amp;', $str);
 
