@@ -648,7 +648,8 @@ class Service
 			if ($products = $ps_order->getProducts())
 				foreach ($products as $product)
 				{
-					$line = new EontechModBpostOrderLine($product['product_name'], $product['product_quantity']);
+					$product_name = self::getBpostring($product['product_name']);
+					$line = new EontechModBpostOrderLine($product_name, $product['product_quantity']);
 					$bpost_order->addLine($line);
 					$weight += $product['product_weight'];
 				}
@@ -897,7 +898,8 @@ class Service
 					if ($products = $ps_order->getProducts())
 						foreach ($products as $product)
 						{
-							$line = new EontechModBpostOrderLine($product['product_name'], $product['product_quantity']);
+							$product_name = self::getBpostring($product['product_name']);
+							$line = new EontechModBpostOrderLine($product_name, $product['product_quantity']);
 							$bpost_order->addLine($line);
 							$weight += $product['product_weight'];
 						}
