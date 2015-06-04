@@ -960,7 +960,7 @@ AND
 
 		$this->smarty->assign('version', (Service::isPrestashop16plus() ? 1.6 : (Service::isPrestashop15plus() ? 1.5 : 1.4)), true);
 		$this->smarty->assign('url_lightbox', (method_exists($this->context->link, 'getModuleLink')
-			? $this->context->link->getModuleLink($this->name, 'lightbox', $url_params)
+			? $this->context->link->getModuleLink($this->name, 'lightbox', $url_params, true)
 			:  Tools::getShopDomainSsl(true, true).'/'.Tools::substr($this->_path, 1)
 			.'controllers/front/lightbox14.php?'.http_build_query($url_params)
 		), true);

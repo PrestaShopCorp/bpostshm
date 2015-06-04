@@ -16,6 +16,8 @@ require_once(_PS_MODULE_DIR_.'bpostshm/classes/Service.php');
 
 class BpostShmLightboxModuleFrontController extends ModuleFrontController
 {
+	public $ssl = true;
+	
 	public function initContent()
 	{
 		$shipping_method = Tools::getValue('shipping_method');
@@ -135,24 +137,24 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 				}
 				self::$smarty->assign('servicePoints', $service_points, true);
 
-				self::$smarty->assign('url_get_nearest_service_points', $this->context->link->getModuleLink('bpostshm', 'lightbox', array(
+				self::$smarty->assign('url_get_nearest_service_points', $this->context->link->	getModuleLink('bpostshm', 'lightbox', array(
 					'ajax'							=> true,
 					'get_nearest_service_points' 	=> true,
 					'shipping_method'				=> $shipping_method,
 					'token'							=> Tools::getToken('bpostshm'),
-				)));
+				), true));
 				self::$smarty->assign('url_get_service_point_hours', $this->context->link->getModuleLink('bpostshm', 'lightbox', array(
 					'ajax'						=> true,
 					'get_service_point_hours' 	=> true,
 					'shipping_method'			=> $shipping_method,
 					'token'						=> Tools::getToken('bpostshm'),
-				)));
+				), true));
 				self::$smarty->assign('url_set_service_point', $this->context->link->getModuleLink('bpostshm', 'lightbox', array(
 					'ajax'				=> true,
 					'set_service_point' => true,
 					'shipping_method'	=> $shipping_method,
 					'token'				=> Tools::getToken('bpostshm'),
-				)));
+				), true));
 
 				$this->addJqueryPlugin('scrollTo');
 				$this->setTemplate('lightbox-point-list.tpl');
@@ -215,21 +217,21 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 							'post_bpack247_register' 	=> true,
 							'shipping_method'			=> $shipping_method,
 							'token'						=> Tools::getToken('bpostshm'),
-						)));
+						), true));
 
 						self::$smarty->assign('url_get_point_list', $this->context->link->getModuleLink('bpostshm', 'lightbox', array(
 							'content_only'		=> true,
 							'shipping_method'	=> $shipping_method,
 							'step'				=> 2,
 							'token'				=> Tools::getToken('bpostshm'),
-						)));
+						), true));
 
 						self::$smarty->assign('url_get_bpack247_member', $this->context->link->getModuleLink('bpostshm', 'lightbox', array(
 							'ajax'					=> true,
 							'get_bpack247_member'	=> true,
 							'shipping_method'		=> $shipping_method,
 							'token'					=> Tools::getToken('bpostshm'),
-						)));
+						), true));
 
 						$this->addJqueryPlugin('fancybox');
 						$this->setTemplate('lightbox-at-247.tpl');
@@ -289,19 +291,19 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 							'get_nearest_service_points' 	=> true,
 							'shipping_method'				=> $shipping_method,
 							'token'							=> Tools::getToken('bpostshm'),
-						)));
+						), true));
 						self::$smarty->assign('url_get_service_point_hours', $this->context->link->getModuleLink('bpostshm', 'lightbox', array(
 							'ajax'						=> true,
 							'get_service_point_hours' 	=> true,
 							'shipping_method'			=> $shipping_method,
 							'token'						=> Tools::getToken('bpostshm'),
-						)));
+						), true));
 						self::$smarty->assign('url_set_service_point', $this->context->link->getModuleLink('bpostshm', 'lightbox', array(
 							'ajax'				=> true,
 							'set_service_point' => true,
 							'shipping_method'	=> $shipping_method,
 							'token'				=> Tools::getToken('bpostshm'),
-						)));
+						), true));
 
 						$this->addJqueryPlugin('scrollTo');
 						$this->setTemplate('lightbox-point-list.tpl');
