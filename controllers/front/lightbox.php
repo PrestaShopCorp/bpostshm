@@ -17,7 +17,7 @@ require_once(_PS_MODULE_DIR_.'bpostshm/classes/Service.php');
 class BpostShmLightboxModuleFrontController extends ModuleFrontController
 {
 	public $ssl = true;
-	
+
 	public function initContent()
 	{
 		$shipping_method = Tools::getValue('shipping_method');
@@ -137,7 +137,7 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 				}
 				self::$smarty->assign('servicePoints', $service_points, true);
 
-				self::$smarty->assign('url_get_nearest_service_points', $this->context->link->	getModuleLink('bpostshm', 'lightbox', array(
+				self::$smarty->assign('url_get_nearest_service_points', $this->context->link->getModuleLink('bpostshm', 'lightbox', array(
 					'ajax'							=> true,
 					'get_nearest_service_points' 	=> true,
 					'shipping_method'				=> $shipping_method,
