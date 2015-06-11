@@ -387,8 +387,9 @@ BpostShm = {
 
 		var LatLng = [];
 		google.maps.event.addListener(marker, 'click', function() {
-			LatLng.push(parseFloat(marker.position.lat().toFixed(4)));
-			LatLng.push(parseFloat(marker.position.lng().toFixed(4)));
+			$precision = 5;
+			LatLng.push(parseFloat(marker.position.lat().toFixed($precision)));
+			LatLng.push(parseFloat(marker.position.lng().toFixed($precision)));
 
 			var i, len;
 			for (i = 0, len = BpostShm.points.coords.length; i < len; i++)
