@@ -64,9 +64,6 @@ class BpostShm extends CarrierModule
 			'newOrder',					// actionValidateOrder
 			'postUpdateOrderStatus',	// actionOrderStatusPostUpdate
 			'updateCarrier',			// actionCarrierUpdate
-			// v1.21
-			// 'adminOrder',				// displayAdminOrder
-			'orderDetailDisplayed',		// displayOrderDetail
 			);
 
 		$this->shipping_methods = array(
@@ -1258,46 +1255,6 @@ AND
 		}
 
 		return $return;
-	}
-
-	public function hookAdminOrder($params)
-	{
-		$id_order = (int)$params['id_order'];
-		if ($order_bpost = $this->getOrderBpost($id_order))
-		{
-			if (Service::isPrestashop15plus())
-				$id_cart = (int)$params['cart']->id;
-			else
-			{
-				$ps_order = new Order($id_order);
-				$id_cart = (int)$ps_order->id_cart;
-			}
-
-			$cart_bpost = $this->getCartBpost($id_cart);
-			if (Validate::isLoadedObject($cart_bpost))
-			{
-				$bpost = array(
-					'id_order' => $id_order,
-					'shm' => (int)$order_bpost->shm,
-					'dm' => $order_bpost->delivery_method,
-					'ref' => $order_bpost->reference,
-					);
-
-				if ($sp_type = (int)$cart_bpost->sp_type)
-				{
-					$service = Service::getInstance();
-					$service_point = $service->getServicePointDetails((int)$cart_bpost->service_point_id, $sp_type);
-					$bpost['sp'] = $service_point;
-				}
-
-				$this->context->smarty->assign('module_dir', __PS_BASE_URI__.'/modules/'.$this->name);
-				$this->context->smarty->assign('bpost', $bpost);
-
-				return $this->context->smarty->fetch(dirname(__FILE__).'/views/templates/admin/admin_order_details.tpl');
-			}
-		}
-
-		return 'not ours';
 	}
 
 	public function hookOrderDetailDisplayed($params)

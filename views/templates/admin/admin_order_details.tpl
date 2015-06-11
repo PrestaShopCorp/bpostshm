@@ -7,8 +7,8 @@
 *}
 
 {if isset($sp)}
-<div style="background: url({$module_dir|escape}/views/img/sp.png) no-repeat;background-size:auto 70px;padding:20px 0px;">
-	<h4 style="margin-left:60px">{$sp.slug|escape}</h4>
+<div class="order-details">
+	<h4>{$sp.slug|escape}</h4>
 	<p>
 		{$sp.lname|escape}:&nbsp;{$sp.id|escape}<br>
 		{$sp.office|escape}<br>
