@@ -64,6 +64,8 @@ class BpostShm extends CarrierModule
 			'newOrder',					// actionValidateOrder
 			'postUpdateOrderStatus',	// actionOrderStatusPostUpdate
 			'updateCarrier',			// actionCarrierUpdate
+			// v1.21
+			'orderDetailDisplayed',		// displayOrderDetail
 			);
 
 		$this->shipping_methods = array(
