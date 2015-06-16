@@ -19,8 +19,8 @@ if (!defined('_PS_VERSION_'))
 function upgrade_module_1_21_0($object)
 {
 	$upgrade_version = '1.21.0';
-	$object->upgrade_detail[$upgrade_version] = array();
-
+	// $object->upgrade_detail[$upgrade_version] = array();
+	$return = true;
 	$new_hooks = array(
 			'orderDetailDisplayed',		// displayOrderDetail
 		);
@@ -28,7 +28,8 @@ function upgrade_module_1_21_0($object)
 	/*  Try to register the new hook since last version */
 	foreach ($new_hooks as $hook)
 			if (!$object->isRegisteredInHook($hook))
-				$object->registerHook($hook);
+				$return = $return && $object->registerHook($hook);
 
-	return (bool)count($object->upgrade_detail[$upgrade_version]);
+	// return (bool)count($object->upgrade_detail[$upgrade_version]);
+	return $return;
 }
