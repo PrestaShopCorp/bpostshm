@@ -76,7 +76,7 @@ class EontechPdfManager extends EontechBaseObject
 	{
 		// ex. getPath('module/bpost/pdf', 'today/ref123')
 		$path = empty($sub_dirs) ? $base_dir : $base_dir.$sub_dirs;
-		if (is_writable($path))
+		if ($path = $this->validPath($path))
 			return $path;
 
 		$path = $base_dir;
@@ -89,11 +89,24 @@ class EontechPdfManager extends EontechBaseObject
 
 		}
 
-		if (is_writable($path))
+		return $this->validPath($path, true);
+	}
+
+	protected function validPath($path = '', $strict = false)
+	{
+		if (!empty($path) && is_writable($path))
+		{
+			$index_file = $path.DIRECTORY_SEPARATOR.'index.php';
+			if (!file_exists($index_file))
+				@copy(dirname(realpath(__FILE__)).DIRECTORY_SEPARATOR.'index.php', $index_file);
+
 			return $path;
+		}
 		else
 		{
-			$this->setError('Path: '.$path.' is not accessible.', self::ERR_ACCESS);
+			if ($strict)
+				$this->setError('Path: '.$path.' is not accessible.', self::ERR_ACCESS);
+
 			return false;
 		}
 	}

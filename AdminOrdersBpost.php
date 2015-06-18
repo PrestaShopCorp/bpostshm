@@ -32,10 +32,6 @@ class AdminOrdersBpost extends AdminTab
 	);
 	protected $identifier = 'reference';
 
-	/* bpost orders are displayed into Orders > bpost depending on their PS order state */
-	private $ps_order_states = array(2, 3, 4, 5, 9, 12);
-	private $ps_order_state_rejects = array(1, 6, 7, 8, 10, 11);
-
 	private $tracking_url = 'http://track.bpost.be/etr/light/performSearch.do';
 	private $tracking_params = array(
 		'searchByCustomerReference' => true,
@@ -89,9 +85,9 @@ class AdminOrdersBpost extends AdminTab
 		';
 
 		$this->_where = '
-		AND obl.status IN("'.implode('", "', $this->statuses).'")
-		AND a.current_state NOT IN('.implode(', ', $this->ps_order_state_rejects).')
 		AND DATEDIFF(NOW(), a.date_add) <= 14
+		AND obl.status IN("'.implode('", "', $this->statuses).'")
+		AND a.current_state '.$this->module->getOrderStateListSQL().'
 		';
 
 		$id_bpost_carriers = array_values($this->module->getIdCarriers());
@@ -508,6 +504,9 @@ class AdminOrdersBpost extends AdminTab
 		if (Tools::getValue($this->table.'Orderway'))
 			$order_way = Tools::getValue($this->table.'Orderway');
 
+		if (!empty($this->_filter))
+			$this->_filter = (string)str_replace('`lstatus`', 'obl.`status`', $this->_filter);
+
 		parent::getList($id_lang, $order_by, $order_way, $start, $limit, $id_lang_shop);
 	}
 
@@ -918,7 +917,7 @@ class AdminOrdersBpost extends AdminTab
 	 */
 	public function displayListHeader($token = null)
 	{
-		$current_index = $this->current_index;
+		$current_index = self::$current_index;
 		$cookie = $this->context->cookie;
 
 		$is_cms = false;

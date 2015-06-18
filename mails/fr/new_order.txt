@@ -1,0 +1,24 @@
+
+[{shop_url}] 
+
+Bonjour {customer_name},
+
+Merci d'avoir effectué vos achats sur {shop_name} avec bpost! 
+
+Vous trouverez ci-dessous les coordonnées du point de livraison que vous avez choisi pour votre commande :
+
+{sp_name}: {sp_id}
+{sp_office}
+{sp_street} {sp_nr}
+{sp_zip} {sp_city}
+
+
+Vous pouvez accéder à tout moment au suivi de votre commande et 
+visualiser ces informations dans "Historique des commandes"
+[{history_url}] de la rubrique "Mon compte"
+[{my_account_url}] sur notre site. 
+
+
+{shop_name} [{shop_url}] réalisé avec
+PrestaShop™ [http://www.prestashop.com/] 
+

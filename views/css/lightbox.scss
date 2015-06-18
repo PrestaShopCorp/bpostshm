@@ -254,7 +254,7 @@
                 border-radius: 5px;
                 color: #fff;
                 display: inline-block;
-                float: left;
+                /*float: left;*/
                 font-size: 20px;
                 line-height: 55px;
                 margin-right: 20px;
@@ -304,6 +304,7 @@
 
         #register {
             display: none;
+            padding-left: 40px;
         }
 
         #register-247 {
