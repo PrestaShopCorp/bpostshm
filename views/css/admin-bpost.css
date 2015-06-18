@@ -95,3 +95,15 @@ option:disabled {
 #order_actions a {
   cursor: pointer;
   text-decoration: underline; }
+
+/* Serge 11-06-15 */
+div.order-details {
+  background: url(../img/sp.png) no-repeat;
+  background-size:auto 70px;
+  padding:20px 0px;
+  margin-top: 10px;
+}
+div.order-details h4 {
+  margin-left:60px;
+}
+/* Serge end */

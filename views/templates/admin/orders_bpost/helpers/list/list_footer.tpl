@@ -239,15 +239,18 @@
 						tr_list.push($td.closest('tr'));
 				});
 
+
 				// remove order_state column;
 				var $first_row = $table.find('tbody tr:eq(0)'),
 					$first_row_haystack = $first_row.children('td'),
 					$first_row_needle = $first_row.children('td.order_state'),
 					position = $first_row_haystack.index($first_row_needle);
 
-				$('tr, colgroup', 'table.order_bpost').each(function() {
-					$(this).children(':eq('+position+')').not('.list-empty').remove();
-				});
+				if (0 == $('td.list-empty').length) {
+					$('tr, colgroup', 'table.order_bpost').each(function() {
+						$(this).children(':eq('+position+')').not('.list-empty').remove();
+					});
+				}
 				
 				// sep list
 				if (tr_list.length)
@@ -420,6 +423,20 @@
 
 					if ('undefined' !== typeof $img.data('labels'))
 						$.get($img.data('labels'), { }, function(response) {
+							if ('undefined' !== typeof response.errors && response.errors.length)
+							{
+								var errors = '';
+								$.each(response.errors, function(i, error) {
+									if (i > 0)
+										errors += "<li>" + error;
+									else
+										errors += error;
+								});
+								srgBox.displayError(errors, function() {
+									reloadPage();
+								});
+							}
+
 							if ('undefined' !== typeof response.links) {
 								srgBox.reset();
 								$.each(response.links, function(i, link) {
@@ -430,8 +447,9 @@
 								});
 								srgBox.open();
 								reloadPage();
-								return;
 							}
+
+							return;
 						});
 				});
 

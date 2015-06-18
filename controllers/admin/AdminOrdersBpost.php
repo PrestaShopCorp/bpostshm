@@ -25,10 +25,6 @@ class AdminOrdersBpost extends ModuleAdminController
 	);
 	protected $identifier = 'reference';
 
-	/* bpost orders are displayed into Orders > bpost depending on their PS order state */
-	private $ps_order_states = array(2, 3, 4, 5, 9, 12);
-	private $ps_order_state_rejects = array(1, 6, 7, 8, 10, 11);
-
 	private $tracking_url = 'http://track.bpost.be/etr/light/performSearch.do';
 	private $tracking_params = array(
 		'searchByCustomerReference' => true,
@@ -49,17 +45,20 @@ class AdminOrdersBpost extends ModuleAdminController
 		$iso_code = in_array($iso_code, array('de', 'fr', 'nl', 'en')) ? $iso_code : 'en';
 		$this->tracking_params['oss_language'] = $iso_code;
 		$this->affectAdminTranslation($iso_code);
-
-		// cached current_row while building list
-		// always false after display for any action
-		$this->current_row = false;
-		$this->bpost_treated_state = (int)Configuration::get('BPOST_ORDER_STATE_TREATED');
+		// the most unlikely performance boost!
+		$this->l_cache = array();
 
 		$this->bootstrap = true;
 		$this->show_filters = true;
 		$this->module = new BpostShm();
 		// service needs to be shop context dependant.
-		// $this->service = Service::getInstance($this->context);
+		$service = Service::getInstance($this->context);
+		$this->service = SHOP::isFeatureActive() ? false : $service;
+
+		// cached current_row while building list
+		// always false after display for any action
+		$this->current_row = false;
+		$this->bpost_treated_state = (int)Configuration::get('BPOST_ORDER_STATE_TREATED');
 
 		$this->actions = array(
 			'addLabel',
@@ -96,9 +95,9 @@ class AdminOrdersBpost extends ModuleAdminController
 		';
 
 		$this->_where = '
-		AND obl.status IN("'.implode('", "', $this->statuses).'")
-		AND a.current_state NOT IN('.implode(', ', $this->ps_order_state_rejects).')
 		AND DATEDIFF(NOW(), a.date_add) <= 14
+		AND obl.status IN("'.implode('", "', $this->statuses).'")
+		AND a.current_state '.$this->module->getOrderStateListSQL().'
 		';
 
 		$id_bpost_carriers = array_values($this->module->getIdCarriers());
@@ -178,8 +177,6 @@ class AdminOrdersBpost extends ModuleAdminController
 		$this->shopLinkType = 'shop';
 		$this->shopShareDatas = Shop::SHARE_ORDER;
 
-		// Just for Autoload
-		Service::getInstance($this->context);
 		parent::__construct();
 	}
 
@@ -218,9 +215,7 @@ class AdminOrdersBpost extends ModuleAdminController
 		if (empty($this->errors) && !empty($reference))
 		{
 			$response = array();
-			// service needs to be shop context dependant
-			$this->setRowContext($reference);
-			$service = new Service($this->context);
+			$service = $this->getContextualService($reference);
 
 			if (Tools::getIsset('addLabel'.$this->table))
 			{
@@ -279,12 +274,15 @@ class AdminOrdersBpost extends ModuleAdminController
 	 * @param  string  $string       string to translate
 	 * @return string                translated string if found or $string
 	 */
-	protected function l($string, $class = 'AdminTab', $addslashes = false, $htmlentities = true)
+	protected function l($string, $class = 'AdminOrdersBpost', $addslashes = false, $htmlentities = true)
 	{
-		$class = get_class($this); // always
+		// $class = get_class($this); // always
 		//  $addslashes = false
 		$htmlentities = false; // always
-		return Translate::getAdminTranslation($string, $class, $addslashes, $htmlentities);
+		if (!isset($this->l_cache[$string]))
+			$this->l_cache[$string] = Translate::getAdminTranslation($string, $class, $addslashes, $htmlentities);
+
+		return $this->l_cache[$string];
 	}
 
 	/**
@@ -300,7 +298,7 @@ class AdminOrdersBpost extends ModuleAdminController
 
 		if (!(bool)preg_match('/^([a-z]{2})$/', $iso_code))
 			return;
-		
+
 		$class_name = get_class($this);
 		$module = isset($this->module) ? $this->module : 'bpostshm';
 		$needle = Tools::strtolower($class_name).'_';
@@ -314,6 +312,25 @@ class AdminOrdersBpost extends ModuleAdminController
 					$_LANGADM[str_replace($needle, $class_name, strip_tags($key))] = $value;
 
 		}
+	}
+
+	/**
+	 * retrieve service with correct shop context
+	 * @author Serge <serge@stigmi.eu>
+	 * @param  string $reference
+	 * @return None
+	 */
+	private function getContextualService($reference)
+	{
+		// service needs the correct row shop context when multistore
+		$service = $this->service;
+		if (false === $service)
+		{
+			$this->setRowContext($reference);
+			$service = new Service($this->context);
+		}
+
+		return $service;
 	}
 
 	/**
@@ -614,9 +631,7 @@ class AdminOrdersBpost extends ModuleAdminController
 		$labels = array();
 		foreach ($this->boxes as $reference)
 		{
-			$this->setRowContext($reference);
-			$service = new Service($this->context);
-
+			$service = $this->getContextualService($reference);
 			$links = $service->printLabels($reference);
 			if (isset($links['Error']))
 					$this->_errors[] = $links['Error'];
@@ -796,7 +811,8 @@ class AdminOrdersBpost extends ModuleAdminController
 
 		// This is the 1st method called so store currentRow & set rowContext
 		$this->setCurrentRow($reference);
-		$this->setRowContext($reference);
+		if (false === $this->service)
+			$this->setRowContext($reference);
 
 		$tpl_vars = array(
 			'action' => $this->l('Add label'),

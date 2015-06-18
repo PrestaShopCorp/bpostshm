@@ -78,6 +78,10 @@
 					{if $version >= 1.6}<p><span class="label label-danger red">{l s='Important' mod='bpostshm'}</span></p>{/if}
 					<p>
 						{l s='You need a user account from bpost to use this module. Call 02/201 11 11.' mod='bpostshm'}
+						<br />
+						<a href="https://www.bpost.be/portal/goHome" title="{l s='Click here' mod='bpostshm'}" target="_blank">
+						{l s='Click here' mod='bpostshm'}</a> 
+						{l s='to connect to your bpost account' mod='bpostshm'}.
 					</p>
 				</div>
 			</div>
@@ -270,6 +274,8 @@
 				<div class="margin-form col-lg-9 col-lg-offset-3">
 					<p class="preference_description help-block">
 						{l s='If you enable this option, labels are generated directly within PrestaShop. It is not needed to use the bpost Shipping Manager for these tasks.' mod='bpostshm'}
+						<br />
+						{l s='Pop-ups must be enabled in your browser, in order to view the printed labels' mod='bpostshm'}.
 						<br />
 						<a href="http://bpost.freshdesk.com/support/solutions/articles/4000033755" title="{l s='Click here' mod='bpostshm'}" target="_blank">
 						<!-- <a class="info-link" href="#desc-use-labels" title="{l s='Click here' mod='bpostshm'}">{l s='Click here' mod='bpostshm'}</a>  -->

@@ -34,9 +34,9 @@ class Service
 	 * @var Service
 	 */
 	protected static $instance;
-	public $bpost;
 	private $context;
 	private $geo6;
+	public $bpost;
 
 	/**
 	 * @param Context $context
@@ -142,8 +142,9 @@ class Service
 	public static function getBpostring($str, $max = false)
 	{
 		$pattern = '/[^\pL0-9,-_\.\s\'\(\)\&]/u';
-		$str = preg_replace($pattern, '', trim($str));
-		$str = str_replace(array('/', '\\'), '', $str);
+		$rpl = '-';
+		$str = preg_replace($pattern, $rpl, trim($str));
+		$str = str_replace(array('/', '\\'), $rpl, $str);
 		if (false === strpos($str, '&amp;'))
 			$str = str_replace('&', '&amp;', $str);
 
@@ -282,6 +283,37 @@ class Service
 	}
 
 	/**
+	 * extract number, street and line2 from address fields
+	 * @author Serge <serge@stigmi.eu>
+	 * @param  array $address
+	 * @return array $address
+	 */
+	public function getAddressStreetNr($address = '')
+	{
+		if (empty($address) || !is_array($address))
+			return false;
+
+		$line2 = $address['line2'];
+		preg_match('#([0-9]+)?[, ]*([\pL&;\'\. -]+)[, ]*([0-9]+[a-z]*)?[, ]*(.*)?#iu', $address['street'], $matches);
+		if (!empty($matches[1]))
+			$nr = $matches[1];
+		elseif (!empty($matches[3]))
+			$nr = $matches[3];
+		elseif (!empty($line2) && is_numeric($line2))
+		{
+			$nr = $line2;
+			$line2 = '';
+		}
+
+		$address['nr'] = $nr;
+		$address['line2'] = !empty($matches[4]) ? $matches[4].(!empty($line2) ? ', '.$line2 : '') : $line2;
+		if (!empty($matches[2]))
+			$address['street'] = $matches[2];
+
+		return $address;
+	}
+
+	/**
 	 * Rearrange address fields depending on Address2! because of stingy WS 40 char max fields
 	 * @author Serge <serge@stigmi.eu>
 	 * @param  array $person shop or client
@@ -292,37 +324,22 @@ class Service
 		if (empty($person))
 			return false;
 
-		$line1 = $person['address1'];
-		$line2 = $person['address2'];
-		$iso_code = Tools::strtoupper(Country::getIsoById($person['id_country']));
-		$nr = ',';
-		if ('BE' === $iso_code)
-		{
-			preg_match('#([0-9]+)?[, ]*([\pL&;\'\. -]+)[, ]*([0-9]+[a-z]*)?[, ]*(.*)?#iu', $line1, $matches);
-			// if (!empty($matches[1]) && is_numeric($matches[1]))
-			if (!empty($matches[1]))
-				$nr = $matches[1];
-			// elseif (!empty($matches[3]) && is_numeric($matches[3]))
-			elseif (!empty($matches[3]))
-				$nr = $matches[3];
-			elseif (!empty($line2) && is_numeric($line2))
-			{
-				$nr = $line2;
-				$line2 = '';
-			}
+		$address = array(
+			'nr' => ',',
+			'street' => $person['address1'],
+			'line2' => $person['address2'],
+			);
 
-			$street = !empty($matches[2]) ? $matches[2] : $line1;
-			$line2 = !empty($matches[4]) ? $matches[4].(!empty($line2) ? ', '.$line2 : '') : $line2;
-		}
-		else
-			$street = $line1;
+		$iso_code = Tools::strtoupper(Country::getIsoById($person['id_country']));
+		// if ('BE' === $iso_code)
+		// 	$address = $this->getAddressStreetNr($address);
 
 		$shipper = array(
 			'name' => $person['name'],
 			'company' => isset($person['company']) ? $person['company'] : '',
-			'number' => $nr,
-			'street' => $street,
-			'line2' => $line2,
+			'number' => $address['nr'],
+			'street' => $address['street'],
+			'line2' => $address['line2'],
 			'postcode' => $person['postcode'],
 			'locality' => $person['city'],
 			'countrycode' => $iso_code,
@@ -343,7 +360,7 @@ class Service
 	{
 		$customer = new Customer((int)$ps_order->id_customer);
 		$delivery_address = new Address($ps_order->id_address_delivery, $this->context->language->id);
-		$invoice_address = new Address($ps_order->id_address_invoice, $this->context->language->id);
+		// $invoice_address = new Address($ps_order->id_address_invoice, $this->context->language->id);
 		$company = self::getBpostring($delivery_address->company);
 		$client_line1 = self::getBpostring($delivery_address->address1);
 		$client_line2 = self::getBpostring($delivery_address->address2);
@@ -355,7 +372,7 @@ class Service
 				'city' 		=> $delivery_address->city,
 				'email'		=> $customer->email,
 				'id_country'=> $delivery_address->id_country,
-				'name'		=> $invoice_address->firstname.' '.$invoice_address->lastname,
+				'name'		=> $delivery_address->firstname.' '.$delivery_address->lastname,
 				'phone'		=> !empty($delivery_address->phone) ? $delivery_address->phone : $delivery_address->phone_mobile,
 				'postcode' 	=> $delivery_address->postcode,
 			),
@@ -472,7 +489,7 @@ class Service
 				'id_country'=> Configuration::get('PS_SHOP_COUNTRY_ID'),
 				'name'		=> preg_replace($name_pattern, '', (string)Configuration::get('PS_SHOP_NAME')),
 				'phone'		=> Configuration::get('PS_SHOP_PHONE'),
-				'postcode' 	=> Configuration::get('PS_SHOP_CODE'),
+				'postcode' 	=> trim(Configuration::get('PS_SHOP_CODE')), // todo something better than trim
 			),
 		);
 
@@ -624,13 +641,15 @@ class Service
 		{
 			// Send order for SHM only processing
 			$bpost_order = new EontechModBpostOrder($reference);
-			$bpost_order->setCostCenter('PrestaShop_'._PS_VERSION_);
+			// $bpost_order->setCostCenter('PrestaShop_'._PS_VERSION_);
+			// $bpost_order->setCostCenter('Cost Center');
 
 			// add product lines
 			if ($products = $ps_order->getProducts())
 				foreach ($products as $product)
 				{
-					$line = new EontechModBpostOrderLine($product['product_name'], $product['product_quantity']);
+					$product_name = self::getBpostring($product['product_name']);
+					$line = new EontechModBpostOrderLine($product_name, $product['product_quantity']);
 					$bpost_order->addLine($line);
 					$weight += $product['product_weight'];
 				}
@@ -810,6 +829,8 @@ class Service
 				$box->setNationalBox($at247);
 				break;
 		}
+		// new field to insert PS version once per box, instead of once per Order!
+		$box->setAdditionalCustomerReference((string)'PrestaShop_'._PS_VERSION_);
 
 		return $box;
 	}
@@ -870,13 +891,15 @@ class Service
 					// create a new bpost order
 					$order_bpost_status = 'PENDING';
 					$bpost_order = new EontechModBpostOrder($reference);
-					$bpost_order->setCostCenter('PrestaShop_'._PS_VERSION_);
+					// $bpost_order->setCostCenter('PrestaShop_'._PS_VERSION_);
+					// $bpost_order->setCostCenter('Cost Center');
 
 					// add product lines
 					if ($products = $ps_order->getProducts())
 						foreach ($products as $product)
 						{
-							$line = new EontechModBpostOrderLine($product['product_name'], $product['product_quantity']);
+							$product_name = self::getBpostring($product['product_name']);
+							$line = new EontechModBpostOrderLine($product_name, $product['product_quantity']);
 							$bpost_order->addLine($line);
 							$weight += $product['product_weight'];
 						}

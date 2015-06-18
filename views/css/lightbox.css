@@ -162,7 +162,7 @@
         border-radius: 5px;
         color: #fff;
         display: inline-block;
-        float: left;
+        /*float: left;*/
         font-size: 20px;
         line-height: 55px;
         margin-right: 20px;
@@ -191,7 +191,8 @@
     #lightbox.at-247 #rc-form {
       margin-bottom: 15px; }
     #lightbox.at-247 #register {
-      display: none; }
+      display: none;
+      padding-left: 40px; }
     #lightbox.at-247 #register-247 .row {
       margin-bottom: 5px; }
     #lightbox.at-247 #register-247 label {
