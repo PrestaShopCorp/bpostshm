@@ -28,6 +28,7 @@ require_once(_PS_MODULE_DIR_.'bpostshm/classes/Service.php');
 class Lightbox extends FrontController
 {
 	private $tpl;
+	public $ssl = true;
 
 	public function process()
 	{
