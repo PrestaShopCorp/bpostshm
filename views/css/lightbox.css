@@ -272,4 +272,51 @@
 
   #rc-info {
     display: block;
-    margin-left: 20px; } }
+    margin-left: 20px;
+  }
+}
+/* Serge: 18-07-15 */
+    #lightbox.at-247 #upl-unregister .row {
+      margin-bottom: 5px; }
+    #lightbox.at-247 #upl-unregister label {
+      float: left;
+      width: 35%; }
+    #lightbox.at-247 #upl-unregister input.error,
+    #lightbox.at-247 #upl-unregister select.error {
+      border-color: #c90200; }
+    #lightbox.at-247 #upl-unregister input[type="text"],
+    #lightbox.at-247 #upl-unregister select {
+      margin-right: 3px; }
+    #lightbox.at-247 #upl-unregister input[type="text"] {
+      padding-left: 5px;
+      width: 40%; }
+    #lightbox.at-247 #upl-unregister select {
+      width: 40%; }
+    #lightbox.at-247 #upl-unregister .infos {
+      font-style: italic;
+      margin-left: 5px; }
+    #lightbox.at-247 #upl-unregister sup {
+      color: #c90200; }
+    #lightbox.at-247 #upl-unregister .last {
+      margin-top: 5px;
+      padding-left: 30%; }
+      #lightbox.at-247 #upl-unregister .last input {
+        margin-left: 5px; }
+      #lightbox.at-247 #upl-unregister .last label {
+        float: none;
+        font-weight: normal;
+        width: auto; }
+      #error-phrase {
+        border-bottom: 1px solid #d2d2d2;
+        color: #da2b00;
+        font-size: 14px;
+        font-weight: bold;
+        padding: 10px 0; }
+
+#uniform-rmz {
+    display: inline;
+    margin-left: 3px;
+}
+img.info {
+  margin:-4px 4px;
+}

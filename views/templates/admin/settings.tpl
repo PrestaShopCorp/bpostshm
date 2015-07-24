@@ -21,7 +21,6 @@
 						{/if}
 						<ol>
 							{foreach $errors as $error}
-								<!-- <li>{$error|strval}</li> -->
 								<li>{$error|escape}</li>
 							{/foreach}
 						</ol>
@@ -39,11 +38,41 @@
 		{/if}
 		<br />
 	{/if}
-
-	<fieldset class="panel">
-		{if $version < 1.6}<legend><img src="{$module_dir|escape}views/img/icons/bpost.png" alt="bpost" />{else}<div class="panel-heading">{/if}
-			{l s='Description' mod='bpostshm'}
-		{if $version < 1.6}</legend>{else}</div>{/if}
+	{if $version < 1.6}<legend class="tab-wrapper">{/if}
+	<ul class="bpost-tabs">
+		<!-- <li>
+			<a href="#fs-description">
+				{l s='Description' mod='bpostshm'}
+			</a>
+		</li> -->
+		<li>
+			<a href="#fs-account">
+				{l s='Account settings' mod='bpostshm'}
+			</a>
+		</li>
+		<li>
+			<a href="#fs-delopts">
+				{l s='Delivery options' mod='bpostshm'}
+			</a>
+		</li>
+		<li>
+			<a href="#fs-delivery-set">
+				{l s='Delivery settings' mod='bpostshm'}
+			</a>
+		</li>
+		<li>
+			<a href="#fs-intl-set">
+				{l s='International settings' mod='bpostshm'}
+			</a>
+		</li>
+		<li>
+			<a href="#fs-label-set">
+				{l s='Label settings' mod='bpostshm'}
+			</a>
+		</li>
+	</ul>
+	{if $version < 1.6}</legend>{/if}
+	<!-- <fieldset class="panel" id="fs-description">
 		<div class="panel-body">
 			<p>{l s='bpost Shipping Manager is a service offered by bpost, allowing your customer to chose their preferred delivery method when ordering in your webshop.' mod='bpostshm'}</p>
 			<p>{l s='The following delivery methods are currently supported:' mod='bpostshm'}</p>
@@ -61,13 +90,28 @@
 				</a>
 			</p>
 		</div>
-	</fieldset>
-	<br />
+	</fieldset> -->
+	<!-- Account settings -->
 	<form class="form-horizontal{if $version < 1.5} v1-4{elseif $version < 1.6} v1-5{/if}" action="#" method="POST" autocomplete="off">
-		<fieldset class="panel">
-			{if $version < 1.6}<legend><img src="{$module_dir|escape}views/img/icons/bpost.png" alt="bpost" />{else}<div class="panel-heading">{/if}
-				{l s='Account settings' mod='bpostshm'}
-			{if $version < 1.6}</legend>{else}</div>{/if}
+		<fieldset class="panel" id="fs-account">
+			<div class="panel-body">
+				<p>{l s='bpost Shipping Manager is a service offered by bpost, allowing your customer to chose their preferred delivery method when ordering in your webshop.' mod='bpostshm'}</p>
+				<p>{l s='The following delivery methods are currently supported:' mod='bpostshm'}</p>
+				<ul>{strip}
+					<li>{l s='Delivery at home or at the office' mod='bpostshm'}</li>
+					<li>{l s='Delivery in a pick-up point or postal office' mod='bpostshm'}</li>
+					<li>{l s='Delivery in a parcel locker' mod='bpostshm'}</li>
+				{/strip}</ul>
+				<p>{l s='When activated and correctly installed, this module also allows you to completely integrate the bpost administration into your webshop. This means that orders are automatically added to the bpost portal. Furthermore, if enabled, it is possible to generate your labels and tracking codes directly from the Prestashop order admin page.' mod='bpostshm'}
+					<br />{l s='No more hassle and 100% transparent!' mod='bpostshm'}
+				</p>
+				<p>
+					<a href="{l s='http://bpost.freshdesk.com/support/solutions/folders/208531' mod='bpostshm'}" title="{l s='Documentation' mod='bpostshm'}" target="_blank">
+						<img src="{$module_dir|escape}views/img/icons/information.png" alt="{l s='Documentation' mod='bpostshm'}" />{l s='Documentation' mod='bpostshm'}
+					</a>
+				</p>
+			</div>
+			<br>
 			<div class="form-group">
 				{if $version < 1.6}
 				<div class="control-label{if $version < 1.6}-bw{/if} col-lg-3">
@@ -134,92 +178,67 @@
 			</div>
 		</fieldset>
 	</form>
-	<br />
+	
+	<!-- new Delivery options -->
+	<div class="del-opt-tpl" style="display:none;">
+		<span class="dex"> from </span>
+		<input type="text" class="currency">
+		<img src="{$module_dir|escape}views/img/icons/information.png" style="margin:2px 6px;">
+	</div>
 	<form class="form-horizontal{if $version < 1.5} v1-4{elseif $version < 1.6} v1-5{/if}" action="#" method="POST" autocomplete="off">
-		<fieldset class="panel">
-			{if $version < 1.6}<legend><img src="{$module_dir|escape}views/img/icons/bpost.png" alt="bpost" />{else}<div class="panel-heading">{/if}
-				{l s='Delivery settings' mod='bpostshm'}
-			{if $version < 1.6}</legend>{else}</div>{/if}
-			<div class="form-group">
-				<span class="control-label{if $version < 1.6}-bw{/if} col-lg-3">{l s='Home delivery only' mod='bpostshm'}</span>
-				<div class="margin-form col-lg-9">
-					<span class="switch prestashop-switch fixed-width-lg">
-						<input type="radio" name="display_home_delivery_only" id="home_delivery_only_1" value="1"{if !empty($display_home_delivery_only)} checked="checked"{/if} />
-						<label for="home_delivery_only_1">
-							{if $version < 1.6}<img src="{$module_dir|escape}views/img/icons/tick.png" alt="{l s='Yes' mod='bpostshm'}" />{else}{l s='Yes' mod='bpostshm'}{/if}
-						</label>
-						<input type="radio" name="display_home_delivery_only" id="home_delivery_only_0" value="0"{if empty($display_home_delivery_only)} checked="checked"{/if} />
-						<label for="home_delivery_only_0">
-							{if $version < 1.6}<img src="{$module_dir|escape}views/img/icons/cross.png" alt="{l s='No' mod='bpostshm'}" />{else}{l s='No' mod='bpostshm'}{/if}
-						</label>
-						<a class="slide-button btn"></a>
-					</span>
-				</div>
-				<div class="margin-form col-lg-9 col-lg-offset-3">
-					<p class="preference_description help-block">
-						{l s='If you enable this option, only the home delivery option is enabled. all other delivery methods (pick-up points and parcel locker) are disabled.' mod='bpostshm'}
-					</p>
-				</div>
-
-				<span class="control-label{if $version < 1.6}-bw{/if} col-lg-3">{l s='International delivery' mod='bpostshm'}</span>
-				<div class="margin-form col-lg-9">
-					<p class="radio">
-						<label for="international_delivery_0">
-							<input type="radio" name="display_international_delivery" id="international_delivery_0" value="0"{if empty($display_international_delivery)} checked="checked"{/if} />
-							{l s='World Express Pro' mod='bpostshm'}
-						</label>
-						<br />
-						<label for="international_delivery_1">
-							<input type="radio" name="display_international_delivery" id="international_delivery_1" value="1"{if !empty($display_international_delivery)} checked="checked"{/if} />
-							{l s='World Business' mod='bpostshm'}
-						</label>
-					</p>
-				</div>
-				<div class="margin-form col-lg-9 col-lg-offset-3">
-					<p class="preference_description help-block">
-						{l s='Choose international delivery option.' mod='bpostshm'}
-					</p>
-				</div>
-
-			</div>
-			<div class="clear"></div>
-			<div class="margin-form panel-footer">
-				<button class="button btn btn-default pull-right" type="submit" name="submitDeliverySettings">
-					<i class="process-icon-save"></i>
-					{l s='Save settings' mod='bpostshm'}
-				</button>
-			</div>
-		</fieldset>
-	</form>
-	<br />
-	<form class="form-horizontal{if $version < 1.5} v1-4{elseif $version < 1.6} v1-5{/if}" action="#" method="POST" autocomplete="off">
-		<fieldset class="panel">
-			{if $version < 1.6}<legend><img src="{$module_dir|escape}views/img/icons/bpost.png" alt="bpost" />{else}<div class="panel-heading">{/if}
-				{l s='Delivery options' mod='bpostshm'}
-			{if $version < 1.6}</legend>{else}</div>{/if}
+		<fieldset class="panel" id="fs-delopts">
 			<div id="delivery-options" class="form-group">
 			<!-- content start -->
 			<input type="hidden" name="delivery_options_list" value="">
-			{$delivery_sections = array()}
-			{foreach $delivery_options as $name => $options}
-				{$delivery_sections[] = "$name"}
-				<div id="section-{$name|escape}">
+			<!-- <ul class="delopt-tabs">
+			{foreach $delivery_options as $dm => $options}
+				<li class="delopt-tab-row"><a href="#dm-{$dm|intval}">{l s=$options['title'] mod='bpostshm'}</a></li> 
+			{/foreach}
+			</ul> --> 
+			{foreach $delivery_options as $dm => $options}
+			{assign var="is_intl" value=(9 === $dm)}
+				<div id="dm-{$dm|intval}">
 					<span class="control-label{if $version < 1.6}-bw{/if} col-lg-3">{l s=$options['title'] mod='bpostshm'}</span>
 					<div class="margin-form col-lg-9">
-						<p class="checkbox">
-						{foreach $options['full'] as $key => $opt}
-							{assign var="chk_id" value="$name-$key"}
-							<label for="{$chk_id|escape}">
-								<input type="checkbox" name="{$chk_id|escape}" id="{$chk_id|escape}" value="{$key|escape}" {if in_array($key, $options['list'])}checked="checked"{/if} />&nbsp;{$opt['title']|escape}
+					<table>
+					{foreach $options['opts'] as $key => $opt}
+					{assign var="opt_id" value="$dm-$key"}
+						<tr>
+							<td class="checkbox">
+								<label {if $version >= 1.6}style="margin-right:5px;"{/if}>
+									<input type="checkbox" class="del-opt" data-id="{$opt_id|escape}" from="{$opt['from']|escape}"{if isset($opt['cost'])} cost="{$opt['cost']|escape}"{/if} {if $opt['checked']}checked="checked"{/if} />
+									&nbsp;{$delivery_options_info[$key]['title']|escape}
+								</label>
+							</td>
+						</tr>
+					{/foreach}	
+					</table>
+					{if $is_intl}
+						<!-- <p class="radio">
+							<label for="international_delivery_0">
+								<input type="radio" name="display_international_delivery" id="international_delivery_0" value="0"{if empty($display_international_delivery)} checked="checked"{/if} />
+								{l s='World Express Pro' mod='bpostshm'}
 							</label>
 							<br />
-						{/foreach}	
-						</p>
+							<label for="international_delivery_1">
+								<input type="radio" name="display_international_delivery" id="international_delivery_1" value="1"{if !empty($display_international_delivery)} checked="checked"{/if} />
+								{l s='World Business' mod='bpostshm'}
+							</label>
+						</p> -->
+					{/if}
 					</div>
+
+					{if $is_intl}
+						<!-- <div class="margin-form col-lg-9 col-lg-offset-3">
+							<p class="preference_description help-block">
+								{l s='Choose international delivery option.' mod='bpostshm'}
+							</p>
+						</div> -->
+					{/if}
 					<div class="margin-form col-lg-9 col-lg-offset-3">
 						<p class="preference_description help-block">
-						{foreach $options['full'] as $key => $opt}
-							<b>{$opt['title']|escape}</b>: {$opt['info']|escape}
+						{foreach $options['opts'] as $key => $opt}
+							<b>{$delivery_options_info[$key]['title']|escape}</b>: {$delivery_options_info[$key]['info']|escape}
 							<br />
 						{/foreach}
 						</p>
@@ -247,15 +266,99 @@
 					{l s='Save settings' mod='bpostshm'}
 				</button>
 			</div>
-		</fieldset>	
+		</fieldset>
+	</form>	
+	
+	<!-- Delivery settings -->
+	<form class="form-horizontal{if $version < 1.5} v1-4{elseif $version < 1.6} v1-5{/if}" action="#" method="POST" autocomplete="off">
+		<fieldset class="panel" id="fs-delivery-set">
+		{if isset($display_delivery_date)}
+			<div class="form-group">
+				<span class="control-label{if $version < 1.6}-bw{/if} col-lg-3">{l s='Display delivery date' mod='bpostshm'}</span>
+				<div class="margin-form col-lg-9">
+					<span class="switch prestashop-switch fixed-width-lg">
+						<input type="radio" name="display_delivery_date" id="display_delivery_date_1" value="1"{if !empty($display_delivery_date)} checked="checked"{/if} />
+						<label for="display_delivery_date_1">
+							{if $version < 1.6}<img src="{$module_dir|escape}views/img/icons/tick.png" alt="{l s='Yes' mod='bpostshm'}" />{else}{l s='Yes' mod='bpostshm'}{/if}
+						</label>
+						<input type="radio" name="display_delivery_date" id="display_delivery_date_0" value="0"{if empty($display_delivery_date)} checked="checked"{/if} />
+						<label for="display_delivery_date_0">
+							{if $version < 1.6}<img src="{$module_dir|escape}views/img/icons/cross.png" alt="{l s='No' mod='bpostshm'}" />{else}{l s='No' mod='bpostshm'}{/if}
+						</label>
+						<a class="slide-button btn"></a>
+					</span>
+				</div>
+				<div class="margin-form col-lg-9 col-lg-offset-3">
+					<p class="preference_description help-block">
+						{l s='Option to display the expected delivery date to the client (Belgium only).' mod='bpostshm'}
+					</p>
+				</div>
+			</div>
+			<div class="clear"></div>
+		{/if}
+		{if isset($ship_delay_days)}
+			<div class="form-group">
+				<span class="control-label{if $version < 1.6}-bw{/if} col-lg-3">{l s='Days between order and shipment' mod='bpostshm'}</span>
+				<div class="margin-form col-lg-9">
+					<input type="text" name="ship_delay_days" id="ship-delay" value="{$ship_delay_days|intval}">
+				</div>
+				<div class="margin-form col-lg-9 col-lg-offset-3">
+					<p class="preference_description help-block">
+						{l s='Default is 0 (next day delivery), maximum 8' mod='bpostshm'}
+					</p>
+				</div>
+			</div>
+			<div class="clear"></div>
+		{/if}
+		{if isset($cutoff_time)}
+			<div class="form-group">
+				<span class="control-label{if $version < 1.6}-bw{/if} col-lg-3">{l s='Next day delivery allowed until' mod='bpostshm'}</span>
+				<div class="margin-form col-lg-9">
+					<input type="text" name="cutoff_time" id="cutoff-time" value="{$cutoff_time|escape}">&nbsp;h
+				</div>
+				<!-- <div class="margin-form col-lg-9 col-lg-offset-3">
+					<p class="preference_description help-block">
+						{l s='Next day delivery allowed until' mod='bpostshm'}
+					</p>
+				</div> -->
+			</div>
+			<div class="clear"></div>
+		{/if}
+		{if isset($hide_date_oos)}
+			<div class="form-group">
+				<span class="control-label{if $version < 1.6}-bw{/if} col-lg-3">{l s='Hide delivery date when out of stock' mod='bpostshm'}</span>
+				<div class="margin-form col-lg-9">
+					<span class="switch prestashop-switch fixed-width-lg">
+						<input type="radio" name="hide_date_oos" id="hide_date_oos_1" value="1"{if !empty($hide_date_oos)} checked="checked"{/if} />
+						<label for="hide_date_oos_1">
+							{if $version < 1.6}<img src="{$module_dir|escape}views/img/icons/tick.png" alt="{l s='Yes' mod='bpostshm'}" />{else}{l s='Yes' mod='bpostshm'}{/if}
+						</label>
+						<input type="radio" name="hide_date_oos" id="hide_date_oos_0" value="0"{if empty($hide_date_oos)} checked="checked"{/if} />
+						<label for="hide_date_oos_0">
+							{if $version < 1.6}<img src="{$module_dir|escape}views/img/icons/cross.png" alt="{l s='No' mod='bpostshm'}" />{else}{l s='No' mod='bpostshm'}{/if}
+						</label>
+						<a class="slide-button btn"></a>
+					</span>
+				</div>
+				<div class="margin-form col-lg-9 col-lg-offset-3">
+					<p class="preference_description help-block">
+						{l s='Do not display delivery date when at least one product in the cart, is out of stock.' mod='bpostshm'}
+					</p>
+				</div>
+			</div>
+			<div class="clear"></div>
+		{/if}
+			<div class="margin-form panel-footer">
+				<button class="button btn btn-default pull-right" type="submit" name="submitDeliverySettings">
+					<i class="process-icon-save"></i>
+					{l s='Save settings' mod='bpostshm'}
+				</button>
+			</div>
+		</fieldset>
 	</form>
-	<br />
 	<!-- Label settings -->
 	<form class="form-horizontal{if $version < 1.5} v1-4{elseif $version < 1.6} v1-5{/if}" action="#" method="POST" autocomplete="off">
-		<fieldset class="panel">
-			{if $version < 1.6}<legend><img src="{$module_dir|escape}views/img/icons/bpost.png" alt="bpost" />{else}<div class="panel-heading">{/if}
-				{l s='Label settings' mod='bpostshm'}
-			{if $version < 1.6}</legend>{else}</div>{/if}
+		<fieldset class="panel" id="fs-label-set">
 			<div class="form-group">
 				<span class="control-label{if $version < 1.6}-bw{/if} col-lg-3">{l s='Use PrestaShop to manage labels' mod='bpostshm'}</span>
 				<div class="margin-form col-lg-9">
@@ -403,14 +506,39 @@
 			</div>
 		</fieldset>
 	</form>
-	<br />
-	<!-- Country information -->
+	<!-- International settings -->
 	{if empty($errors)}
 		<form class="form-horizontal{if $version < 1.5} v1-4{elseif $version < 1.6} v1-5{/if}" action="#" method="POST" autocomplete="off">
-			<fieldset class="panel">
-				{if $version < 1.6}<legend><img src="{$module_dir|escape}views/img/icons/bpost.png" alt="bpost" />{else}<div class="panel-heading">{/if}
-					{l s='Country information' mod='bpostshm'}
-				{if $version < 1.6}</legend>{else}</div>{/if}
+			<fieldset class="panel" id="fs-intl-set">
+				<div class="form-group">
+					<span class="control-label{if $version < 1.6}-bw{/if} col-lg-3">{l s='International delivery' mod='bpostshm'}</span>
+					<div class="margin-form col-lg-9">
+						<p class="radio">
+							<label for="international_delivery_0">
+								<input type="radio" name="display_international_delivery" id="international_delivery_0" value="0"{if empty($display_international_delivery)} checked="checked"{/if} />
+								{l s='World Express Pro' mod='bpostshm'}
+							</label>
+							<br />
+							<label for="international_delivery_1">
+								<input type="radio" name="display_international_delivery" id="international_delivery_1" value="1"{if !empty($display_international_delivery)} checked="checked"{/if} />
+								{l s='World Business' mod='bpostshm'}
+							</label>
+						</p>
+					</div>
+					<div class="margin-form col-lg-9 col-lg-offset-3">
+						<p class="preference_description help-block">
+							{l s='Choose international delivery option.' mod='bpostshm'}
+						</p>
+					</div>
+				</div>	
+				<div class="clear"></div>
+				<div class="margin-form panel-footer">
+					<button class="button btn btn-default pull-right" type="submit" name="submitInternationalSettings">
+						<i class="process-icon-save"></i>
+						{l s='Save settings' mod='bpostshm'}
+					</button>
+				</div>
+				<div class="clear"></div>
 				<!-- <div class="form-group">
 					<span class="control-label{if $version < 1.6}-bw{/if} col-lg-3">{l s='Zone configuration' mod='bpostshm'}</span>
 					<div class="margin-form col-lg-9">
@@ -516,6 +644,56 @@
 
 	<script type="text/javascript">
 	$(function() {
+		$def_cutoff = '{$cutoff_time|escape}';
+		$('input#ship-delay').integerInput({ min: 0, max: 8 });
+		$('input#cutoff-time').hourInput({ def: $def_cutoff });
+		$('input.del-opt').deliveryOption({ tf: "{l s='as from' mod='bpostshm'}",	tc: "{l s='with additional cost of' mod='bpostshm'}", disables: { "1-350": ["1-300"] }	});
+		$('button[name="submitDeliveryOptions"]').on('click', function() {
+{literal}			
+			var js_delopts = {'1':{},'2':{},'4':{},'9':{}};
+{/literal}
+			$('input.del-opt').each(function() {
+				if (this.checked) {
+					var elm = $(this);
+						opt_id = elm.data('id'),
+						from = elm.attr('from');
+					$dm = opt_id.substr(0, 1);
+					$opt = opt_id.substr(2);
+					js_delopts[$dm][$opt] = (!!elm.attr('cost')) ? [from, elm.attr('cost')] : from;
+				}
+			});
+
+			$jsn_list = JSON.stringify(js_delopts);
+			$('input[name="delivery_options_list"]').val($jsn_list);
+		});
+		$('button[name="submitDeliverySettings"]').on('click', function() {
+			elm_hour = $('input#cutoff-time');
+			elm_hour.val(elm_hour.val().replace(/:/g, ''));
+		});
+
+		var tip_from = {
+			style: { classes:'qtip-bootstrap' },
+			content: { text: '' }
+		},
+		tip_cost = $.extend(true, {}, tip_from);
+		tip_from.content.text = "{l s='Minimum purchase total required in order to trigger the option excluding taxes & shipping costs' mod='bpostshm'}";
+		tip_cost.content.text = "{l s='added shipping costs' mod='bpostshm'}";
+		$('[data-tip="from"]').qtip(tip_from);
+		$('[data-tip="cost"]').qtip(tip_cost);
+		//
+		// $('.delopt-tabs').idTabs();
+		// bpost-tabs
+		$last_tab = {$last_set_tab|intval};
+		$('.bpost-tabs').idTabs({ start: $last_tab });
+		$('button[type="submit"]').on('click', function() {
+			var idx = $('ul.bpost-tabs li a.selected').parent().index();
+			var	elm_hidden = $('<input type="hidden">')
+					.attr('name', 'last_set_tab')
+					.val(idx);
+
+			$(this).before(elm_hidden);
+		});
+		// end new items
 		$('.info-link').live('click', function(e) {
 			e.preventDefault();
 			
@@ -625,39 +803,6 @@
 				$('#enabled-country-list').html('<option selected value="REMOVE">(empty)</option>');
 		});
 
-		// Delivery options submit
-		var del_sections = {$delivery_sections|@json_encode};
-		$('button[name="submitDeliveryOptions"]').live('click', function(e) {
-			//e.preventDefault();
-{literal}
-			delopts = {};
-			$.each(del_sections, function() {
-				checked_opts = '';
-				$('#section-' + this).find('input:checkbox').each(function() {
-					if (this.checked)
-						checked_opts += '|' + this.value;
-				});
-				if ('' !== checked_opts)
-					checked_opts = checked_opts.substr(1);
-				delopts['__'+this] = checked_opts;
-			});
-			json_options = JSON.stringify(delopts).replace(/__/g, '');
-			$('input[name="delivery_options_list"]').val(json_options);
-{/literal}
-		});
-		
-		// special section-home: if 350-insurance is checked 300-signature is unchecked & disabled
-		$('#home-350').change(function() {
-			elm = $('input[name="home-300"]');
-			if (this.checked && elm.prop('checked'))
-				elm.prop('checked', false);
-
-			elm.prop('disabled', this.checked);
-		});
-		// and at page load
-		if ($('#home-350').prop('checked')) {
-			$('input[name="home-300"]').prop('disabled', true);
-		}
 		//
 		$('input[name="label_use_ps_labels"]').live('change', function() {
 			$(this).closest('.form-group').nextAll('.form-group').toggleClass('hidden');

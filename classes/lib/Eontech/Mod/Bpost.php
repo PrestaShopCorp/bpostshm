@@ -157,7 +157,7 @@ class EontechModBpost
 
 		// set options
 		$options = array();
-		$options[CURLOPT_URL] = self::API_URL.'/'.$this->account_id.$url;
+		$options[CURLOPT_URL] = static::API_URL.'/'.$this->account_id.$url;
 		if ($this->getPort() != 0)
 			$options[CURLOPT_PORT] = $this->getPort();
 		$options[CURLOPT_USERAGENT] = $this->getUserAgent();

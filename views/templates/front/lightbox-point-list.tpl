@@ -7,7 +7,11 @@
 *}
 
 <div id="lightbox" class="at-shop{if $version == 1.5} v1-5{/if}">
-	<div id="catch-phrase">{l s='Select where you want to pick up your parcel.' mod='bpostshm'}</div>
+	{if $is_valid}
+		<div id="catch-phrase">{l s='Select where you want to pick up your parcel.' mod='bpostshm'}</div>
+	{else}
+		<div id="error-phrase">{l s='Invalid postcode. Please provide a correct address.' mod='bpostshm'}</div>
+	{/if}
 	<form action="{$url_get_nearest_service_points|escape}" id="search-form" method="GET" target="_self" autocomplete="off">
 		<label for="postcode">{l s='Postcode' mod='bpostshm'}</label>
 		<!-- <input type="text" name="postcode" id="postcode" value="{$postcode|default:''}" size="10" /> -->
