@@ -33,14 +33,18 @@ class BpostShm extends CarrierModule
 	 */
 	const SHM_INTL = 9;
 
+	const API_URL = 'https://api.bpost.be/services/shm';
+	const API_URL_TEST = 'https://test2api.bpost.be/services/shm';
 	const DEF_CUTOFF = '1500';
 
 	public $carriers = array();
 	public $shipping_methods = array();
 
 	private $order_states_inc = array();
-	private $api_url = 'https://shippingmanager.bpost.be/ShmFrontEnd/start';
-	private $api_url_test = 'http://shm-res-ac2.netpost/api/external';
+	/*
+	private $api_url = 'https://api.bpost.be/services/shm';
+	private $api_url_test = 'https://test2api.bpost.be/services/shm';
+	*/
 
 	public function __construct()
 	{
@@ -149,7 +153,8 @@ class BpostShm extends CarrierModule
 			if (!$this->isRegisteredInHook($hook))
 				$return = $return && $this->registerHook($hook);
 
-		$return = $return && Service::updateGlobalValue('BPOST_ACCOUNT_API_URL', $this->api_url);
+		// $return = $return && Service::updateGlobalValue('BPOST_ACCOUNT_API_URL', $this->api_url);
+		$return = $return && Service::updateGlobalValue('BPOST_ACCOUNT_API_URL', self::API_URL);
 		$return = $return && $this->addReplaceOrderState();
 
 		// addCartBpostTable

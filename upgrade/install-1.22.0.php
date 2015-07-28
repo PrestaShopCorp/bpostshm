@@ -31,6 +31,8 @@ ADD COLUMN `upl_info` TEXT AFTER `option_kmi`';
 		$object->upgrade_detail[$upgrade_version][] = $object->l('Can\'t alter bpost cart table');
 
 	$return = $return && empty($object->upgrade_detail[$upgrade_version]);
+	$return = $return && Configuration::updateGlobalValue('BPOST_ACCOUNT_API_URL', $object::API_URL);
+
 	$return = $return && $object->upgradeTo($upgrade_version);
 
 	return $return;

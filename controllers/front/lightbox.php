@@ -407,7 +407,6 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 		$this->addCSS(__PS_BASE_URI__.'modules/'.$this->module->name.'/views/css/jquery.qtip.min.css');
 		$this->addJS(__PS_BASE_URI__.'modules/'.$this->module->name.'/views/js/bpostshm.js');
 		$this->addJS(__PS_BASE_URI__.'modules/'.$this->module->name.'/views/js/srgdebug.js');
-		$this->addJS(__PS_BASE_URI__.'modules/'.$this->module->name.'/views/js/input-options.min.js');
 		$this->addJS(__PS_BASE_URI__.'modules/'.$this->module->name.'/views/js/jquery.qtip.min.js');
 		$this->addJS('https://maps.googleapis.com/maps/api/js?v=3.16&key='.Service::GMAPS_API_KEY.'&sensor=false&language='
 			.$this->context->language->iso_code);

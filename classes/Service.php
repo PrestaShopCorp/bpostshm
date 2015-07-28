@@ -51,10 +51,11 @@ class Service
 
 		$this->context = $context;
 
-		$this->bpost = new EontechBpostServiceTest(
-		// $this->bpost = new EontechBpostService(
+		// $this->bpost = new EontechBpostServiceTest(
+		$this->bpost = new EontechBpostService(
 			Configuration::get('BPOST_ACCOUNT_ID'),
-			Configuration::get('BPOST_ACCOUNT_PASSPHRASE')
+			Configuration::get('BPOST_ACCOUNT_PASSPHRASE'),
+			Configuration::get('BPOST_ACCOUNT_API_URL')
 		);
 		$this->geo6 = new EontechModGeo6(
 			self::GEO6_PARTNER,

@@ -399,7 +399,6 @@ class Lightbox extends FrontController
 				<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript"></script>
 				<script src="'._MODULE_DIR_.'bpostshm/views/js/bpostshm.js" type="text/javascript"></script>
 				<script src="'._MODULE_DIR_.'bpostshm/views/js/srgdebug.js" type="text/javascript"></script>
-				<script src="'._MODULE_DIR_.'bpostshm/views/js/input-options.min.js" type="text/javascript"></script>
 				<script src="//cdnjs.cloudflare.com/ajax/libs/jquery-scrollTo/1.4.11/jquery.scrollTo.min.js" type="text/javascript"></script>
 				<script src="//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.pack.js" type="text/javascript"></script>
 				<script src="'._MODULE_DIR_.'bpostshm/views/js/jquery.qtip.min.js" type="text/javascript"></script>
@@ -423,7 +422,6 @@ class Lightbox extends FrontController
 		Tools::addJS((_PS_SSL_ENABLED_ ? 'https://' : 'http://').'//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js');
 		Tools::addJS(__PS_BASE_URI__.'/modules/bpostshm/views/js/bpostshm.js');
 		Tools::addJS(__PS_BASE_URI__.'/modules/bpostshm/views/js/srgdebug.js');
-		Tools::addJS(__PS_BASE_URI__.'/modules/bpostshm/views/js/input-options.min.js');
 		Tools::addJS((_PS_SSL_ENABLED_ ? 'https://' : 'http://').'//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.pack.js');
 		Tools::addJS(__PS_BASE_URI__.'/modules/bpostshm/views/js/jquery.qtip.min.js');
 		Tools::addJS('https://maps.googleapis.com/maps/api/js?v=3.16&key='.Service::GMAPS_API_KEY.'&sensor=false&language=fr');

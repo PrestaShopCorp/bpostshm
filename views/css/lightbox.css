@@ -320,3 +320,8 @@
 img.info {
   margin:-4px 4px;
 }
+.field-error {
+  margin-left: 5px;
+  font-size: 12px;
+  color: #da2b00;
+}

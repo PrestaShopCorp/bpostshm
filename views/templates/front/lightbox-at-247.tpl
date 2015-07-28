@@ -147,9 +147,9 @@
 			
 			//
 			var upl = {$upl_info|@json_encode};
-			$('input#eml').genInput({ reTest: reMail, err: true, ini: upl.eml });
-			$('input#mob').genInput({ reTest: reMobileBE, err: true, ini: upl.mob, reMove: /[\s\(\)]/g });
-			
+			$('input#eml').val(upl.eml);
+			$('input#mob').val(upl.mob);
+
 			$('.loader').hide();
 			$(document)
 				// .tooltip()
@@ -164,14 +164,41 @@
 				e.preventDefault();
 				e.stopPropagation();
 
-				upl.eml = $('input#eml').val();
-
-				mob_num = $('input#mob').val();
-				upl.mob = '0' + mob_num.substring(mob_num.length-9);
-				upl.rmz = $('input#rmz').prop('checked'); 
-
 				var $form 	= $(this),
 					$errors = [];
+
+				$('span.field-error').remove();
+				$.each($form.find('[type="text"]'), function(i, field) {
+					var $field = $(field);
+
+					$field.removeClass('error');
+					if ($field.is('input#eml') && !reMail.test(field.value))
+						$errors.push($field);
+					else if ($field.is('input#mob')) {
+						val = field.value.replace(/[\s\(\)]/g, '');
+						if (val.length) { 
+							if (reMobileBE.test(val))
+								field.value =  '0' + val.substring(val.length-9);
+							else
+								$errors.push($field);
+						}
+					}
+				});
+				if ($errors.length)
+				{
+					$.each($errors, function(i, $field) {
+						$field.addClass('error')
+							.after($('<span class="field-error">{l s="Incorrect format" mod="bpostshm"}</span>'))
+							.fadeOut('slow', function(){
+								$(this).fadeIn('slow');
+							});
+					});
+					return;
+				}
+
+				upl.eml = $('input#eml').val();
+				upl.mob = $('input#mob').val();
+				upl.rmz = $('input#rmz').prop('checked'); 
 
 				$.post( $form.attr('action'), { post_upl_info: JSON.stringify(upl) } )
 					.done(function(response) {
