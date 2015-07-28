@@ -196,7 +196,8 @@ class BpostShmLightboxModuleFrontController extends ModuleFrontController
 								'rmz' => false,
 								);
 
-						$upl_info['lng'] = $this->context->language->iso_code;
+						$iso_code = $this->context->language->iso_code;
+						$upl_info['lng'] = in_array($iso_code, array('fr', 'nl')) ? $iso_code : 'en';
 						self::$smarty->assign('upl_info', $upl_info, true);
 						//
 						/*

@@ -220,7 +220,8 @@ class Lightbox extends FrontController
 								'rmz' => false,
 								);
 
-						$upl_info['lng'] = $context->language->iso_code;
+						$iso_code = $context->language->iso_code;
+						$upl_info['lng'] = in_array($iso_code, array('fr', 'nl')) ? $iso_code : 'en';
 						self::$smarty->assign('upl_info', $upl_info, true);
 						//
 						/*
