@@ -187,7 +187,7 @@ WHERE `id_configuration` in ('.implode(',', $id_list).')';
 			$delivery_options[$old2new_tbl[$dm]] = $new_opt;
 			unset($delivery_options[$dm]);
 		}
-		
+
 		// Tools version is inadequate so don't ask!
 		// return Tools::jsonEncode($delivery_options, JSON_FORCE_OBJECT);
 		return json_encode($delivery_options, JSON_FORCE_OBJECT);

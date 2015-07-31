@@ -280,7 +280,7 @@
       margin-bottom: 5px; }
     #lightbox.at-247 #upl-unregister label {
       float: left;
-      width: 35%; }
+      width: 36%; }
     #lightbox.at-247 #upl-unregister input.error,
     #lightbox.at-247 #upl-unregister select.error {
       border-color: #c90200; }
@@ -313,6 +313,15 @@
         font-weight: bold;
         padding: 10px 0; }
 
+#lightbox div p {
+  margin-bottom: 20px;
+  text-align: center;
+}
+.at-247 .center {
+  float: none;
+  margin: 0 auto;
+}
+
 #uniform-rmz {
     display: inline;
     margin-left: 3px;
@@ -322,6 +331,10 @@ img.info {
 }
 .field-error {
   margin-left: 5px;
+  font-size: 12px;
+  color: #da2b00;
+}
+.legend {
   font-size: 12px;
   color: #da2b00;
 }

@@ -55,11 +55,11 @@
 				{l s='Delivery options' mod='bpostshm'}
 			</a>
 		</li>
-		<li>
+		<!-- <li>
 			<a href="#fs-delivery-set">
 				{l s='Delivery settings' mod='bpostshm'}
 			</a>
-		</li>
+		</li> -->
 		<li>
 			<a href="#fs-intl-set">
 				{l s='International settings' mod='bpostshm'}
@@ -179,7 +179,7 @@
 		</fieldset>
 	</form>
 	
-	<!-- new Delivery options -->
+	<!-- Delivery options -->
 	<div class="del-opt-tpl" style="display:none;">
 		<span class="dex"> from </span>
 		<input type="text" class="currency">
@@ -196,7 +196,6 @@
 			{/foreach}
 			</ul> --> 
 			{foreach $delivery_options as $dm => $options}
-			{assign var="is_intl" value=(9 === $dm)}
 				<div id="dm-{$dm|intval}">
 					<span class="control-label{if $version < 1.6}-bw{/if} col-lg-3">{l s=$options['title'] mod='bpostshm'}</span>
 					<div class="margin-form col-lg-9">
@@ -213,28 +212,7 @@
 						</tr>
 					{/foreach}	
 					</table>
-					{if $is_intl}
-						<!-- <p class="radio">
-							<label for="international_delivery_0">
-								<input type="radio" name="display_international_delivery" id="international_delivery_0" value="0"{if empty($display_international_delivery)} checked="checked"{/if} />
-								{l s='World Express Pro' mod='bpostshm'}
-							</label>
-							<br />
-							<label for="international_delivery_1">
-								<input type="radio" name="display_international_delivery" id="international_delivery_1" value="1"{if !empty($display_international_delivery)} checked="checked"{/if} />
-								{l s='World Business' mod='bpostshm'}
-							</label>
-						</p> -->
-					{/if}
 					</div>
-
-					{if $is_intl}
-						<!-- <div class="margin-form col-lg-9 col-lg-offset-3">
-							<p class="preference_description help-block">
-								{l s='Choose international delivery option.' mod='bpostshm'}
-							</p>
-						</div> -->
-					{/if}
 					<div class="margin-form col-lg-9 col-lg-offset-3">
 						<p class="preference_description help-block">
 						{foreach $options['opts'] as $key => $opt}
@@ -270,7 +248,7 @@
 	</form>	
 	
 	<!-- Delivery settings -->
-	<form class="form-horizontal{if $version < 1.5} v1-4{elseif $version < 1.6} v1-5{/if}" action="#" method="POST" autocomplete="off">
+	<!-- <form class="form-horizontal{if $version < 1.5} v1-4{elseif $version < 1.6} v1-5{/if}" action="#" method="POST" autocomplete="off">
 		<fieldset class="panel" id="fs-delivery-set">
 		{if isset($display_delivery_date)}
 			<div class="form-group">
@@ -316,11 +294,6 @@
 				<div class="margin-form col-lg-9">
 					<input type="text" name="cutoff_time" id="cutoff-time" value="{$cutoff_time|escape}">&nbsp;h
 				</div>
-				<!-- <div class="margin-form col-lg-9 col-lg-offset-3">
-					<p class="preference_description help-block">
-						{l s='Next day delivery allowed until' mod='bpostshm'}
-					</p>
-				</div> -->
 			</div>
 			<div class="clear"></div>
 		{/if}
@@ -355,7 +328,7 @@
 				</button>
 			</div>
 		</fieldset>
-	</form>
+	</form> -->
 	<!-- Label settings -->
 	<form class="form-horizontal{if $version < 1.5} v1-4{elseif $version < 1.6} v1-5{/if}" action="#" method="POST" autocomplete="off">
 		<fieldset class="panel" id="fs-label-set">
@@ -647,7 +620,7 @@
 		$def_cutoff = '{$cutoff_time|escape}';
 		$('input#ship-delay').integerInput({ min: 0, max: 8 });
 		$('input#cutoff-time').hourInput({ def: $def_cutoff });
-		$('input.del-opt').deliveryOption({ tf: "{l s='as from' mod='bpostshm'}",	tc: "{l s='with additional cost of' mod='bpostshm'}", disables: { "1-350": ["1-300"] }	});
+		$('input.del-opt').deliveryOption({ tf: "{l s='as from' mod='bpostshm' js=1}",	tc: "{l s='with additional cost of' mod='bpostshm' js=1}", disables: { "1-350": ["1-300"] }	});
 		$('button[name="submitDeliveryOptions"]').on('click', function() {
 {literal}			
 			var js_delopts = {'1':{},'2':{},'4':{},'9':{}};
@@ -676,8 +649,8 @@
 			content: { text: '' }
 		},
 		tip_cost = $.extend(true, {}, tip_from);
-		tip_from.content.text = "{l s='Minimum purchase total required in order to trigger the option excluding taxes & shipping costs' mod='bpostshm'}";
-		tip_cost.content.text = "{l s='added shipping costs' mod='bpostshm'}";
+		tip_from.content.text = "{l s='Minimum purchase total required in order to trigger the option excluding taxes & shipping costs' mod='bpostshm' js=1}";
+		tip_cost.content.text = "{l s='added shipping costs' mod='bpostshm' js=1}";
 		$('[data-tip="from"]').qtip(tip_from);
 		$('[data-tip="cost"]').qtip(tip_cost);
 		//

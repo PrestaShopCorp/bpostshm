@@ -22,7 +22,7 @@
 	</div>
 	{if isset($upl_info)}
 	<div id="unregister" class="clearfix">		
-		<form class="col-xs-6" action="{$url_post_upl_unregister|escape}" id="upl-unregister" method="POST" autocomplete="off" novalidate="novalidate">
+		<form class="col-xs-6 center" action="{$url_post_upl_unregister|escape}" id="upl-unregister" method="POST" autocomplete="off" novalidate="novalidate">
 			<div class="row clearfix">
 				<label for="email">{l s='E-mail' mod='bpostshm'}</label>
 				<input type="text" name="eml" id="eml" value="" required="required" />
@@ -42,23 +42,15 @@
 				</label>
 				<input type="checkbox" name="rmz" id="rmz" value="1" {if $upl_info['rmz']}checked="checked"{/if} />
 			</div>
-			<!-- <div class="row clearfix">
-				<label for="preferred-language">{l s='Preferred language' mod='bpostshm'}</label>
-				<select name="preferred_language" id="preferred-language" required="required">
-					{foreach $languages as $iso_code => $_language}
-						<option value="{$_language['lang']|escape}"{if $language == $iso_code} selected="selected"{/if}>{$_language['name']|escape}</option>
-					{/foreach}
-				</select>
-				<sup>*</sup>
-			</div> -->
 			<div class="row last">
-				<!-- <input type="checkbox" name="cgv" id="cgv" value="1" required="required" />
-				<label for="cgv">{l s='I accept the' mod='bpostshm'} <a id="terms" href="" title="{l s='Terms and conditions' mod='bpostshm'}">{{l s='Terms and conditions' mod='bpostshm'}|lower}</a></label>
-				<sup>*</sup> -->
 				<br /><br />
 				<input type="submit" class="button" value="{l s='Proceed' mod='bpostshm'}" />
 			</div>
-
+			<div class="row clearfix legend">
+				<label>
+					* {l s='required' mod='bpostshm'}
+				</label>
+			</div>
 		</form>
 	</div>
 	{/if}
@@ -99,49 +91,13 @@
 		        }
 			}); 
 
-			// Getbpack247Member
-			/*
-			function getBpack247Member($rcn)
-			{
-				var dev_mode = false;
-				var	actual_error = false,
-					polling_time = dev_mode ? 100 : 5000;
-
-				$.getJSON( "{$url_get_bpack247_member|escape:'javascript'}", { rcn: $rcn } )
-					.done(function(json) {
-				  		actual_error = null != json.Error; //['Error'];
-				  		if (actual_error)
-				  			//srgDebug.traceJson(json);
-				  			srgDebug.trace("{l s='RC# cannot be verified.' mod='bpostshm'}");
-				  		else
-				  			$(location).attr('href', "{$url_get_point_list|escape:'javascript'}");
-				  	})
-				  	.fail(function( jqXHR, textStatus, error ) {
-				    	var err = textStatus + '<br>' + error + '<br>';
-				    	err += jqXHR.responseText;
-				    	actual_error = true;
-				    	setTimeout(function() {
-							if (actual_error)
-								srgDebug.trace(err);
-						}, polling_time);
-					});
-			}
-
-			$('input[name="rc"]').live('keyup', function() {
-				$rcn = this.value;
-				if (reRCn.test($rcn))
-					getBpack247Member( $rcn.replace(/-/g, '') );
-
-			});
-			*/
-			
 			var tip_mobile = {
 				style: { classes:'qtip-bootstrap' },
 				content: { text: '' }
 			},
 			tip_rmz = $.extend(true, {}, tip_mobile);
-			tip_mobile.content.text = "{l s='Mobile number info' mod='bpostshm'}";
-			tip_rmz.content.text = "{l s='Reduced mobility zone info' mod='bpostshm'}";
+			tip_mobile.content.text = "{l s='Mobile number info' mod='bpostshm' js=1}";
+			tip_rmz.content.text = "{l s='Reduced mobility zone info' mod='bpostshm' js=1}";
 			$('[data-tip="mobile"]').qtip(tip_mobile);
 			$('[data-tip="mobi-zone"]').qtip(tip_rmz);
 			
@@ -186,9 +142,10 @@
 				});
 				if ($errors.length)
 				{
+					var field_error_msg = "{l s='Incorrect format' mod='bpostshm' js=1}";
 					$.each($errors, function(i, $field) {
 						$field.addClass('error')
-							.after($('<span class="field-error">{l s="Incorrect format" mod="bpostshm"}</span>'))
+							.after($('<span class="field-error">'+field_error_msg+'</span>'))
 							.fadeOut('slow', function(){
 								$(this).fadeIn('slow');
 							});

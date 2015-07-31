@@ -527,7 +527,7 @@ class Service
 				'id_country'=> Configuration::get('PS_SHOP_COUNTRY_ID'),
 				'name'		=> preg_replace($name_pattern, '', (string)Configuration::get('PS_SHOP_NAME')),
 				'phone'		=> Configuration::get('PS_SHOP_PHONE'),
-				'postcode' 	=> trim(Configuration::get('PS_SHOP_CODE')), // todo something better than trim
+				'postcode' 	=> trim(Configuration::get('PS_SHOP_CODE')),
 			),
 		);
 

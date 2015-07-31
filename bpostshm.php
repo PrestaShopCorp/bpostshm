@@ -41,10 +41,6 @@ class BpostShm extends CarrierModule
 	public $shipping_methods = array();
 
 	private $order_states_inc = array();
-	/*
-	private $api_url = 'https://api.bpost.be/services/shm';
-	private $api_url_test = 'https://test2api.bpost.be/services/shm';
-	*/
 
 	public function __construct()
 	{
@@ -128,7 +124,7 @@ class BpostShm extends CarrierModule
 				'info' => $this->l('Insurance to insure your goods to a maximum of 500,00 euro.'),
 				),
 		);
-		// unset($this->_all_delivery_options[470]);
+		unset($this->_all_delivery_options[470]);
 
 		/** Backward compatibility */
 		require_once(_PS_MODULE_DIR_.$this->name.'/backward_compatibility/backward.php');
@@ -671,13 +667,6 @@ AND
 			Configuration::get('BPOST_ACCOUNT_API_URL')
 		);
 		//
-		// REMOVE
-		/*
-		$display_home_delivery_only = Tools::getValue(
-			'display_home_delivery_only',
-			Configuration::get('BPOST_HOME_DELIVERY_ONLY')
-		);
-		*/
 		// TRANSLATE
 		$delivery_options_list = Tools::getValue(
 			'delivery_options_list',
@@ -756,35 +745,9 @@ AND
 			if (Configuration::get('BPOST_DELIVERY_OPTIONS_LIST') !== $delivery_options_list)
 				Configuration::updateValue('BPOST_DELIVERY_OPTIONS_LIST', $delivery_options_list);
 
-			// Display international delivery
-			/*
-			if (Configuration::get('BPOST_INTERNATIONAL_DELIVERY') !== $display_international_delivery
-					&& is_numeric($display_international_delivery))
-				Configuration::updateValue('BPOST_INTERNATIONAL_DELIVERY', (int)$display_international_delivery);
-			*/
 		}
 		elseif (Tools::isSubmit('submitDeliverySettings'))
 		{
-			/*
-			if (Configuration::get('BPOST_HOME_DELIVERY_ONLY') !== $display_home_delivery_only
-					&& is_numeric($display_home_delivery_only))
-			{
-				Service::updateGlobalValue('BPOST_HOME_DELIVERY_ONLY', (int)$display_home_delivery_only);
-
-				foreach ($this->getIdCarriers() as $shipping_method => $id_carrier)
-				{
-					if (BpostShm::SHM_HOME == $shipping_method)
-						continue;
-
-					$carrier = new Carrier((int)$id_carrier);
-					if (Validate::isLoadedObject($carrier) && !empty($carrier->id))
-					{
-						$carrier->active = !$display_home_delivery_only;
-						$carrier->update();
-					}
-				}
-			}
-			*/
 			// Display delivery date
 			if (Configuration::get('BPOST_DISPLAY_DELIVERY_DATE') !== $display_delivery_date
 					&& is_numeric($display_delivery_date))
@@ -867,22 +830,22 @@ AND
 		$delivery_options = array(
 			self::SHM_HOME => array(
 				// 'name' => 'home',
-				'title' => 'Home delivery: Belgium',
+				'title' => $this->l('Home delivery: Belgium'),
 				'opts' => '470|300|350|330',
 				),
 			self::SHM_PPOINT => array(
 				// 'name' => 'bpost',
-				'title' => 'Post point: Belgium',
+				'title' => $this->l('Post point: Belgium'),
 				'opts' => '470|350',
 				),
 			self::SHM_PLOCKER => array(
 				// 'name' => '247',
-				'title' => 'Parcel locker: Belgium',
+				'title' => $this->l('Parcel locker: Belgium'),
 				'opts' => '470|350',
 				),
 			self::SHM_INTL => array(
 				// 'name' => 'intl',
-				'title' => 'Home delivery: International',
+				'title' => $this->l('Home delivery: International'),
 				'opts' => '540',
 				),
 			);
@@ -914,44 +877,10 @@ AND
 				$dm_opts[$key] = $option;
 			}
 			$options['opts'] = $dm_opts;
-			// true gets [title & info] for each option
-			// $options['opts'] = $this->getDeliveryOptions($options['opts'], true);
-			// $options['list'] = isset($delivery_options_list) ? explode('|', $delivery_options_list[$options['name']]) : array();
 			$delivery_options[$dm] = $options;
 		}
 		$this->smarty->assign('delivery_options', $delivery_options, true);
 		$this->smarty->assign('delivery_options_info', $this->_all_delivery_options);
-		//// similar section to Go
-		/*
-		$old_delivery_options = array(
-			'home' => array(
-				'title' => '@home: Belgium',
-				//'full' => '300|330|350|470',
-				'full' => '330|350|470|300',
-				),
-			'bpost' => array(
-				'title' => 'bpack@bpost: Belgium',
-				'full' => '350|470',
-				),
-			'247' => array(
-				'title' => 'Parcel locker: Belgium',
-				'full' => '350|470',
-				),
-			'intl' => array(
-				'title' => '@home: International',
-				'full' => '540',
-				),
-			);
-		foreach ($old_delivery_options as $name => $options)
-		{
-			// true gets [title & info] for each option
-			$options['full'] = $this->getOldDeliveryOptions($options['full'], true);
-			$options['list'] = isset($delivery_options_list) ? explode('|', $delivery_options_list[$name]) : array();
-			$old_delivery_options[$name] = $options;
-		}
-		$this->smarty->assign('old_delivery_options', $old_delivery_options, true);
-		*/
-		//
 		// international settings
 		$this->smarty->assign('display_international_delivery', $display_international_delivery, true);
 		// disbling country settings
@@ -1136,10 +1065,10 @@ AND
 			'token'				=> Tools::getToken('bpostshm'),
 		);
 
-/*		// if (!empty($cart_bpost->bpack247_customer))
-		if (!empty($cart_bpost->upl_info))
-			$url_params['step'] = 2;
-*/
+		// // if (!empty($cart_bpost->bpack247_customer))
+		// if (!empty($cart_bpost->upl_info))
+		// 	$url_params['step'] = 2;
+
 		$this->smarty->assign('version', (Service::isPrestashop16plus() ? 1.6 : (Service::isPrestashop15plus() ? 1.5 : 1.4)), true);
 		$this->smarty->assign('url_lightbox', (method_exists($this->context->link, 'getModuleLink')
 			? $this->context->link->getModuleLink($this->name, 'lightbox', $url_params, true)
