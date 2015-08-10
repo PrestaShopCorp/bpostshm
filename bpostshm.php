@@ -20,26 +20,27 @@ require_once(_PS_MODULE_DIR_.'bpostshm/classes/Service.php');
 class BpostShm extends CarrierModule
 {
 	/**
-	 * 1: Post Office
-	 * 2: Post Point
-	 * 3: (1+2, Post Office + Post Point)
-	 * 4: bpack 24/7
+	 * 1: @home
+	 * 2: @bpost
+	 * 4: @24/7
 	 * 7: (1+2+4, Post Office + Post Point + bpack 24/7)
 	 */
-	const SHIPPING_METHOD_AT_HOME = 1;
-	const SHIPPING_METHOD_AT_SHOP = 2;
-	const SHIPPING_METHOD_AT_24_7 = 4;
-	/*
-	 * Need to represent sudo shipping method
+	const SHM_HOME = 1;
+	const SHM_PPOINT = 2;
+	const SHM_PLOCKER = 4;
+	/* Sudo SHM international
 	 * 9: (1+8)
 	 */
-	const SHIPPING_METHOD_AT_INTL = 9;
+	const SHM_INTL = 9;
+
+	const API_URL = 'https://api.bpost.be/services/shm';
+	const API_URL_TEST = 'https://test2api.bpost.be/services/shm';
+	const DEF_CUTOFF = '1500';
 
 	public $carriers = array();
 	public $shipping_methods = array();
 
 	private $order_states_inc = array();
-	private $api_url = 'https://shippingmanager.bpost.be/ShmFrontEnd/start';
 
 	public function __construct()
 	{
@@ -48,7 +49,7 @@ class BpostShm extends CarrierModule
 		$this->name = 'bpostshm';
 		$this->need_instance = 0;
 		$this->tab = 'shipping_logistics';
-		$this->version = '1.21.0';
+		$this->version = '1.22.0';
 
 		$this->displayName = $this->l('bpost Shipping Manager - bpost customers only');
 		$this->description = $this->l('IMPORTANT: bpostshm module description');
@@ -69,7 +70,7 @@ class BpostShm extends CarrierModule
 			);
 
 		$this->shipping_methods = array(
-			self::SHIPPING_METHOD_AT_HOME => array(
+			self::SHM_HOME => array(
 				'name' 	=> 'Home delivery / Livraison à domicile / Thuislevering',
 				'delay' => array(
 					'en' =>	'Receive your parcel at home or at the office.',
@@ -79,7 +80,7 @@ class BpostShm extends CarrierModule
 				'slug' 	=> '@home',
 				'lname'	=> $this->l('Home delivery'),
 			),
-			self::SHIPPING_METHOD_AT_SHOP => array(
+			self::SHM_PPOINT => array(
 				'name' 	=> 'Pick-up point / Point d’enlèvement / Afhaalpunt',
 				'delay' => array(
 					'en' =>	'Over 1.250 locations nearby home or the office.',
@@ -89,7 +90,7 @@ class BpostShm extends CarrierModule
 				'slug' 	=> '@bpost',
 				'lname'	=> $this->l('Pick-up point'),
 			),
-			self::SHIPPING_METHOD_AT_24_7 => array(
+			self::SHM_PLOCKER => array(
 				'name' 	=> 'Parcel locker / Distributeur de paquets / Pakjesautomaat',
 				'delay' => array(
 					'en' =>	'Pick-up your parcel whenever you want, thanks to the 24/7 service of bpost.',
@@ -114,11 +115,16 @@ class BpostShm extends CarrierModule
 				'title' => $this->l('Insurance'),
 				'info' => $this->l('Insurance to insure your goods to a maximum of 500,00 euro.'),
 				),
+			470 => array(
+				'title' => $this->l('Saturday Delivery'),
+				'info' => $this->l('Allow delivery of your goods on Saturdays.'),
+				),
 			540 => array(
 				'title' => $this->l('Insurance basic'),
 				'info' => $this->l('Insurance to insure your goods to a maximum of 500,00 euro.'),
 				),
 		);
+		unset($this->_all_delivery_options[470]);
 
 		/** Backward compatibility */
 		require_once(_PS_MODULE_DIR_.$this->name.'/backward_compatibility/backward.php');
@@ -143,7 +149,8 @@ class BpostShm extends CarrierModule
 			if (!$this->isRegisteredInHook($hook))
 				$return = $return && $this->registerHook($hook);
 
-		$return = $return && Service::updateGlobalValue('BPOST_ACCOUNT_API_URL', $this->api_url);
+		// $return = $return && Service::updateGlobalValue('BPOST_ACCOUNT_API_URL', $this->api_url);
+		$return = $return && Service::updateGlobalValue('BPOST_ACCOUNT_API_URL', self::API_URL);
 		$return = $return && $this->addReplaceOrderState();
 
 		// addCartBpostTable
@@ -156,6 +163,7 @@ class BpostShm extends CarrierModule
 				'service_point_id' => 'INT(10) unsigned NOT NULL DEFAULT 0',
 				'sp_type' => 'TINYINT(1) unsigned NOT NULL DEFAULT 0',
 				'option_kmi' => 'TINYINT(1) unsigned NOT NULL DEFAULT 0',
+				'upl_info' => 'TEXT',
 				'bpack247_customer' => 'TEXT',
 				'date_add' => 'datetime NOT NULL',
 				'date_upd' => 'timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP',
@@ -200,6 +208,7 @@ class BpostShm extends CarrierModule
 			)
 		);
 		$return = $return && $this->dbCreateTable($table_order_bpost_label_create);
+		$return = $return && $this->upgradeTo($this->version);
 
 		if ((bool)Configuration::get('BPOST_USE_PS_LABELS'))
 			$this->installModuleTab(
@@ -208,6 +217,19 @@ class BpostShm extends CarrierModule
 				'bpost',
 				Service::isPrestashop15plus() ? Tab::getIdFromClassName('AdminParentOrders') : Tab::getIdFromClassName('AdminOrders')
 			);
+
+		return $return;
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function upgradeTo($version = '')
+	{
+		$return = !empty($version);
+		require_once(_PS_MODULE_DIR_.$this->name.'/classes/UpgradeService.php');
+		$upgrader = UpgradeService::init($this);
+		$return = $return && $upgrader->upgradeTo($version);
 
 		return $return;
 	}
@@ -267,9 +289,9 @@ class BpostShm extends CarrierModule
 			// 	return false;
 
 			$carrier->deleted = (int)false;
-			// $carrier->active = true;
-			$carrier->active = BpostShm::SHIPPING_METHOD_AT_HOME == $shipping_method ||
-							!Configuration::get('BPOST_HOME_DELIVERY_ONLY');
+			$carrier->active = true;
+			// $carrier->active = BpostShm::SHM_HOME == $shipping_method ||
+			// 				!Configuration::get('BPOST_HOME_DELIVERY_ONLY');
 
 			$carrier->external_module_name = $this->name;
 			$carrier->name = (string)$lang_fields['name'];
@@ -629,6 +651,9 @@ AND
 			$errors[] = $this->l($translate);
 		}
 
+		// bpost last settings tab used
+		$last_set_tab = Tools::getValue('last_set_tab', 0);
+
 		$id_account = Tools::getValue(
 			'account_id_account',
 			Configuration::get('BPOST_ACCOUNT_ID')
@@ -642,19 +667,37 @@ AND
 			Configuration::get('BPOST_ACCOUNT_API_URL')
 		);
 		//
-		$display_home_delivery_only = Tools::getValue(
-			'display_home_delivery_only',
-			Configuration::get('BPOST_HOME_DELIVERY_ONLY')
+		// TRANSLATE
+		$delivery_options_list = Tools::getValue(
+			'delivery_options_list',
+			Configuration::get('BPOST_DELIVERY_OPTIONS_LIST')
 		);
+		//
+		$display_delivery_date = Tools::getValue(
+			'display_delivery_date',
+			Configuration::get('BPOST_DISPLAY_DELIVERY_DATE')
+		);
+		$ship_delay_days = Tools::getValue(
+			'ship_delay_days',
+			Configuration::get('BPOST_SHIP_DELAY_DAYS')
+		);
+		$cutoff_time = Tools::getValue(
+			'cutoff_time',
+			Configuration::get('BPOST_CUTOFF_TIME')
+		);
+		if (empty($cutoff_time))
+			$cutoff_time = self::DEF_CUTOFF;
+
+		$hide_date_oos = Tools::getValue(
+			'hide_date_oos',
+			Configuration::get('BPOST_HIDE_DATE_OOS')
+		);
+		//
 		$display_international_delivery = Tools::getValue(
 			'display_international_delivery',
 			Configuration::get('BPOST_INTERNATIONAL_DELIVERY')
 		);
 		//
-		$delivery_options_list = Tools::getValue(
-			'delivery_options_list',
-			Configuration::get('BPOST_DELIVERY_OPTIONS_LIST')
-		);
 		$label_use_ps_labels = Tools::getValue(
 			'label_use_ps_labels',
 			Configuration::get('BPOST_USE_PS_LABELS')
@@ -697,36 +740,41 @@ AND
 				Service::updateGlobalValue('BPOST_ACCOUNT_API_URL', $api_url);
 			}
 		}
-		elseif (Tools::isSubmit('submitDeliverySettings'))
-		{
-			if (Configuration::get('BPOST_HOME_DELIVERY_ONLY') !== $display_home_delivery_only
-					&& is_numeric($display_home_delivery_only))
-			{
-				Service::updateGlobalValue('BPOST_HOME_DELIVERY_ONLY', (int)$display_home_delivery_only);
-
-				foreach ($this->getIdCarriers() as $shipping_method => $id_carrier)
-				{
-					if (BpostShm::SHIPPING_METHOD_AT_HOME == $shipping_method)
-						continue;
-
-					$carrier = new Carrier((int)$id_carrier);
-					if (Validate::isLoadedObject($carrier) && !empty($carrier->id))
-					{
-						$carrier->active = !$display_home_delivery_only;
-						$carrier->update();
-					}
-				}
-			}
-			// Display international delivery
-			if (Configuration::get('BPOST_INTERNATIONAL_DELIVERY') !== $display_international_delivery
-					&& is_numeric($display_international_delivery))
-				Configuration::updateValue('BPOST_INTERNATIONAL_DELIVERY', (int)$display_international_delivery);
-
-		}
 		elseif (Tools::isSubmit('submitDeliveryOptions'))
 		{
 			if (Configuration::get('BPOST_DELIVERY_OPTIONS_LIST') !== $delivery_options_list)
 				Configuration::updateValue('BPOST_DELIVERY_OPTIONS_LIST', $delivery_options_list);
+
+		}
+		elseif (Tools::isSubmit('submitDeliverySettings'))
+		{
+			// Display delivery date
+			if (Configuration::get('BPOST_DISPLAY_DELIVERY_DATE') !== $display_delivery_date
+					&& is_numeric($display_delivery_date))
+				Configuration::updateValue('BPOST_DISPLAY_DELIVERY_DATE', (int)$display_delivery_date);
+
+			// Delay days before shipping
+			if (Configuration::get('BPOST_SHIP_DELAY_DAYS') !== $ship_delay_days
+					&& is_numeric($ship_delay_days))
+				Configuration::updateValue('BPOST_SHIP_DELAY_DAYS', (int)$ship_delay_days);
+
+			// Next day cut off time
+			if (Configuration::get('BPOST_CUTOFF_TIME') !== $cutoff_time)
+					// && is_numeric($cutoff_time))
+				Configuration::updateValue('BPOST_CUTOFF_TIME', $cutoff_time);
+
+			// Hide date when out of stock
+			if (Configuration::get('BPOST_HIDE_DATE_OOS') !== $hide_date_oos
+					&& is_numeric($hide_date_oos))
+				Configuration::updateValue('BPOST_HIDE_DATE_OOS', (int)$hide_date_oos);
+
+		}
+		elseif (Tools::isSubmit('submitInternationalSettings'))
+		{
+			// Display international delivery
+			if (Configuration::get('BPOST_INTERNATIONAL_DELIVERY') !== $display_international_delivery
+					&& is_numeric($display_international_delivery))
+				Configuration::updateValue('BPOST_INTERNATIONAL_DELIVERY', (int)$display_international_delivery);
 
 		}
 		elseif (Tools::isSubmit('submitLabelSettings'))
@@ -767,43 +815,74 @@ AND
 			// 	Configuration::updateValue('BPOST_LABEL_TT_UPDATE_ON_OPEN', (int)$label_tt_update_on_open);
 		}
 
+		$this->smarty->assign('last_set_tab', (int)$last_set_tab, true);
+		// account settings
 		$this->smarty->assign('account_id_account', $id_account, true);
 		$this->smarty->assign('account_passphrase', $passphrase, true);
 		$this->smarty->assign('account_api_url', $api_url, true);
-		$this->smarty->assign('display_home_delivery_only', $display_home_delivery_only, true);
-		$this->smarty->assign('display_international_delivery', $display_international_delivery, true);
+		// delivery settings
+		$this->smarty->assign('display_delivery_date', $display_delivery_date, true);
+		$this->smarty->assign('ship_delay_days', $ship_delay_days, true);
+		$this->smarty->assign('cutoff_time', $cutoff_time, true);
+		$this->smarty->assign('hide_date_oos', $hide_date_oos, true);
 		// delivery options
-		if (isset($delivery_options_list))
-			$delivery_options_list = Tools::jsonDecode($delivery_options_list, true);
-
+		$delivery_options_list = isset($delivery_options_list) ? Tools::jsonDecode($delivery_options_list, true) : array();
 		$delivery_options = array(
-			'home' => array(
-				'title' => '@home: Belgium',
-				//'full' => '300|330|350|470',
-				'full' => '330|350|470|300',
+			self::SHM_HOME => array(
+				// 'name' => 'home',
+				'title' => $this->l('Home delivery: Belgium'),
+				'opts' => '470|300|350|330',
 				),
-			'bpost' => array(
-				'title' => 'bpack@bpost: Belgium',
-				'full' => '350|470',
+			self::SHM_PPOINT => array(
+				// 'name' => 'bpost',
+				'title' => $this->l('Post point: Belgium'),
+				'opts' => '470|350',
 				),
-			'247' => array(
-				'title' => 'Parcel locker: Belgium',
-				'full' => '350|470',
+			self::SHM_PLOCKER => array(
+				// 'name' => '247',
+				'title' => $this->l('Parcel locker: Belgium'),
+				'opts' => '470|350',
 				),
-			'intl' => array(
-				'title' => '@home: International',
-				'full' => '540',
+			self::SHM_INTL => array(
+				// 'name' => 'intl',
+				'title' => $this->l('Home delivery: International'),
+				'opts' => '540',
 				),
 			);
-		foreach ($delivery_options as $name => $options)
+		foreach ($delivery_options as $dm => $options)
 		{
-			// true gets [title & info] for each option
-			$options['full'] = $this->getDeliveryOptions($options['full'], true);
-			$options['list'] = isset($delivery_options_list) ? explode('|', $delivery_options_list[$name]) : array();
-			$delivery_options[$name] = $options;
+			$selected_opts = isset($delivery_options_list[$dm]) ? $delivery_options_list[$dm] : array();
+			$opts = explode('|', $options['opts']);
+			$dm_opts = array();
+			foreach ($opts as $key)
+			{
+				if (!isset($this->_all_delivery_options[$key])) continue;
+
+				$has_opt = isset($selected_opts[$key]);
+				$option = array(
+					'checked' => $has_opt,
+					'from' => '0.0',
+					);
+				if (470 === (int)$key) $option['cost'] = '0.0';
+				if ($has_opt)
+				{
+					$option['from'] = $value = $selected_opts[$key];
+					if (is_array($value))
+					{
+						$option['from'] = $value[0];
+						$option['cost'] = $value[1];
+					}
+				}
+
+				$dm_opts[$key] = $option;
+			}
+			$options['opts'] = $dm_opts;
+			$delivery_options[$dm] = $options;
 		}
 		$this->smarty->assign('delivery_options', $delivery_options, true);
-		//
+		$this->smarty->assign('delivery_options_info', $this->_all_delivery_options);
+		// international settings
+		$this->smarty->assign('display_international_delivery', $display_international_delivery, true);
 		// disbling country settings
 		$country_international_orders = false;
 		//
@@ -817,6 +896,7 @@ AND
 		$this->smarty->assign('product_countries', $product_countries, true);
 		$this->smarty->assign('enabled_countries', $enabled_countries, true);
 
+		// Label settings
 		$this->smarty->assign('label_use_ps_labels', $label_use_ps_labels, true);
 		$this->smarty->assign('label_pdf_format', $label_pdf_format, true);
 		$this->smarty->assign('auto_retour_label', $auto_retour_label, true);
@@ -825,6 +905,7 @@ AND
 		// $this->smarty->assign('label_tt_update_on_open', $label_tt_update_on_open, true);
 
 		$this->smarty->assign('errors', $errors, true);
+		// Country information
 		$this->smarty->assign('url_get_available_countries', $service->getControllerLink('bpostshm', 'servicepoint', array(
 			'ajax'						=> true,
 			'get_available_countries'	=> true,
@@ -923,7 +1004,7 @@ AND
 		if (!Service::isPrestashop15plus() || !isset($params['delivery_option_list']))
 			return;
 
-		$at_home_id = (int)Configuration::get('BPOST_SHIP_METHOD_'.BpostShm::SHIPPING_METHOD_AT_HOME.'_ID_CARRIER');
+		$at_home_id = (int)Configuration::get('BPOST_SHIP_METHOD_'.BpostShm::SHM_HOME.'_ID_CARRIER');
 		$delivery_option_list = $params['delivery_option_list'];
 		if ($id_address_delivery = (int)key($delivery_option_list))
 		{
@@ -969,7 +1050,7 @@ AND
 		if (!$our_carriers)
 			return;
 
-		unset($carriers[self::SHIPPING_METHOD_AT_HOME]);
+		unset($carriers[self::SHM_HOME]);
 
 		$this->smarty->assign('id_carrier', $cart->id_carrier, true);
 		$this->smarty->assign('shipping_methods', $carriers, true);
@@ -984,8 +1065,9 @@ AND
 			'token'				=> Tools::getToken('bpostshm'),
 		);
 
-		if (!empty($cart_bpost->bpack247_customer))
-			$url_params['step'] = 2;
+		// // if (!empty($cart_bpost->bpack247_customer))
+		// if (!empty($cart_bpost->upl_info))
+		// 	$url_params['step'] = 2;
 
 		$this->smarty->assign('version', (Service::isPrestashop16plus() ? 1.6 : (Service::isPrestashop15plus() ? 1.5 : 1.4)), true);
 		$this->smarty->assign('url_lightbox', (method_exists($this->context->link, 'getModuleLink')
@@ -1264,7 +1346,7 @@ AND
 		if ($service_point = $this->getCartServicePointDetails((int)$params['order']->id_cart))
 		{
 			$this->smartyAssignVersion();
-			$this->context->smarty->assign('module_dir', __PS_BASE_URI__.'/modules/'.$this->name);
+			$this->context->smarty->assign('module_dir', __PS_BASE_URI__.'modules/'.$this->name);
 			$this->context->smarty->assign('sp', $service_point);
 
 			return $this->context->smarty->fetch(dirname(__FILE__).'/views/templates/front/order_details.tpl');
@@ -1272,11 +1354,13 @@ AND
 	}
 
 	/**
-	 *  PrestaShop 1.4 hook
+	 *  backOfficeHeader is shared for all BO
 	 */
 	public function hookBackOfficeHeader()
 	{
-		return '<link href="'.($this->_path).'views/css/admin-bpost.css" type="text/css" rel="stylesheet" />';
+		$this->context->smarty->assign('module_dir', __PS_BASE_URI__.'modules/'.$this->name);
+
+		return $this->context->smarty->fetch(dirname(__FILE__).'/views/templates/hook/back-office-header.tpl');
 	}
 
 	/**

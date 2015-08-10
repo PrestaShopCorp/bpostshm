@@ -18,8 +18,8 @@ require_once(_PS_MODULE_DIR_.'bpostshm/bpostshm.php');
 class Service
 {
 	private static $_slugs_international = array(
-		'bpack World Express Pro',
-		'bpack World Business',
+		'World Express Pro',
+		'World Business',
 		);
 
 	const GEO6_PARTNER = 999999;
@@ -51,9 +51,11 @@ class Service
 
 		$this->context = $context;
 
+		// $this->bpost = new EontechBpostServiceTest(
 		$this->bpost = new EontechBpostService(
 			Configuration::get('BPOST_ACCOUNT_ID'),
-			Configuration::get('BPOST_ACCOUNT_PASSPHRASE')
+			Configuration::get('BPOST_ACCOUNT_PASSPHRASE'),
+			Configuration::get('BPOST_ACCOUNT_API_URL')
 		);
 		$this->geo6 = new EontechModGeo6(
 			self::GEO6_PARTNER,
@@ -130,12 +132,12 @@ class Service
 
 	public static function isInternational($db_shm)
 	{
-		return BpostShm::SHIPPING_METHOD_AT_INTL == (int)$db_shm;
+		return BpostShm::SHM_INTL == (int)$db_shm;
 	}
 
 	public static function isAtHome($shm)
 	{
-		$is_athome = $shm & BpostShm::SHIPPING_METHOD_AT_HOME;
+		$is_athome = $shm & BpostShm::SHM_HOME;
 		return (bool)$is_athome;
 	}
 
@@ -182,6 +184,42 @@ class Service
 		$weight = (int)round($weight, 0, PHP_ROUND_HALF_UP);
 
 		return empty($weight) ? 1 : $weight;
+	}
+
+	/**
+	 * @param int $type
+	 * @return array
+	 */
+	public function getNearestValidServicePoint($type = 3)
+	{
+		$delivery_address = new Address($this->context->cart->id_address_delivery, $this->context->language->id);
+		$result = array(
+			'city' => $delivery_address->city,
+			'postcode' =>  $delivery_address->postcode,
+		);
+
+		$try_zones = array(
+			2 => $delivery_address->postcode.' '.$delivery_address->city,
+			1 => $delivery_address->postcode,
+			0 => '1000', // last resort brussels
+		);
+
+		$search_params = array(
+			'street' 	=> '',
+			'nr' 		=> '',
+		);
+		foreach ($try_zones as $valid_key => $zone)
+		{
+			$search_params['zone'] = $zone;
+			$service_points = $this->getNearestServicePoint($search_params, $type);
+			if (!empty($service_points))
+				break;
+
+		}
+		$result['is_valid'] = (bool)$valid_key;
+		$result['servicePoints'] = $service_points;
+
+		return $result;
 	}
 
 	/**
@@ -489,7 +527,7 @@ class Service
 				'id_country'=> Configuration::get('PS_SHOP_COUNTRY_ID'),
 				'name'		=> preg_replace($name_pattern, '', (string)Configuration::get('PS_SHOP_NAME')),
 				'phone'		=> Configuration::get('PS_SHOP_PHONE'),
-				'postcode' 	=> trim(Configuration::get('PS_SHOP_CODE')), // todo something better than trim
+				'postcode' 	=> trim(Configuration::get('PS_SHOP_CODE')),
 			),
 		);
 
@@ -592,36 +630,40 @@ class Service
 		$reference = Configuration::get('BPOST_ACCOUNT_ID').'_'.Tools::substr($ps_order->id, 0, 42).'_'.$ref;
 
 		$shm = $this->module->getShmFromCarrierID($ps_order->id_carrier);
-		$delivery_method = $this->module->shipping_methods[$shm]['slug'];
+		$dm_text = $this->module->shipping_methods[$shm]['slug'];
+		// $delivery_method = $this->module->shipping_methods[$shm]['slug'];
 		switch ($shm)
 		{
-			case BpostShm::SHIPPING_METHOD_AT_HOME:
+			case BpostShm::SHM_HOME:
 				if ($address = Address::getCountryAndState((int)$ps_order->id_address_delivery))
 				{
 					$country = new Country((int)$address['id_country']);
 					if ('BE' != $country->iso_code)
 					{
 						// $delivery_method = '@international';
-						$shm = BpostShm::SHIPPING_METHOD_AT_INTL;
-						$options_list = $this->getDeliveryOptionsList('intl', ':');
-						$delivery_method = $this->getInternationalSlug(true).$options_list;
+						$shm = BpostShm::SHM_INTL;
+						$dm_text = $this->getInternationalSlug();
+						// $options_list = $this->getDeliveryOptionsList('intl', ':');
+						// $delivery_method = $this->getInternationalSlug().$options_list;
 					}
-					else
-						// Belgian address
-						$delivery_method .= $this->getDeliveryOptionsList('home', ':');
+					// else
+					// 	// Belgian address
+					// 	$delivery_method .= $this->getDeliveryOptionsList('home', ':');
 				}
 				break;
 
-			case BpostShm::SHIPPING_METHOD_AT_SHOP:
-				$delivery_method .= $this->getDeliveryOptionsList('bpost', ':');
+			case BpostShm::SHM_PPOINT:
+				// $delivery_method .= $this->getDeliveryOptionsList('bpost', ':');
 				break;
 
-			case BpostShm::SHIPPING_METHOD_AT_24_7:
+			case BpostShm::SHM_PLOCKER:
 				// $delivery_method .= $this->getDeliveryOptionsList('247', ':');
-				$delivery_method = 'Parcel locker'.$this->getDeliveryOptionsList('247', ':');
+				$dm_text = 'Parcel locker';
+				// $delivery_method = 'Parcel locker'.$this->getDeliveryOptionsList('247', ':');
 				break;
 
 		}
+		$options_keys = $this->getEffectiveDeliveryOptions($shm, $ps_order->total_products);
 
 		if ((bool)Configuration::get('BPOST_USE_PS_LABELS'))
 		{
@@ -633,7 +675,8 @@ class Service
 			$order_bpost->reference = (string)$reference;
 			$order_bpost->recipient = (string)$recipient;
 			$order_bpost->shm = (int)$shm;
-			$order_bpost->delivery_method = (string)$delivery_method;
+			// $order_bpost->delivery_method = (string)$delivery_method;
+			$order_bpost->delivery_method = (string)$this->getDeliveryMethodString($dm_text, $options_keys);
 			$response = $response && $order_bpost->save();
 			$response = $response && $order_bpost->addLabel();
 		}
@@ -698,7 +741,7 @@ class Service
 
 			if ($is_retour)
 				// effective $shipping_method if retour is on is always @home!
-				$shipping_method = (int)BpostShm::SHIPPING_METHOD_AT_HOME;
+				$shipping_method = (int)BpostShm::SHM_HOME;
 		}
 
 		$shippers = $this->getReceiverAndSender($ps_order, $is_retour, !$has_service_point);
@@ -709,15 +752,19 @@ class Service
 		$box->setStatus('OPEN');
 		$box->setSender($sender);
 
+		// $setting_option_keys = $this->getEffectiveDeliveryOptions((int)$db_shm, (float)$ps_order->total_products);
+		$option_keys = $this->getOrderDeliveryOptions((int)$db_shm, $ps_order);
+
 		switch ($shipping_method)
 		{
-			case BpostShm::SHIPPING_METHOD_AT_HOME:
+			case BpostShm::SHM_HOME:
 				if (self::isInternational($db_shm))
 				{
 					// @International
 					$customs_info = new EontechModBpostOrderBoxCustomsinfoCustomsInfo();
 					$customs_info->setParcelValue((float)$ps_order->total_paid * 100);
-					$customs_info->setContentDescription(Tools::substr('ORDER '.Configuration::get('PS_SHOP_NAME'), 0, 50));
+					// $customs_info->setContentDescription(Tools::substr('ORDER '.Configuration::get('PS_SHOP_NAME'), 0, 50));
+					$customs_info->setContentDescription(self::getBpostring('ORDER '.Configuration::get('PS_SHOP_NAME'), 50));
 					$customs_info->setShipmentType('OTHER');
 					$customs_info->setParcelReturnInstructions('RTS');
 					$customs_info->setPrivateAddress(false);
@@ -731,8 +778,9 @@ class Service
 						$international->setProduct('bpack World Easy Return');
 					else
 					{
-						$international->setProduct($this->getInternationalSlug());
-						$delivery_options = $this->getDeliveryBoxOptions('intl');
+						$international->setProduct('bpack '.$this->getInternationalSlug());
+						// $delivery_options = $this->getDeliveryBoxOptions('intl');
+						$delivery_options = $this->getDeliveryBoxOptions($option_keys);
 						foreach ($delivery_options as $option)
 							$international->addOption($option);
 					}
@@ -751,7 +799,8 @@ class Service
 					{
 						$at_home->setProduct('bpack 24h Pro');
 
-						$delivery_options = $this->getDeliveryBoxOptions('home');
+						// $delivery_options = $this->getDeliveryBoxOptions('home');
+						$delivery_options = $this->getDeliveryBoxOptions($option_keys);
 						foreach ($delivery_options as $option)
 							$at_home->addOption($option);
 					}
@@ -760,7 +809,7 @@ class Service
 				}
 				break;
 
-			case BpostShm::SHIPPING_METHOD_AT_SHOP:
+			case BpostShm::SHM_PPOINT:
 				// @Bpost
 				// Never retour
 				$service_point = $this->getServicePointDetails($service_point_id, $sp_type);
@@ -789,19 +838,18 @@ class Service
 					$receiver->getEmailAddress()
 				);
 				$at_bpost->addOption($option);
-				$delivery_options = $this->getDeliveryBoxOptions('bpost');
+				// $delivery_options = $this->getDeliveryBoxOptions('bpost');
+				$delivery_options = $this->getDeliveryBoxOptions($option_keys);
 				foreach ($delivery_options as $option)
 					$at_bpost->addOption($option);
 
 				$box->setNationalBox($at_bpost);
 				break;
 
-			case BpostShm::SHIPPING_METHOD_AT_24_7:
+			case BpostShm::SHM_PLOCKER:
 				// @24/7
 				// Never retour
-				$service_point = $this->getServicePointDetails($service_point_id, BpostShm::SHIPPING_METHOD_AT_24_7);
-				$bpack247_customer = Tools::jsonDecode($cart->bpack247_customer);
-
+				$service_point = $this->getServicePointDetails($service_point_id, BpostShm::SHM_PLOCKER);
 				$parcels_depot_address = new EontechModBpostOrderParcelsDepotAddress(
 					$service_point['street'],
 					$service_point['nr'],
@@ -814,6 +862,25 @@ class Service
 				for ($i = Tools::strlen($service_point['id']); $i < 6; $i++)
 					$service_point['id'] = '0'.$service_point['id'];
 
+				$at_upl = new EontechModBpostOrderBoxAtUPL();
+				$at_upl->setParcelsDepotId($service_point['id']);
+				$at_upl->setParcelsDepotName($service_point['office']);
+				$at_upl->setParcelsDepotAddress($parcels_depot_address);
+				//
+				$upl_info = EontechBpostUPLInfo::createFromJson($cart->upl_info);
+				$at_upl->setUnregisteredInfo($upl_info);
+				$at_upl->setReceiverName(Tools::substr($receiver->getName(), 0, 40));
+				$at_upl->setReceiverCompany(Tools::substr($receiver->getCompany(), 0, 40));
+
+				// $delivery_options = $this->getDeliveryBoxOptions('247');
+				$delivery_options = $this->getDeliveryBoxOptions($option_keys);
+				foreach ($delivery_options as $option)
+					$at_upl->addOption($option);
+
+				$box->setNationalBox($at_upl);
+				/*
+				$bpack247_customer = Tools::jsonDecode($cart->bpack247_customer);
+
 				$at247 = new EontechModBpostOrderBoxAt247();
 				$at247->setParcelsDepotId($service_point['id']);
 				$at247->setParcelsDepotName($service_point['office']);
@@ -822,11 +889,13 @@ class Service
 				$at247->setReceiverName(Tools::substr($receiver->getName(), 0, 40));
 				$at247->setReceiverCompany(Tools::substr($receiver->getCompany(), 0, 40));
 
-				$delivery_options = $this->getDeliveryBoxOptions('247');
+				// $delivery_options = $this->getDeliveryBoxOptions('247');
+				$delivery_options = $this->getDeliveryBoxOptions($option_keys);
 				foreach ($delivery_options as $option)
 					$at247->addOption($option);
 
 				$box->setNationalBox($at247);
+				*/
 				break;
 		}
 		// new field to insert PS version once per box, instead of once per Order!
@@ -1171,12 +1240,125 @@ class Service
 			true
 		);
 	}
-
+/*
 	private function getInternationalSlug($short = false)
 	{
 		$setting = (int)Configuration::get('BPOST_INTERNATIONAL_DELIVERY');
 		$slug = self::$_slugs_international[$setting];
 		return $short ? str_replace('bpack ', '', $slug) : $slug;
+	}
+*/
+	private function getInternationalSlug()
+	{
+		$setting = (int)Configuration::get('BPOST_INTERNATIONAL_DELIVERY');
+
+		return self::$_slugs_international[$setting];
+	}
+
+	private function getDeliveryMethodString($dm_text, $dm_options)
+	{
+		$dms = (string)$dm_text;
+		if (!empty($dm_options))
+			$dms .= ':'.implode('|', $dm_options);
+
+		return $dms;
+	}
+
+	/**
+	 * [getEffectiveDeliveryOptions list of options triggered by order products total]
+	 * @author Serge <serge@stigmi.eu>
+	 * @param  int $shm shipping method
+	 * @param  float $total_products (order total before shipping & tax)
+	 * @return array	option keys
+	 */
+	private function getEffectiveDeliveryOptions($shm, $total_products)
+	{
+		$opts = array();
+		if ($options_list = Configuration::get('BPOST_DELIVERY_OPTIONS_LIST'))
+		{
+			$options_list = Tools::jsonDecode($options_list, true);
+			if (isset($options_list[$shm]))
+				foreach ($options_list[$shm] as $key => $from)
+				{
+					if (is_array($from)) $from = $from[0];
+					if ((float)$from <= (float)$total_products)
+						$opts[] = $key;
+				}
+
+		}
+
+		return $opts;
+	}
+
+	/**
+	 * [getOrderDeliveryOptions list of options stored | triggered by order]
+	 * @author Serge <serge@stigmi.eu>
+	 * @param  int $shm 		shipping method
+	 * @param  Order $ps_order 	Prestashop order
+	 * @return array			option keys
+	 */
+	private function getOrderDeliveryOptions($shm, $ps_order)
+	{
+		$opts = array();
+		if (Validate::isLoadedObject($ps_order))
+			if ($bpost_order = PsOrderBpost::getByPsOrderID($ps_order->id))
+			{
+				if (isset($bpost_order->delivery_method))
+				{
+					$delivery_method = explode(':', $bpost_order->delivery_method);
+					if (count($delivery_method) > 1)
+						$opts = explode('|', $delivery_method[1]);
+				}
+			}
+			else
+				$opts = $this->getEffectiveDeliveryOptions($shm, $ps_order->total_products);
+
+		return $opts;
+	}
+
+	/**
+	 * [getDeliveryBoxOptions provide delivery options in optimal order]
+	 * @param  array $option_keys  numeric order 
+	 * @return array option xml classes in effctive optimal order '330|350(540)|470|300'
+	 */
+	private function getDeliveryBoxOptions($option_keys = '')
+	{
+		$options = array();
+		if (!empty($option_keys))
+		{
+			$sign_opt = false;
+			foreach ($option_keys as $key)
+			{
+				switch ((int)$key)
+				{
+					case 330: // 2nd Presentation
+						$options[] = new EontechModBpostOrderBoxOptionAutomaticSecondPresentation();
+						break;
+
+					case 540:
+					case 350: // Insurance
+						$options[] = new EontechModBpostOrderBoxOptionInsured('basicInsurance');
+						break;
+
+					case 470: // Saturday delivery (Not yet implemented)
+						// $options[] = new EontechModBpostOrderBoxOptionSaturdayDelivery();
+						break;
+
+					case 300: // Signature has to be at the end !?
+						$sign_opt = new EontechModBpostOrderBoxOptionSigned();
+						break;
+
+					default:
+						throw new Exception('Not a valid delivery option');
+						// break;
+				}
+			}
+
+			if (false !== $sign_opt)
+				$options[] = $sign_opt;
+		}
+
+		return $options;
 	}
 
 	/**
@@ -1184,7 +1366,7 @@ class Service
 	 * @param  string $deliveryMethod (home, bpost, 247 or intl)
 	 * @return string                 empty or option keys seperated by |
 	 */
-	private function getDeliveryOptionsList($delivery_method, $prepend = '')
+/*	private function getDeliveryOptionsList($delivery_method, $prepend = '')
 	{
 		$list = '';
 		if ($options_list = Configuration::get('BPOST_DELIVERY_OPTIONS_LIST'))
@@ -1234,7 +1416,7 @@ class Service
 
 		return $options;
 	}
-
+*/
 	public function getDeliveryOptions($selection)
 	{
 		return $this->module->getDeliveryOptions($selection);

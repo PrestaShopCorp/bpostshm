@@ -191,4 +191,36 @@ div.order-details {
      margin-left:60px;
   }
 }
+/* Serge 30-06-15 */
+.delopt-tabs {
+  float: left;
+}
+.delopt-tab-row {
+  list-style: none;
+
+  & a {
+    display: block;
+    width: 180px;
+    background: white;
+    border: 1px solid #ccc;
+    text-decoration: none !important;
+    padding: 8px 12px 7px 12px;
+    text-align: left;
+
+    /*
+    -webkit-border-top-left-radius: 8px;
+    -webkit-border-bottom-left-radius: 4px;
+    -moz-border-radius-topleft: 8px;
+    -moz-border-radius-bottomleft: 4px;
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 4px;
+    */
+  }
+
+  & a.selected {
+    background: none;
+    border-right: none;
+    font-weight: 600;
+  }
+}
 /* Serge end */

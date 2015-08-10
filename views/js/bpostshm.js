@@ -74,14 +74,18 @@ BpostShm = {
 
 		_map = this.map;
 		_map.panToBounds(bounds);
-		if (this.points.coords.length > 1)	
+		// if (this.points.coords.length > 1)
+		if (1 == this.points.coords.length)
+			this.map.panTo( new google.maps.LatLng(this.points.coords[0][0], this.points.coords[0][1]) );
+		else // if (this.points.coords.length > 1)
 			setTimeout(function() {
 				_map.fitBounds(bounds);
 			}, 600);
 //
+		// SRG:20-07-15
 		// if (this.shipping_method < 4)
 		// 	this.map.panTo( new google.maps.LatLng(this.points.coords[0][0], this.points.coords[0][1]) );
-		
+
 		return;
 	},
 	bindEventListeners: function()
@@ -223,7 +227,7 @@ BpostShm = {
 			else
 				switch (BpostShm.shipping_method)
 				{
-					// if SHIPPING_METHOD_AT_SHOP
+					// if SHM_PPOINT pickup point
 					case 2:
 						if ('undefined' !== typeof BpostShm.cache.service_point_hours[ $poi.data('servicepointid') ])
 							return BpostShm.appendHours(BpostShm.cache.service_point_hours[ $poi.data('servicepointid') ], $poi);
@@ -240,7 +244,7 @@ BpostShm = {
 						});
 						break;
 
-					// if SHIPPING_METHOD_AT_24_7
+					// if SHM_PLOCKER parcel locker
 					case 4:
 						$button = $('<a />').addClass('button').text(BpostShm.lang['Next step']);
 						$('<div class="hours" />').append($button).insertAfter( $poi.find('a') );

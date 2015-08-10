@@ -26,6 +26,9 @@ class PsCartBpost extends ObjectModel
 	/* int keep me informed choice value (default 0 => email) */
 	public $option_kmi = 0;
 
+	/* json encoded unregistered parcel locker customer info */
+	public $upl_info;
+
 	/* json encoded parcel locker customer info */
 	public $bpack247_customer;
 
@@ -55,6 +58,7 @@ class PsCartBpost extends ObjectModel
 		'service_point_id' =>	'isUnsignedId',
 		'sp_type' =>			'isUnsignedId',
 		'option_kmi' =>			'isUnsignedId',
+		'upl_info' =>			'isString',
 		'bpack247_customer' =>	'isString',
 		);
 
@@ -76,6 +80,7 @@ class PsCartBpost extends ObjectModel
 		$fields['service_point_id'] =	(int)$this->service_point_id;
 		$fields['sp_type'] = 			(int)$this->sp_type;
 		$fields['option_kmi'] = 		(int)$this->option_kmi;
+		$fields['upl_info'] = 			pSQL($this->upl_info);
 		$fields['bpack247_customer'] = 	pSQL($this->bpack247_customer);
 		$fields['date_add'] = 			pSQL($this->date_add);
 		$fields['date_upd'] = 			pSQL($this->date_upd);
@@ -92,11 +97,12 @@ class PsCartBpost extends ObjectModel
 				'table' => 'cart_bpost',
 				'primary' => 'id_cart_bpost',
 				'fields' => array(
-					'id_cart' =>					array('type' => self::TYPE_INT, 'validate' => 'isUnsignedId', 'required' => true),
-					'service_point_id' =>			array('type' => self::TYPE_INT, 'validate' => 'isUnsignedId'),
-					'sp_type' =>					array('type' => self::TYPE_INT, 'validate' => 'isUnsignedId'),
-					'option_kmi' =>					array('type' => self::TYPE_INT, 'validate' => 'isUnsignedId'),
-					'bpack247_customer' =>			array('type' => self::TYPE_STRING, 'validate' => 'isString'),
+					'id_cart' =>			array('type' => self::TYPE_INT, 'validate' => 'isUnsignedId', 'required' => true),
+					'service_point_id' =>	array('type' => self::TYPE_INT, 'validate' => 'isUnsignedId'),
+					'sp_type' =>			array('type' => self::TYPE_INT, 'validate' => 'isUnsignedId'),
+					'option_kmi' =>			array('type' => self::TYPE_INT, 'validate' => 'isUnsignedId'),
+					'upl_info' =>			array('type' => self::TYPE_STRING, 'validate' => 'isString'),
+					'bpack247_customer' =>	array('type' => self::TYPE_STRING, 'validate' => 'isString'),
 					'date_add' =>			array('type' => self::TYPE_DATE, 'validate' => 'isDate'),
 					'date_upd' =>			array('type' => self::TYPE_DATE, 'validate' => 'isDate'),
 					),

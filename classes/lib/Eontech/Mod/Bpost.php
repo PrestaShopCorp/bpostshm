@@ -10,7 +10,7 @@
 
 class EontechModBpost
 {
-	/* URL for the api */
+	/* URL for the api (default) */
 	const API_URL = 'https://api.bpost.be/services/shm';
 
 	/* current version */
@@ -36,6 +36,13 @@ class EontechModBpost
 	 * @var string
 	 */
 	private $pass_phrase;
+
+	/**
+	 * The API_URL
+	 *
+	 * @var string
+	 */
+	private $api_url;
 
 	/**
 	 * The port to use.
@@ -65,10 +72,11 @@ class EontechModBpost
 	 * @param string $account_id
 	 * @param string $pass_phrase
 	 */
-	public function __construct($account_id, $pass_phrase)
+	public function __construct($account_id, $pass_phrase, $api_url = '')
 	{
 		$this->account_id = (string)$account_id;
 		$this->pass_phrase = (string)$pass_phrase;
+		$this->api_url = empty($api_url) ? static::API_URL : (string)$api_url;
 	}
 
 	/**
@@ -157,7 +165,7 @@ class EontechModBpost
 
 		// set options
 		$options = array();
-		$options[CURLOPT_URL] = self::API_URL.'/'.$this->account_id.$url;
+		$options[CURLOPT_URL] = $this->api_url.'/'.$this->account_id.$url;
 		if ($this->getPort() != 0)
 			$options[CURLOPT_PORT] = $this->getPort();
 		$options[CURLOPT_USERAGENT] = $this->getUserAgent();
