@@ -18,7 +18,7 @@ option:disabled {
   list-style: disc inside none;
   padding-left: 0; }
 #bpost-settings form {
-  margin-top: 20px; }
+  /*margin-top: 20px;*/ }
   #bpost-settings form label {
     cursor: pointer; }
   #bpost-settings form select.fixed-width-xs {
@@ -105,5 +105,72 @@ div.order-details {
 }
 div.order-details h4 {
   margin-left:60px;
+}
+/* Serge 30-06-15 */
+.delopt-tabs {
+  float: left;
+  margin-right: 30px;
+}
+.delopt-tab-row {
+  list-style: none;
+}
+.delopt-tab-row a {
+  display: block;
+  width: 180px;
+  background: white;
+  border: 1px solid #ccc;
+  text-decoration: none !important;
+  padding: 8px 12px 7px 12px;
+  text-align: left;
+}
+.delopt-tab-row a.selected {
+  background: none;
+  border-right: none;
+  border-top: none;
+  font-weight: 600;
+}
+/* Serge 15-07-15 */
+.tab-wrapper {
+  margin-bottom: 0px;
+  margin-top: 10px;
+  padding: 0px;
+  border: 0px;
+}
+.bpost-tabs {
+  padding-left: 0px;
+  margin:0;
+  list-style-type: none;
+  text-align: left;
+}
+.bpost-tabs li {
+  display: inline-block;
+  margin: -1px;
+}
+.bpost-tabs li a {
+  display: block;
+  background: white;
+  border: 1px solid #ccc;
+  text-decoration: none !important;
+  padding: 8px 14px 8px 14px;
+  margin-right: -2px;
+  text-align: left;
+  font-weight: 500;
+
+}
+.bpost-tabs li a.selected {
+  background: none;
+  border-bottom: none;
+  font-weight: 600;
+}
+/**/
+#ship-delay, #cutoff-time {
+  width: 54px;
+}
+input{
+display: inline !important;
+margin-right: 4px;
+}
+.panel-footer {
+margin-bottom:0px !important;
 }
 /* Serge end */

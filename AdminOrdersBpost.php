@@ -242,7 +242,7 @@ class AdminOrdersBpost extends AdminTab
 
 		if (!(bool)preg_match('/^([a-z]{2})$/', $iso_code))
 			return;
-		
+
 		$class_name = get_class($this);
 		$module = isset($this->module) ? $this->module : 'bpostshm';
 		$needle = Tools::strtolower($class_name).'_';
